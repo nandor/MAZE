@@ -1,0 +1,6 @@
+build/*
+docs/*
+engine.log
+maze.rar
+*.pyc
+__pycache__/*
