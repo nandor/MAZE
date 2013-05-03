@@ -7,12 +7,13 @@
 #pragma once
 
 #include "MZScene.h"
+#include "MZPlayer.h"
 #include "MZTexture.h"
 
 namespace MAZE
 {
 	class Engine;
-	class Camera;
+	class Script;
 	class RenderBuffer;
 
 	/**
@@ -44,7 +45,9 @@ namespace MAZE
 		void Generate();
 
 		/**
-			Update method - run in the main thread
+			Update method - runs in the main thread
+			@param time Total time
+			@param dt	Delta time
 		*/
 		void Update(float time, float dt);
 
@@ -52,54 +55,32 @@ namespace MAZE
 			Fills the back renderbuffer - run in the main thread
 		*/
 		void Render(RenderBuffer* buffer);
-
-	private:
-
-		/**
-			Camera movement
-		*/
-		void UpdateCamera();
 		
 	private:
 
 		/// Reference to the engine
 		Engine *mEngine;
 		
-		/// Camera
-		std::auto_ptr<Camera> mCamera;
-				
-		/// Scene
-		std::auto_ptr<Scene> mScene;
+		/// Scene manager
+		Scene *mScene;
 
-		/// Frame time
-		float mTime;
-
-		/// Time difference
-		float mTimeDiff;
-
-		/// Camera y rotation
-		float mRotY;
-
-		/// Camera x rotation
-		float mRotX;
+		/// Script state
+		Script *mScript;
 		
-		/// Camera velocity
-		glm::vec3 mVelocity;
-
-		/// Ground texture
-		Resource::Ptr<Texture> mGroundTexture;
-
-		/// Skybox cube map
-		Resource::Ptr<Texture> mSkyTexture;
+		/// Player
+		Player *mPlayer;
 
 		/// Size of the world
 		glm::vec3 mSize;
 
-		/// Seed
-		size_t mSeed;
+		/// Light provided by the moon
+		Light *mMoon;
 
-		/// Global ambient
-		glm::vec3 mAmbient;
+		/// Light provided by the sun
+		Light *mSun;
+
+		/// Skybox cube map
+		Resource::Ptr<Texture> mSkyTexture;
 	};
 };
 

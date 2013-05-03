@@ -88,12 +88,20 @@ SceneNode* SceneNode::Next(const Shape& clip)
 }
 
 // ------------------------------------------------------------------------------------------------
-Scene::Scene(float width, float height, float depth)
-{
-	mRoot = new SceneNode(BoundingBox(
+Scene::Scene(Engine* engine, float width, float height, float depth)
+	: mEngine(engine),
+	  mRoot(new SceneNode(BoundingBox(
 		-width, -height, -depth, 
 		width * 2.0f, height * 2.0f, depth * 2.0f
-	));
+	)))
+{
+}
+
+// ------------------------------------------------------------------------------------------------
+Scene::Scene(Engine *engine, const glm::vec3& size)
+	: mEngine(engine),
+	  mRoot(new SceneNode(BoundingBox(-size, size * 2.0f)))
+{
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -112,54 +120,11 @@ Scene::~Scene()
 }
 
 // ------------------------------------------------------------------------------------------------
-Light* Scene::CreateLight(Light::Type type)
-{
-	Light* light;
-	unsigned id;
-
-	light = new Light(type);
-	id = ++mEntityCount;
-	mEntities.insert(std::make_pair(id, light));
-
-	return light;
-}
-
-// ------------------------------------------------------------------------------------------------
-Object* Scene::CreateObject()
-{
-	Object* object;
-	unsigned id;
-
-	object = new Object();
-	id = ++mEntityCount;
-	mEntities.insert(std::make_pair(id, object));
-
-	return object;
-}
-
-// ------------------------------------------------------------------------------------------------
-void Scene::Update()
-{	
-	std::hash_map<unsigned, Entity*>::iterator it;
-	for (it = mEntities.begin(); it != mEntities.end(); ++it)
-	{
-		Entity *ent = it->second;
-
-		if (ent->IsDirty())
-		{
-			RemoveEntity(ent);
-			ent->Update();
-			AddEntity(ent);
-		}
-	}
-}
-
-// ------------------------------------------------------------------------------------------------
 void Scene::RemoveEntity(Entity* entity)
 {
 	SceneNode* node;
 	
-	node = entity->mParentNode;
+	node = entity->fParentNode;
 	if (node == NULL)
 	{
 		return;
@@ -243,6 +208,7 @@ void Scene::AddEntity(Entity* entity)
 		}
 	}
 
+	entity->fParentNode = target;
 	target->Items.push_back(entity);
 }
 
@@ -256,34 +222,18 @@ void Scene::QueryScene(const ViewFrustum& volume, RenderBuffer* buffer)
 	{
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
-			Entity *ent = *it;
-			
-			if (volume.Intersect(ent->GetBoundingBox()) != OUTSIDE)
+			if ((*it)->IsActive() &&
+				(*it)->IsRenderable() &&
+				(*it)->GetBoundingBox().Intersect(volume))
 			{
-				switch (ent->GetEntityType())
-				{
-					case Entity::LIGHT:
-					{
-						buffer->Lights.resize(buffer->Lights.size() + 1);
-						((Light*)ent)->Prepare(&(*buffer->Lights.rbegin()));
-						break;
-					}	
-					case Entity::OBJECT:
-					{
-						buffer->Objects.resize(buffer->Objects.size() + 1);
-						((Object*)ent)->Prepare(&(*buffer->Objects.rbegin()));
-						break;
-					}
-					case Entity::PARTICLE:
-					{
-						break;
-					}
-				}
+				(*it)->Render(buffer, Entity::RENDER_GBUFFER);
 			}
 		}
 
 		node = node->Next(volume);
 	}
+
+	buffer->Sort(volume.GetView());
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -291,17 +241,17 @@ void Scene::QueryShadows(const ViewFrustum& volume, RenderBuffer* buffer)
 {
 	SceneNode* node = mRoot;
 	std::vector<Entity*>::iterator it;
-
+	
 	while (node)
 	{
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
 			if ((*it)->GetEntityType() == Entity::OBJECT && 
-				volume.Intersect((*it)->GetBoundingBox()) != OUTSIDE &&
-				(*it)->IsShadowCaster())
+				(*it)->IsActive() &&
+				(*it)->IsShadowCaster() &&
+				(*it)->GetBoundingBox().Intersect(volume) != OUTSIDE)
 			{
-				buffer->ShadowCasters.resize(buffer->ShadowCasters.size() + 1);
-				((Object*)(*it))->Prepare(&(*buffer->ShadowCasters.rbegin()));
+				(*it)->Render(buffer, Entity::RENDER_SHADOW);
 			}
 		}
 
@@ -313,18 +263,20 @@ void Scene::QueryShadows(const ViewFrustum& volume, RenderBuffer* buffer)
 glm::vec3 Scene::QueryDistance(const BoundingBox& entity, const glm::vec3& dir)
 {	
 	BoundingBox extended = entity.Extend(dir);
-	std::vector<BoundingBox> objects;
+	std::vector<Entity*> objects;
 	std::vector<Entity*>::iterator it;
 	glm::vec3 final = dir;
-
+	
 	SceneNode* node = mRoot;
 	while (node)
 	{
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
-			if (extended.Intersect((*it)->GetBoundingBox()) == INTERSECT && (*it)->IsCollider())
+			if ((*it)->IsCollider() &&
+				(*it)->IsActive() &&
+				(*it)->GetBoundingBox().Intersect(extended) == INTERSECT)
 			{
-				objects.push_back((*it)->GetBoundingBox());
+				objects.push_back(*it);
 			}
 		}
 
@@ -338,47 +290,50 @@ glm::vec3 Scene::QueryDistance(const BoundingBox& entity, const glm::vec3& dir)
 		box = entity.Extend(glm::vec3(dir.x, 0.0f, 0.0f));
 		for (size_t i = 0; i < objects.size(); ++i)
 		{
-			if (box.Intersect(objects[i]) == INTERSECT)
+			BoundingBox& target = objects[i]->GetBoundingBox();
+			if (box.Intersect(target) == INTERSECT)
 			{
 				if (dir.x >= 0.0f)
 				{
-					final.x = std::min(objects[i].GetMin().x - entity.GetMax().x, final.x);
+					final.x = std::min(target.GetMin().x - entity.GetMax().x, final.x);
 				}
 				else
 				{
-					final.x = std::max(objects[i].GetMax().x - entity.GetMin().x, final.x);
-				}
-			}
-		}
-
-		box = entity.Extend(glm::vec3(final.x, dir.y, 0.0f));
-		for (size_t i = 0; i < objects.size(); ++i)
-		{
-			if (box.Intersect(objects[i]) == INTERSECT)
-			{
-				if (dir.y >= 0.0f)
-				{
-					final.y = std::min(objects[i].GetMin().y - entity.GetMax().y, final.y);
-				}
-				else
-				{
-					final.y = std::max(objects[i].GetMax().y - entity.GetMin().y, final.y);
+					final.x = std::max(target.GetMax().x - entity.GetMin().x, final.x);
 				}
 			}
 		}
 		
-		box = entity.Extend(glm::vec3(final.x, final.y, dir.z));
+		box = entity.Extend(glm::vec3(final.x, 0.0f, dir.z));
 		for (size_t i = 0; i < objects.size(); ++i)
 		{
-			if (box.Intersect(objects[i]) == INTERSECT)
+			BoundingBox& target = objects[i]->GetBoundingBox();
+			if (box.Intersect(target) == INTERSECT)
 			{
 				if (dir.z >= 0.0f)
 				{
-					final.z = std::min(objects[i].GetMin().z - entity.GetMax().z , final.z);
+					final.z = std::min(target.GetMin().z - entity.GetMax().z , final.z);
 				}
 				else
 				{
-					final.z = std::max(objects[i].GetMax().z - entity.GetMin().z, final.z);
+					final.z = std::max(target.GetMax().z - entity.GetMin().z, final.z);
+				}
+			}
+		}
+
+		box = entity.Extend(glm::vec3(final.x, dir.y, final.z));
+		for (size_t i = 0; i < objects.size(); ++i)
+		{
+			BoundingBox& target = objects[i]->GetBoundingBox();
+			if (box.Intersect(target) == INTERSECT)
+			{
+				if (dir.y >= 0.0f)
+				{
+					final.y = std::min(target.GetMin().y - entity.GetMax().y, final.y);
+				}
+				else
+				{
+					final.y = std::max(target.GetMax().y - entity.GetMin().y, final.y);
 				}
 			}
 		}

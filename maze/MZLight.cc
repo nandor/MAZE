@@ -5,13 +5,21 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include "MZLight.h"
-#include "MZException.h"
+#include "MZScene.h"
 #include "MZRenderBuffer.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-void Light::Prepare(LightRenderData* data)
+const float Light::CASCADE_SPLIT[5] = {0.0f, 0.06f, 0.15f, 0.4f, 1.0f};  
+
+// ------------------------------------------------------------------------------------------------
+void Light::Render(RenderBuffer* buffer, RenderMode mode)
 {
+	LightRenderData *data;
+
+	buffer->Lights.resize(buffer->Lights.size() + 1);
+	data = &(*buffer->Lights.rbegin());
+
 	data->Type = mType;
 	data->Specular = mSpecular;	
 	data->Diffuse = mDiffuse;
@@ -67,36 +75,61 @@ void Light::Prepare(LightRenderData* data)
 			data->Direction.y = mDirection.y;
 			data->Direction.z = mDirection.z;
 			data->Direction.w = -1.0f;
+
+			data->CastsShadows = mShadowCaster;
+						
+			if (mShadowCaster)
+			{
+				float n = buffer->ViewVolume.GetNearPlane();
+				float f = buffer->ViewVolume.GetFarPlane();
+				for (size_t j = 0; j < 4; ++j)
+				{
+					ViewFrustum lightvol;
+
+					float begin = n + (f - n) * CASCADE_SPLIT[j];
+					float end = n + (f - n) * CASCADE_SPLIT[j + 1];
+			
+					lightvol = buffer->ViewVolume.Slice(begin, end).GetLightVolume(mDirection);
+					data->Shadow[j].MVP = lightvol.GetProjection() * lightvol.GetView();
+					data->Shadow[j].NearZ = begin;	
+
+					data->Shadow[j].Index = buffer->ShadowCasters.size();			
+					fScene->QueryShadows(lightvol, buffer);
+					data->Shadow[j].Count = buffer->ShadowCasters.size() - data->Shadow[j].Index;
+				}
+			}
 			break;
 		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
-void Light::Update()
+void Light::InternalUpdate()
 {
 	switch (mType)
 	{
 		case Light::POINT:
 		{		
-			mBox.SetPosition(mPosition - glm::vec3(mRadius));
-			mBox.SetSize(glm::vec3(mRadius) * 2.0f);
+			glm::vec3 halfSize = glm::vec3(mRadius * 2.0f);
+			fBox.SetPosition(mPosition - halfSize);
+			fBox.SetSize(halfSize * 2.0f);
 			break;
 		}
 		case Light::SPOT:
 		{
-			mBox.SetPosition(mPosition - glm::vec3(mRadius));
-			mBox.SetSize(glm::vec3(mRadius) * 2.0f);
+			glm::vec3 halfSize = glm::vec3(mRadius * 2.0f);
+			fBox.SetPosition(mPosition - halfSize);
+			fBox.SetSize(halfSize * 2.0f);
 			break;
 		}
 		case Light::DIRECTIONAL:
 		{
-			mBox.SetPosition(glm::vec3(-1e10f));
-			mBox.SetSize(glm::vec3(2e10f));
+			fBox.SetPosition(glm::vec3(-1e10f));
+			fBox.SetSize(glm::vec3(2e10f));
 			break;
 		}
 	}
 
-	mDirty = false;
+	fScene->UpdateEntity(this);
 }
 

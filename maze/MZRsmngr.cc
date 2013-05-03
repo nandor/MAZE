@@ -27,13 +27,15 @@ ResourceManager::~ResourceManager()
 		return;
 	
 	wglMakeCurrent(mEngine->GetDC(), mContext);
-	HDC dc = ::wglGetCurrentDC();
-	HGLRC ctx = ::wglGetCurrentContext();
 
-	ResourceHandleIter it;
-	for (it = mHandleMap.begin(); it != mHandleMap.end(); ++it)
+	// Unload all resources
+	for (ResourceHandleIter it = mHandleMap.begin(); it != mHandleMap.end(); ++it)
 	{
-		Log::Inst() << "Deleting resource: " << it->second->GetID();
+		it->second->Unload();
+	}
+
+	for (ResourceHandleIter it = mHandleMap.begin(); it != mHandleMap.end(); ++it)
+	{
 		delete it->second;
 	}
 
@@ -105,7 +107,7 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 		Texture* tex = NULL;
 		ResourceKeyIter it;
 
-		Split(id, '_', tokens);
+		Split(id, '.', tokens);
 		id = tokens[0];
 		
 		if ((it = mKeyMap.find(std::make_pair(id, Texture::TYPE))) != mKeyMap.end())
@@ -151,8 +153,6 @@ void ResourceManager::Add(Resource* res)
 {
 	Resource::Handle handle = ++mResourceCount;
 	
-	Log::Inst() << "Discovered resource: " << res->GetID();
-
 	if (mKeyMap.find(std::make_pair(res->GetID(), res->GetType())) != mKeyMap.end())
 	{
 		throw Exception("Duplicate resource: '" + res->GetID() + "'");

@@ -6,14 +6,12 @@ cmake_minimum_required(VERSION 2.8)
 
 set (SOURCES MZCamera.cc
              MZEngine.cc
-             MZEntity.cc
 			 MZException.cc
 			 MZBound.cc
 			 MZGL.c
 			 MZLight.cc
 			 MZLog.cc
 			 MZMain.cc
-			 MZMaterial.cc
 			 MZMath.cc
 			 MZModel.cc
 			 MZObject.cc
@@ -24,6 +22,7 @@ set (SOURCES MZCamera.cc
 			 MZResource.cc
 			 MZRsmngr.cc
 			 MZScene.cc
+             MZScript.cc
 			 MZTexture.cc
 			 MZThread.cc
 			 MZWorld.cc)
@@ -37,7 +36,6 @@ set (HEADERS MZAtomic.h
 			 MZGL.h
 			 MZLight.h
 			 MZLog.h
-			 MZMaterial.h
 			 MZMath.h
 			 MZModel.h
 			 MZObject.h
@@ -49,13 +47,14 @@ set (HEADERS MZAtomic.h
 			 MZResource.h
 			 MZRsmngr.h
 			 MZScene.h
+             MZScript.h
 			 MZSingleton.h
 			 MZString.h
 			 MZTexture.h
 			 MZThread.h
 			 MZWorld.h)
 
-set (LIBS libjpeg opengl32)
+set (LIBS libjpeg opengl32 lua52)
 set (LIBS_RELASE libpng15_static zlibstatic)
 set (LIBS_DEBUG	libpng15_staticd zlibstaticd)
 

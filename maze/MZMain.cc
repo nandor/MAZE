@@ -34,12 +34,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 				engine = NULL;
 			}
 		
-			Log::Inst() << "Exception: " << e.what();
+			MessageBox(NULL, e.what(), "Unhandled exception", MB_ICONERROR);
 			return -1;
 		}
 		catch (std::exception& e)
 		{
-			Log::Inst() << "Exception: " << e.what();
+			MessageBox(NULL, e.what(), "Unhandled exception", MB_ICONERROR);
 			return -1;
 		}
 	}

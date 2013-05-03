@@ -105,6 +105,8 @@ void BoundingBox::Compute() const
 	mCorners[FAR_BOTTOM_RIGHT]	= glm::vec3(mMax.x, mMin.y, mMax.z);
 	mCorners[FAR_TOP_LEFT]		= glm::vec3(mMin.x, mMax.y, mMax.z);
 	mCorners[FAR_TOP_RIGHT]		= glm::vec3(mMax.x, mMax.y, mMax.z);
+
+	mDirty = false;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -262,6 +264,8 @@ void ViewFrustum::Compute() const
 		mPlanes[RIGHT]	= glm::vec4( x, -glm::dot( x, mCorners[NEAR_BOTTOM_RIGHT]));
 		mPlanes[LEFT]	= glm::vec4(-x, -glm::dot(-x, mCorners[NEAR_BOTTOM_LEFT] ));
 	}
+
+	mDirty = false;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -431,4 +435,26 @@ Intersection ViewFrustum::Intersect(const BoundingBox& f) const
 Intersection ViewFrustum::Intersect(const BoundingSphere& f) const
 {
 	return INSIDE;
+}
+
+// ------------------------------------------------------------------------------------------------
+glm::mat4 ViewFrustum::GetProjection() const
+{
+	if (mDirty)
+	{
+		Compute();
+	}
+
+	return mProjection;
+}
+
+// ------------------------------------------------------------------------------------------------
+glm::mat4 ViewFrustum::GetView() const
+{
+	if (mDirty)
+	{
+		Compute();
+	}
+
+	return mView;
 }

@@ -11,7 +11,7 @@
 
 namespace MAZE
 {
-	struct LightRenderData;
+	class LightRenderData;
 
 	/**
 		Base class for lights
@@ -36,30 +36,23 @@ namespace MAZE
 			Creates a new light
 			@param type Type of the light
 		*/
-		Light(Type type) 
+		Light() 
 			: Entity(LIGHT), 
-			  mType(type),
+			  mType(Light::POINT),
 			  mDiffuse(1.0f, 1.0f, 1.0f),
 			  mSpecular(1.0f, 1.0f, 1.0f),
 			  mAmbient(0.2f, 0.2f, 0.2f),
 			  mPosition(0.0f),
 			  mDirection(0.0f, -1.0f, 0.0f),
 			  mRadius(1.0f),
-			  mAngle(PIOVER4)
+			  mAngle(PIOVER4),
+			  mShadowCaster(false)
 		{
 			mCollider = false;
 		}
-
-		/**
-			Destroys the light
-		*/
-		virtual ~Light()
-		{
-		}
-
+		
 		/**
 			Sets the diffuse color of the light
-			@param diffuse Diffuse color
 		*/
 		void SetDiffuse(const glm::vec3& diffuse)
 		{
@@ -68,7 +61,6 @@ namespace MAZE
 
 		/**
 			Sets the specular color of the light
-			@param specular Specular color
 		*/
 		void SetSpecular(const glm::vec3& specular)
 		{
@@ -76,62 +68,91 @@ namespace MAZE
 		}
 
 		/**
+			Sets the ambient color of the light
+		*/
+		void SetAmbient(const glm::vec3& ambient)
+		{
+			mAmbient = ambient;
+		}
+
+		/**
+			Sets the type of light
+		*/
+		void SetType(Type type)
+		{
+			mType = type;
+			InternalUpdate();
+		}
+
+		/**
 			Sets the position of the light
-			@param diffuse Diffuse color
 		*/
 		void SetPosition(const glm::vec3& position)
 		{
 			mPosition = position;
-			mDirty = true;
+			InternalUpdate();
 		}
 
 		/**
 			Sets the radius of the light
-			@param radius Light radius
 		*/
 		void SetRadius(float radius)
 		{
 			mRadius = radius;
-			mDirty = true;
+			InternalUpdate();
 		}
 
 		/**
 			Sets the direction of the spotlight
-			@param direction Direction of the spotlight
 		*/
 		void SetDirection(const glm::vec3& direction)
 		{
 			mDirection = glm::normalize(direction);
-			mDirty = true;
 		}
 		
 		/**
 			Sets the angle of the spotlight
-			@param angle Angle of the spotlight
 		*/
 		void SetAngle(float angle)
 		{
 			mAngle = angle;
-			mDirty = true;
 		}
 
 		/**
-			Copies light data to the renderbuffer
-			@param buffer Target renderbuffer
+			Allow the light to cast shadows
 		*/
-		void Prepare(LightRenderData* buffer);
-		
+		void SetShadowCaster(bool flag)
+		{
+			mShadowCaster = flag;
+		}
+
 		/**
 			Computes the bounding volumes
 		*/
 		BoundingBox GetBoundingBox() const;
 
 		/**
-			Updates the objects (removes dirty flag)
+			Places the entity in the renderbuffer
 		*/
-		void Update();
+		void Render(RenderBuffer* buffer, RenderMode mode);
+		
+		/**
+			Nothing to update here...
+			@param time Total game time
+			@param dt	Time difference
+		*/
+		void Update(float time, float dt)
+		{
+		}
+		
+	private:
+
+		void InternalUpdate();
 
 	private:
+
+		/// View frustum split intervals
+		static const float CASCADE_SPLIT[5];
 
 		/// Type of the light
 		Type mType;
@@ -156,6 +177,9 @@ namespace MAZE
 
 		/// Angle of the light (in radians)
 		float mAngle;
+
+		/// Shadow flag
+		bool mShadowCaster;
 	};
 };
 

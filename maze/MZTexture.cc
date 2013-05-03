@@ -206,6 +206,8 @@ void Texture::Image::LoadPNG()
 
 	// Allocate memory for the image
 	rowBytes = ::png_get_rowbytes(pngPtr, infoPtr);
+	rowBytes += 3 - ((rowBytes - 1) % 4);
+
 	rows = new png_bytep[Height];
 	Data = new unsigned char[rowBytes * Height];
 

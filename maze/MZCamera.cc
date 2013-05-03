@@ -10,13 +10,13 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-Camera::Camera(Engine *engine)
-	: mEngine(engine),
-	  mPosition(glm::vec3(0.0, 5.0, 0.0)),
+Camera::Camera()
+	: mPosition(glm::vec3(0.0, 5.0, 0.0)),
 	  mDirection(glm::vec3(0.0, 0.0, -1.0)),
 	  mUp(glm::vec3(0.0, 1.0, 0.0)),
 	  mNearPlane(0.4f),
-	  mFarPlane(150.0f),
+	  mFarPlane(100.0f),
+	  mFocus(10.0f),
 	  mFOV(45.0f),
 	  mAspect(800.0f / 600.0f),
 	  mDirty(true)
@@ -29,7 +29,7 @@ Camera::~Camera()
 }
 
 // ------------------------------------------------------------------------------------------------
-void Camera::Prepare(RenderBuffer* buf)
+void Camera::Render(RenderBuffer* buf)
 {
 	buf->Camera.ProjMatrix = glm::perspective(mFOV, mAspect, mNearPlane, mFarPlane);
 	buf->Camera.ViewMatrix = glm::lookAt(mPosition, mPosition + mDirection, mUp);
@@ -37,6 +37,7 @@ void Camera::Prepare(RenderBuffer* buf)
 	buf->Camera.Position = mPosition;
 	buf->Camera.NearPlane = mNearPlane;
 	buf->Camera.FarPlane = mFarPlane;
+	buf->Camera.Focus = mFocus;
 }
 
 // ------------------------------------------------------------------------------------------------

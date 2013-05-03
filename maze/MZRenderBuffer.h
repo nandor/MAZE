@@ -16,8 +16,10 @@ namespace MAZE
 	/**
 		Camera render data
 	*/
-	struct CameraRenderData
+	class CameraRenderData
 	{
+	public:
+
 		/// Projection matrix
 		glm::mat4 ProjMatrix;
 
@@ -38,13 +40,24 @@ namespace MAZE
 
 		/// Far plane
 		float FarPlane;
+
+		/// Focal distance
+		float Focus;
 	};
 
 	/**
 		Object render data
 	*/
-	struct ObjectRenderData
+	class ObjectRenderData
 	{
+	public:
+
+		ObjectRenderData() : Rendered(false)
+		{
+		}
+
+	public:
+
 		/// Local matrix of the object
 		glm::mat4 ModelMatrix;
 
@@ -54,15 +67,29 @@ namespace MAZE
 		/// Texture matrix
 		glm::mat2 TextureMatrix;
 
+		/// Position of the object
+		glm::vec3 Position;
+
 		/// Reference to the model
 		Resource::Ptr<Model> Model;
+
+		/// Depth of the object
+		float Z;
+
+		/// Render flag
+		bool Rendered;
+
+		/// ID of the entity
+		unsigned Handle;
 	};
 
 	/**
 		Ligth render data
 	*/
-	struct LightRenderData
+	class LightRenderData
 	{
+	public:
+
 		/// Type of the light
 		size_t Type;
 
@@ -86,6 +113,9 @@ namespace MAZE
 
 		/// Inverse model matrix
 		glm::mat4 NormalMatrix;
+
+		/// True if the light casts shadows
+		bool CastsShadows;
 
 		/// List of shadow maps
 		struct
@@ -128,6 +158,16 @@ namespace MAZE
         */
         void Clear();
 
+		/**
+			Creates a new light
+		*/
+		LightRenderData* AddLight();
+
+		/**
+			Sorts objects front to back
+		*/
+		void Sort(const glm::mat4 view);
+
     public:
 
 		/// Camera
@@ -148,11 +188,11 @@ namespace MAZE
         /// Texture of the skybox
         Resource::Ptr<Texture> SkyTexture;
 
-        /// Ground texture
-        Resource::Ptr<Texture> GroundTexture;
-
         /// Ready state
         bool Ready;
+
+		/// View volume
+		ViewFrustum ViewVolume;
     };         
 };
 

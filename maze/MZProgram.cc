@@ -92,12 +92,13 @@ void Program::Compile(Program::ShaderType type, const std::string& fn)
 // ------------------------------------------------------------------------------------------------
 void Program::Link()
 {
-	MGLint status, uniformCount, maxLen;
-	MGLint length;
+	MGLint length, status;
 	std::string log;
 
 	if (!mProgram)
+	{
 		throw Exception("No shaders attached to program");
+	}
 
 	mglLinkProgram(mProgram);
 	mglGetProgramiv(mProgram, MGL_LINK_STATUS, &status);
@@ -107,20 +108,31 @@ void Program::Link()
 	mglGetProgramInfoLog(mProgram, length, NULL, &log[0]);
 			
 	if (status != MGL_TRUE)
-		throw Exception("Shader linking failed: " + log);
+	{
+		throw Exception("Shader linking failed '" + mID + "': " + log);
+	}
 
-	mglGetProgramiv(mProgram, MGL_ACTIVE_UNIFORMS, &uniformCount);
-	mglGetProgramiv(mProgram, MGL_ACTIVE_UNIFORM_MAX_LENGTH, &maxLen);
+	GetUniforms();
+	GetAttributes();
+}
+
+// ------------------------------------------------------------------------------------------------
+void Program::GetUniforms()
+{
+	MGLint count = 0, length = 0;
+
+	mglGetProgramiv(mProgram, MGL_ACTIVE_UNIFORMS, &count);
+	mglGetProgramiv(mProgram, MGL_ACTIVE_UNIFORM_MAX_LENGTH, &length);
 	
-	for (MGLint i = 0; i < uniformCount; ++i)
+	for (MGLint i = 0; i < count; ++i)
 	{
 		UniformData uniform;
 
-		uniform.Name.resize(maxLen + 1);
+		uniform.Name.resize(length + 1);
 		mglGetActiveUniform(
 			mProgram, 
 			i, 
-			maxLen, 
+			length, 
 			NULL, 
 			&uniform.Size, 
 			&uniform.Type,
@@ -136,6 +148,50 @@ void Program::Link()
 
 		mUniforms.insert(std::make_pair(uniform.Name, uniform));
 	}
+}
+
+// ------------------------------------------------------------------------------------------------
+void Program::GetAttributes()
+{
+	MGLint count = 0, length = 0, loc = 0, size;
+	MGLenum type;
+	std::string name;
+
+	mglGetProgramiv(mProgram, MGL_ACTIVE_ATTRIBUTES, &count);
+	mglGetProgramiv(mProgram, MGL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &length);
+	
+	for (MGLint i = 0; i < count; ++i)
+	{
+		name.clear();
+		name.resize(length + 1);
+
+		mglGetActiveAttrib(mProgram, i, length, NULL, &size, &type, &name[0]);
+		
+		if (name.size() > 1)
+		{
+			while (*name.rbegin() == '\0')
+			{
+				name.pop_back();
+			}
+
+			loc = mglGetAttribLocation(mProgram, name.c_str());
+
+			mAttributes.insert(std::make_pair(name, loc));
+		}
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+MGLuint Program::Attribute(const std::string& name)
+{
+	AttribIter it;
+
+	if ((it = mAttributes.find(name)) == mAttributes.end())
+	{
+		return -1;
+	}
+
+	return it->second;
 }
 
 // ------------------------------------------------------------------------------------------------

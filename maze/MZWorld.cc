@@ -12,64 +12,81 @@
 #include "MZLight.h"
 #include "MZCamera.h"
 #include "MZObject.h"
+#include "MZScript.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 World::World(Engine* engine)
 	: mEngine(engine),
-	  mCamera(new Camera(engine)),
-	  mRotX(0.0f),
-	  mRotY(0.0f),
-	  mVelocity(0.0f, 0.0f, 0.0f),
-	  mScene(new Scene(100.0f, 100.0f, 100.0f))
+	  mScene(NULL),
+	  mPlayer(NULL),
+	  mScript(new Script(engine))
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 World::~World()
 {
+	if (mScript != NULL) { delete mScript; mScript = NULL; }
+	if (mScene != NULL)  { delete mScene;  mScene = NULL; }
 }
 
 // ------------------------------------------------------------------------------------------------
 void World::Init()
 {
-	mSize = glm::vec3(100.0f, 100.0f, 100.0f);
-	mAmbient = glm::vec3(0.1f, 0.1f, 0.1f);
-	mCamera->SetPosition(glm::vec3(7.0f, 2.0f, 7.0f));
-	mCamera->SetTarget(glm::vec3(0.0, 0.0, 2.0));
-
 	mSkyTexture = mEngine->GetResourceManager()->Get<Texture> ("sky");
-	mGroundTexture = mEngine->GetResourceManager()->Get<Texture> ("grass");
 	
-	for (size_t i = 0; i < 10; ++i)
-	{		
-		Light* light = mScene->CreateLight(Light::POINT);
-		light->SetPosition(glm::vec3(rand() % 100, 1.0f, rand() % 100));
-		light->SetDiffuse(glm::vec3(rand() % 10 / 10.0f, rand() % 10 / 10.0f, rand() % 10 / 10.0f));
-		light->SetRadius(10.0f + rand() % 100 / 10.0f);
-		light->SetSpecular(glm::vec3(2.0f, 2.0f, 2.0f));
-	}
-	
-	for (size_t i = 0; i < 100; ++i)
+	mSize = glm::vec3(100.0f, 100.0f, 100.0f);
+	mScene = new Scene(mEngine, mSize);
+
+	mScript->Include("core.lua");
+	mScript->Include("maze.lua");
+	mScript->Execute("on_world_init");
+
+	mPlayer = mScene->Create<Player> ();
+	mPlayer->SetPosition(glm::vec3(10.0f, 3.0f, 10.0f));
+
+	mMoon = mScene->Create<Light>();
+	mMoon->SetType(Light::DIRECTIONAL);
+	mMoon->SetDiffuse(glm::vec3(0.1f, 0.1f, 0.6f));
+	mMoon->SetSpecular(glm::vec3(0.2f, 0.2f, 1.0f));
+	mMoon->SetAmbient(glm::vec3(0.05f, 0.05f, 0.05f));
+	mMoon->SetDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
+	mMoon->SetShadowCaster(true);
+
+	mSun = mScene->Create<Light>();
+	mSun->SetType(Light::DIRECTIONAL);
+	mSun->SetDiffuse(glm::vec3(1.0f, 1.0f, 0.5f));
+	mSun->SetSpecular(glm::vec3(1.0f, 1.0f, 1.0f));
+	mSun->SetAmbient(glm::vec3(0.1f, 0.1f, 0.1f));
+	mSun->SetDirection(glm::vec3(1.0f, -1.0f, -1.0f));
+	mSun->SetShadowCaster(true);
+	mSun->SetActive(false);
+
+	for (size_t i = 0; i < 50; ++i)
 	{
-		Object* obj = mScene->CreateObject();
-		obj->SetModel(mEngine->GetResourceManager()->Get<Model> ("hedge"));
-		obj->SetPosition(glm::vec3(rand() % 100, 0.0f, rand() % 100));
-		obj->SetRotation((float)(rand() % 100), 1.0f, (float)(rand() % 100));
-		obj->SetShadowCaster(true);
-		obj->SetBoundingBox(BoundingBox(glm::vec3(-1.0f, 0.0f, -0.5f), glm::vec3(2.0f, 1.7f, 1.0f)));
+		Light* obj = mScene->Create<Light>();
+		obj->SetType(Light::POINT);
+		obj->SetPosition(glm::vec3(rand() % 100, 1.0f, rand() % 100));
+		obj->SetDiffuse(glm::vec3(rand() % 100 / 100.0f, rand() % 100 / 100.0f, rand() % 100 / 100.0f));
+		obj->SetRadius(rand() % 100 / 10.0f);
+		obj->SetShadowCaster(false);
 	}
 
-	Light* l2 = mScene->CreateLight(Light::DIRECTIONAL);
-	l2->SetDiffuse(glm::vec3(1.0f, 1.0f, 1.0f));
-	l2->SetSpecular(glm::vec3(2.0f, 2.0f, 2.0f));
-	l2->SetDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
+	for (size_t i = 0; i < 500; ++i)
+	{
+		Object* obj = mScene->Create<Object>();
+		obj->SetModel(mEngine->GetResourceManager()->Get<Model> ("pillar"));
+		obj->SetPosition(glm::vec3(rand() % 100, 0.0f, rand() % 100));
+		obj->SetBoundingBox(BoundingBox(glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 4.0, 2.0f)));
+	}
 
-	Model::CreatePlane(mEngine->GetResourceManager(), "base_plane", 100.0f, 100.0f, 1.0f, 1.0f);
-	Object *obj = mScene->CreateObject();
-	obj->SetModel(mEngine->GetResourceManager()->Get<Model> ("base_plane"));
-	obj->SetPosition(glm::vec3(50.0f, 0.0f, 50.0f));
-	obj->SetBoundingBox(BoundingBox(
+	Model::CreatePlane(mEngine->GetResourceManager(), "floor", "floor_diffuse", "floor_bump", glm::vec2(100.0f), glm::vec2(1.5f));
+
+	Object* floor = mScene->Create<Object>();
+	floor->SetModel(mEngine->GetResourceManager()->Get<Model> ("floor"));
+	floor->SetPosition(glm::vec3(50.0f, 0.0f, 50.0f));
+	floor->SetBoundingBox(BoundingBox(
 		glm::vec3(-50.0f, 0.0f, -50.0f), 
 		glm::vec3(100.0f, 0.0f, 100.0f)
 	));
@@ -83,127 +100,47 @@ void World::Generate()
 // ------------------------------------------------------------------------------------------------
 void World::Update(float time, float dt)
 {
-	mTime = time;
-	mTimeDiff = dt;
-
 	if (mEngine->IsKeyDown(Engine::KEY_ESC))
 	{
 		mEngine->Quit();
 	}
 	
-	mScene->Update();
-	UpdateCamera();
+	mPlayer->Update(time, dt);
+	
+	float phi = 0.3f;
+	float sunTheta = time / 20000.0f;
+	float moonTheta = sunTheta + PI;
+	/*
+	glm::vec3 sunDir, moonDir;
+	
+	sunDir.x = -cos(sunTheta) * cos(phi);
+	sunDir.y = -sin(sunTheta);
+	sunDir.z = -cos(sunTheta) * sin(phi);
+	
+	moonDir.x = -cos(moonTheta) * cos(phi);
+	moonDir.y = -sin(moonTheta);
+	moonDir.z = -cos(moonTheta) * sin(phi);
+
+	mSun->SetDirection(sunDir);
+	mSun->SetActive(sunDir.y < 0.0f);
+
+	mMoon->SetDirection(moonDir);
+	mMoon->SetActive(moonDir.y < 0.0f);*/
 }
+
 
 // ------------------------------------------------------------------------------------------------
 void World::Render(RenderBuffer* buffer)
 {
-	ViewFrustum& view = mCamera->GetVolume();
-
-	buffer->GroundTexture = mGroundTexture;
-	buffer->SkyTexture = mSkyTexture;
+	// Global data
 	buffer->WorldSize = mSize;
+	buffer->SkyTexture = mSkyTexture;
+	buffer->ViewVolume = mPlayer->GetCamera()->GetVolume();
 	
-	mCamera->Prepare(buffer);	
-	mScene->QueryScene(view, buffer);
-	
-	for (size_t i = 0; i < buffer->Lights.size(); ++i)
-	{
-		LightRenderData& light = buffer->Lights[i];
-		if (light.Type != Light::DIRECTIONAL)
-		{
-			continue;
-		}
+	// Prepare the player
+	mPlayer->Render(buffer, Entity::RENDER_GBUFFER);
+	mPlayer->GetCamera()->Render(buffer);
 
-		float n = view.GetNearPlane(), f = view.GetFarPlane();
-		float p[] = {0.0f, 0.06f, 0.15f, 0.4f, 1.0f};  
-		for (size_t j = 0; j < 4; ++j)
-		{
-			ViewFrustum lightvol;
-
-			float begin = n + (f - n) * p[j];
-			float end = n + (f - n) * p[j + 1];
-			
-			lightvol = view.Slice(begin, end).GetLightVolume(glm::vec3(light.Direction));
-			light.Shadow[j].MVP = lightvol.GetProjection() * lightvol.GetView();
-			light.Shadow[j].NearZ = begin;	
-
-			light.Shadow[j].Index = buffer->ShadowCasters.size();			
-			mScene->QueryShadows(lightvol, buffer);
-			light.Shadow[j].Count = buffer->ShadowCasters.size() - light.Shadow[j].Index;
-		}
-	}
-}
-
-// ------------------------------------------------------------------------------------------------
-void World::UpdateCamera()
-{
-	int width = mEngine->GetConfig().WindowWidth;
-	int height = mEngine->GetConfig().WindowHeight;
-	glm::ivec2& pos = mEngine->GetMousePos();
-	glm::vec3 dir(0.0f, 0.0f, 0.0f);
-	
-	mRotY += (width / 2 - pos.x) / 100.0f;
-	mRotX += (height / 2 - pos.y) / 100.0f;
-
-	mRotX = std::min(std::max(mRotX, -PIOVER2 + 0.1f), PIOVER2 - 0.1f);
-
-	mCamera->SetDirection(glm::vec3(
-		sin(mRotY) * cos(mRotX),
-		sin(mRotX),
-		cos(mRotY) * cos(mRotX)
-	));
-
-	if (mEngine->IsKeyDown(Engine::KEY_W))
-	{
-		dir.x += sin(mRotY) * cos(mRotX);
-		dir.z += cos(mRotY) * cos(mRotX);
-	}
-
-	if (mEngine->IsKeyDown(Engine::KEY_S))
-	{
-		dir.x -= sin(mRotY) * cos(mRotX);
-		dir.z -= cos(mRotY) * cos(mRotX);
-	}
-
-	if (mEngine->IsKeyDown(Engine::KEY_A))
-	{
-		dir.x += sin(mRotY + PIOVER2) * cos(mRotX);
-		dir.z += cos(mRotY + PIOVER2) * cos(mRotX);
-	}
-
-	if (mEngine->IsKeyDown(Engine::KEY_D))
-	{
-		dir.x += sin(mRotY - PIOVER2) * cos(mRotX);
-		dir.z += cos(mRotY - PIOVER2) * cos(mRotX);
-	}
-
-	if (glm::length(dir) > 0.0f)
-	{
-		dir = glm::normalize(dir) * 0.0075f * mTimeDiff;
-	}
-
-	mVelocity.x = dir.x;
-	mVelocity.z = dir.z;
-	
-	if (mEngine->IsKeyDown(Engine::KEY_SPACE) && mVelocity.y == 0.0f)
-	{
-		mVelocity.y += 0.03f;
-	}
-
-	mVelocity.y -= 0.0001f * mTimeDiff;
-
-	BoundingBox player;
-	
-	player.SetSize(1.0f, 3.0f, 1.0f);
-	player.SetPosition(mCamera->GetPosition() - glm::vec3(0.5f, 1.5f, 0.5f));
-		
-	glm::vec3 vel = mScene->QueryDistance(player, mVelocity);
-	mCamera->SetPosition(mCamera->GetPosition() + vel);
-
-	mVelocity.x = (abs(vel.x) < abs(mVelocity.x)) ? 0.0f : mVelocity.x;
-	mVelocity.y = (abs(vel.y) < abs(mVelocity.y)) ? 0.0f : mVelocity.y;
-	mVelocity.z = (abs(vel.z) < abs(mVelocity.z)) ? 0.0f : mVelocity.z;
-
-	::SetCursorPos(width >> 1, height >> 1);
+	// All visible objects
+	mScene->QueryScene(buffer->ViewVolume, buffer);
 }

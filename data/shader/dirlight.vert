@@ -4,10 +4,10 @@
 
 #version 120
 
-varying vec2 vTexCoord;
+varying vec2 vUV;
 
 void main()
 {
     gl_Position = vec4(gl_Vertex.xy, 1.0, 1.0);
-    vTexCoord = gl_Vertex.xy / 2.0 + vec2(0.5);
+    vUV = gl_Vertex.xy / 2.0 + vec2(0.5);
 }

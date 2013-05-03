@@ -63,7 +63,7 @@ namespace MAZE
 
 			/// glsl program
 			PROGRAM,
-
+			
 			/// Custom resource
 			CUSTOM
 		};
@@ -162,6 +162,18 @@ namespace MAZE
 			operator T* ()
 			{
 				return (T*)mResource;
+			}
+
+			/**	
+				Releases the resource
+			*/
+			void Free()
+			{
+				if (mResource)
+				{
+					mResource->DecRefCount();
+					mResource = NULL;
+				}
 			}
 
 		private:

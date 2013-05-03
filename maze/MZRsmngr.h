@@ -85,9 +85,9 @@ namespace MAZE
 				throw Exception("Resource not found: '" + id + "'");
 			}
 			
-			if (it->second->GetType() != T::TEXTURE)
+			if (it->second->GetType() != T::Type)
 			{
-				throw Exception("Resource is not a texture: '" + id + "'");
+				throw Exception("Invalid resource type: '" + id + "'");
 			}
 
 			return Resource::Ptr<T>((T*)it->second);	

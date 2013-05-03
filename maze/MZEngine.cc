@@ -112,11 +112,11 @@ void Engine::Init()
 // ------------------------------------------------------------------------------------------------
 void Engine::LoadConfig(const std::string& cfg)
 {
-	mConfig.WindowWidth = 800;
-	mConfig.WindowHeight = 600;
+	mConfig.WindowWidth = 1024;
+	mConfig.WindowHeight = 576;
 	mConfig.FullScreen = false;
 	mConfig.WindowTitle = "MAZE";
-	mConfig.ResourceDir = ".\\data";
+	mConfig.ResourceDir = "./data";
 	mConfig.Anisotropy = 16.0f;
 	mConfig.TextureFilter = 2;
 }
@@ -233,6 +233,12 @@ void Engine::Quit()
 }
 
 // ------------------------------------------------------------------------------------------------
+void Engine::SetMousePos(const glm::ivec2& pos)
+{
+	::SetCursorPos(pos.x, pos.y);
+}
+
+// ------------------------------------------------------------------------------------------------
 void Engine::MainLoop()
 {
 	::ShowWindow(mWindow, SW_SHOW);
@@ -285,8 +291,11 @@ void Engine::MainLoop()
 		mMouse.x = p.x;
 		mMouse.y = p.y;
 
+		// Compute frame time
+		mTimeDelta = mLastFrameTime > 0 ? frameBeg - mLastFrameTime : 0.0f;
+
 		// Update the scene
-		mWorld->Update(frameBeg, mLastFrameTime > 0 ? frameBeg - mLastFrameTime : 0.0f);		
+		mWorld->Update(mLastFrameTime, mTimeDelta);		
 		mWorld->Render(mRenderer->GetBuffer());
 		
 		// Prevent CPU from burning

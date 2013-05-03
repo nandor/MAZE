@@ -7,7 +7,6 @@
 uniform mat4 uMVP;
 
 void main()
-{
-    
+{    
     gl_Position = uMVP * gl_Vertex;
 }

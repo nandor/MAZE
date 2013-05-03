@@ -8,6 +8,7 @@
 
 #include "MZMath.h"
 #include "MZBound.h"
+#include "MZRenderBuffer.h"
 
 namespace MAZE
 {
@@ -33,7 +34,26 @@ namespace MAZE
 			BILLBOARD,
 
 			/// Particle engine
-			PARTICLE
+			PARTICLE,
+
+			/// It's complicated
+			PLAYER,
+
+			/// Draw debug data
+			DEBUG
+		};
+
+		/**
+			Render modes
+		*/
+		enum RenderMode
+		{
+			/// The entity is rendered into the GBuffer
+			RENDER_GBUFFER,
+
+			/// The entity is rendered into a shadow map
+			RENDER_SHADOW
+
 		};
 
 	public:
@@ -42,9 +62,10 @@ namespace MAZE
 			Creates a new entity
 		*/
 		Entity(Type type)
-			: mDirty(true),
-			  mType(type),
-			  mParentNode(NULL)
+			: mType(type),
+			  mActive(true),
+			  fScene(NULL),
+			  fParentNode(NULL)
 		{
 		}
 
@@ -70,15 +91,7 @@ namespace MAZE
 		{
 			return mRenderable;
 		}
-
-		/**	
-			Checks if the node is dirty
-		*/
-		bool IsDirty() const
-		{
-			return mDirty;
-		}
-
+		
 		/**
 			Returns true if the entity casts shadows
 		*/
@@ -86,7 +99,23 @@ namespace MAZE
 		{
 			return mShadowCaster;
 		}
-				
+
+		/**
+			Checks if the entity is active or not
+		*/
+		bool IsActive() const
+		{
+			return mActive;
+		}
+		
+		/**
+			Activates the entity
+		*/
+		void SetActive(bool flag)
+		{
+			mActive = flag;
+		}
+
 		/**
 			Returns the type of the entity
 		*/
@@ -100,13 +129,28 @@ namespace MAZE
 		*/
 		BoundingBox GetBoundingBox() const
 		{
-			return mBox;
+			return fBox;
 		}
 
 		/**
-			Updates the entity
+			Prevents the entity from colliding
 		*/
-		virtual void Update() = 0;
+		void SetCollision(bool flag)
+		{
+			mCollider = flag;
+		}
+
+		/**
+			Updates the entity on each frame
+			@param time Total elapsed time
+			@param dt	Time since last updateo
+		*/
+		virtual void Update(float time, float dt) = 0;
+
+		/**
+			Places the entity in the renderbuffer
+		*/
+		virtual void Render(RenderBuffer* buffer, RenderMode mode) = 0;
 
 	protected:
 
@@ -118,18 +162,27 @@ namespace MAZE
 
 		/// True if the object casts shadows
 		bool mShadowCaster;
-
-		/// True if the entity needs to be updated
-		bool mDirty;
 				
+		/// True if the entity is active
+		bool mActive;
+
 		/// Type of the entity
 		Type mType;
 
+		/// Unique numeric handle
+		unsigned fHandle;
+
+		/// Parent scene manager
+		Scene *fScene;
+
+		/// Parent engine instance
+		Engine* fEngine;
+
 		/// Parent octree node
-		SceneNode* mParentNode;
+		SceneNode *fParentNode;
 
 		/// Bounding box
-		BoundingBox mBox;
+		BoundingBox fBox;
 
 		/// Scene is our friend
 		friend class Scene;

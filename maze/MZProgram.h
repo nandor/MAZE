@@ -68,6 +68,13 @@ namespace MAZE
 		void Uniform(const std::string& name, const float* val, int size);
 		void Uniform(const std::string& name, const glm::mat4* val, int size);
 
+		MGLuint Attribute(const std::string& name);
+
+	private:
+
+		void GetUniforms();
+		void GetAttributes();
+
 	private:
 		
 		struct UniformData
@@ -85,7 +92,11 @@ namespace MAZE
 			MGLint Loc;
 		};
 
+		/// Iterate over uniforms
 		typedef std::map<std::string, UniformData>::iterator UniformIter;
+		
+		/// Iterate over attributes
+		typedef std::map<std::string, MGLuint>::iterator AttribIter;
 
 	private:
 
@@ -97,6 +108,9 @@ namespace MAZE
 
 		/// List of active uniforms
 		std::map<std::string, UniformData> mUniforms;
+
+		/// List of active attributes
+		std::map<std::string, MGLuint> mAttributes;
 
 	};
 };

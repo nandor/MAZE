@@ -116,7 +116,7 @@ namespace MAZE
 		glm::vec3 mMax;
 		
 		/// Flag to indicate if internal data needs to be updated
-		bool mDirty;
+		mutable bool mDirty;
 
 		/// List of corner points
 		mutable glm::vec3 mCorners[8];
@@ -236,15 +236,8 @@ namespace MAZE
 			return mFarPlane;
 		}
 
-		glm::mat4 GetProjection()
-		{
-			return mProjection;
-		}
-
-		glm::mat4 GetView()
-		{
-			return mView;
-		}
+		glm::mat4 GetProjection() const;
+		glm::mat4 GetView() const;
 						
 		Intersection Intersect(const BoundingBox& target) const;
 		Intersection Intersect(const BoundingSphere& target) const;
@@ -270,7 +263,7 @@ namespace MAZE
 		float mHeight;
 		float mFOV;
 
-		bool mDirty;
+		mutable bool mDirty;
 		mutable glm::mat4 mProjection;
 		mutable glm::mat4 mView;
 		mutable glm::vec4 mPlanes[NUM_PLANES];

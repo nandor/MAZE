@@ -6,6 +6,7 @@
 #define RENDERER_H
 #pragma once
 
+#include <hash_map>
 #include "MZPlatform.h"
 #include "MZThread.h"
 #include "MZLight.h"
@@ -21,7 +22,7 @@ namespace MAZE
 		The renderer managers the rendering thread and the renderbuffers
 	*/
 	class Renderer : public Thread
-	{		
+	{	
 	public:
 
 		/**
@@ -95,8 +96,12 @@ namespace MAZE
 		
 	private:
 
+		// Number of instances in a batch
+		static const size_t INSTANCE_BATCH = 1024;
+
 		// List of shader programs
 		Program *mObjectProgram;
+		Program *mInstanceProgram;
 		Program *mSkyboxProgram;
 		Program *mDirlightProgram;
 		Program *mSpotlightProgram;
@@ -124,6 +129,10 @@ namespace MAZE
 		MGLuint mLightVBO;
 		MGLuint mSkyboxVBO;
 		MGLuint mQuadVBO;
+		
+		// Instancing
+		MGLuint mInstanceVBO;
+		glm::mat4 *mInstances;
 
 		// Configuration
 		int mWidth;

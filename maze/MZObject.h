@@ -13,7 +13,7 @@
 namespace MAZE
 {
 	/// Data passed to the renderer
-	struct ObjectRenderData;
+	class ObjectRenderData;
 
 	/**
 
@@ -46,7 +46,7 @@ namespace MAZE
 		void SetPosition(const glm::vec3& position)
 		{
 			mPosition = position;
-			mDirty = true;
+			InternalUpdate();
 		}
 
 		/**
@@ -55,7 +55,7 @@ namespace MAZE
 		void SetRotation(float x, float y, float z)
 		{
 			mRotation = glm::vec3(x, y, z);
-			mDirty = true;
+			InternalUpdate();
 		}
 		
 		/**
@@ -64,7 +64,7 @@ namespace MAZE
 		void SetBoundingBox(const BoundingBox& box)
 		{
 			mBoundingBox = box;
-			mDirty = true;
+			InternalUpdate();
 		}
 
 		/**
@@ -76,14 +76,23 @@ namespace MAZE
 		}
 
 		/**
-			Updates the object
+			Places the entity in the renderbuffer
 		*/
-		void Update();
+		void Render(RenderBuffer* buffer, RenderMode mode);
 
 		/**
-			Prepares the model for rendering
+			Updates the entity
 		*/
-		void Prepare(ObjectRenderData* data);
+		void Update(float time, float dt)
+		{
+		}
+
+	private:
+
+		/**
+			Updates the object
+		*/
+		void InternalUpdate();
 
 	private:
 

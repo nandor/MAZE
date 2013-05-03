@@ -16,7 +16,7 @@ using namespace MAZE;
 
 struct MZOHeader
 {
-	char Header[4];
+	unsigned char Header[4];
 
 	struct
 	{
@@ -26,36 +26,18 @@ struct MZOHeader
 		char Build;
 	} Version;
 	
-	unsigned short GroupCount;
-	unsigned short PolyCount;
-	unsigned short VertexCount;
-	unsigned short Pad;
+	unsigned short MeshVertices;
+	unsigned short CollisionFaces;
 
 	struct
 	{
-		float SphereRadius;
-		float BoxX;
-		float BoxY;
-		float BoxZ;
-		float BoxWidth;
-		float BoxHeight;
-		float BoxDepth;
-	} Collision;
-};
-
-struct MZOMesh
-{
-	unsigned VertexCount;
-
-	struct
-	{
-		float R;
-		float G;
-		float B;
-	} Diffuse;
-
-	float Specular;
-	char Texture[16];
+		float MinX;
+		float MinY;
+		float MinZ;
+		float MaxX;
+		float MaxY;
+		float MaxZ;
+	} Box;
 };
 
 #pragma pack(pop)
@@ -64,79 +46,72 @@ struct MZOMesh
 Model::Model(ResourceManager* rsmngr, const std::string& id, const std::string& fn)
 	: Resource(rsmngr, Resource::MODEL, id),
 	  mFile(fn),
-	  mVBO(0),
-	  mFromFile(true)
+	  mMeshVBO(0)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 Model::~Model()
 {
-	if (mVBO) 
-	{ 
-		mglDeleteBuffers(1, &mVBO); 
-		mVBO = 0; 
-	}
+	if (mMeshVBO)	   { mglDeleteBuffers(1, &mMeshVBO);	  mMeshVBO = 0;	    }
 }
 
 // ------------------------------------------------------------------------------------------------
 void Model::Load()
 {
 	MZOHeader header;
-	MZOMesh mesh;
 
-	if (mFromFile)
+	if (mFile != "")
 	{
 		std::ifstream fs(mFile.c_str(), std::ios::binary);
 
-		if (!fs.is_open())
-		{
-			throw Exception("Cannot open file: '" + mFile + "'");
-		}
-
-		if (!fs.read((char*)&header, sizeof(header)) ||
+		if (!fs.is_open() ||
+			!fs.read((char*)&header, sizeof(header)) || 
 			memcmp(header.Header, "MZO\0", 4))
 		{
-			throw Exception("Invalid header: '" + mFile + "'");
+			throw Exception("Invalid mzo: '" + mFile + "'");
 		}
-
-		mMeshes.resize(header.GroupCount);	
-		for (size_t i = 0, off = 0; i < header.GroupCount; ++i)
-		{
-			if (!fs.read((char*)&mesh, sizeof(mesh)))
-				throw Exception("Cannot read mesh #") << i << ": '" + mFile + "'";
-
-			mMeshes[i].Diffuse = glm::vec3(mesh.Diffuse.R, mesh.Diffuse.G, mesh.Diffuse.B);
-			mMeshes[i].VertexOffset = off;
-			mMeshes[i].VertexCount = mesh.VertexCount;
-
-			if (mesh.Texture[0] != '\0')
-				mMeshes[i].DiffuseMap = mRsmngr->Get<Texture>(mesh.Texture);
-
-			off += mesh.VertexCount;
-		}
-	
-		mVertexCount = header.VertexCount;
-		mVertices.resize(header.VertexCount);
-		if (!fs.read((char*)&mVertices[0], header.VertexCount * sizeof(Vertex)))
-			throw Exception("Cannot read vertex data");
 		
-		size_t bufferSize = mVertexCount * sizeof(Vertex);
+		mBoxMin.x = header.Box.MinX;
+		mBoxMin.y = header.Box.MinY;
+		mBoxMin.z = header.Box.MinZ;
+		
+		mBoxMax.x = header.Box.MaxX;
+		mBoxMax.y = header.Box.MaxY;
+		mBoxMax.z = header.Box.MaxZ;
+
+		mVertices.resize(header.MeshVertices);
+		mCollision.resize(header.CollisionFaces);
+		mVertexCount = mVertices.size();
+	
+		if (mVertices.size() > 0)
+		{
+			if (!fs.read((char*)&mVertices[0], mVertices.size() * sizeof(Vertex)))
+			{
+				throw Exception("Cannot read vertex data");
+			}
+		}
+
+		if (mCollision.size() > 0)
+		{
+			if (!fs.read((char*)&mCollision[0], mCollision.size() * sizeof(glm::vec3)))
+			{			
+				throw Exception("Cannot read collision data");
+			}
+		}
+
+		mDiffuseMap = mRsmngr->Get<Texture> (mID + "_diffuse");
+		mBumpMap = mRsmngr->Get<Texture> (mID + "_bump");
 	}
 
 	// Upload the model to the GPU
 	if (mVertices.size() > 0)
 	{
-		mglGenBuffers(1, &mVBO);
-
-		if (!mVBO)
-		{
-			throw Exception("Cannot create VBO");
-		}
-
-		mglBindBuffer(MGL_ARRAY_BUFFER, mVBO);
-		mglBufferData(MGL_ARRAY_BUFFER, mVertices.size() * sizeof(Vertex), &mVertices[0], MGL_STATIC_DRAW);
+		mglGenBuffers(1, &mMeshVBO);
+		mglBindBuffer(MGL_ARRAY_BUFFER, mMeshVBO);
+		mglBufferData(MGL_ARRAY_BUFFER, mVertices.size() * sizeof(mVertices[0]), &mVertices[0], MGL_STATIC_DRAW);
 		mglBindBuffer(MGL_ARRAY_BUFFER, 0);
+		mVertices.clear();
 
 		mglFinish();	
 	}
@@ -145,57 +120,73 @@ void Model::Load()
 // ------------------------------------------------------------------------------------------------
 void Model::Unload()
 {
-	mMeshes.clear();
-	mVertices.clear();
+	mDiffuseMap.Free();
+	mBumpMap.Free();
 
-	if (mVBO)
-	{
-		mglDeleteBuffers(1, &mVBO);
-		mVBO = 0;
-	}
+	mVertices.clear();
+	mCollision.clear();
+
+	if (mMeshVBO)	   { mglDeleteBuffers(1, &mMeshVBO);	  mMeshVBO = 0;	    }
 }
 
 
 // ------------------------------------------------------------------------------------------------
-void Model::CreatePlane(ResourceManager* rsmngr, const std::string& id, float w, float h, float cw, float ch)
+void Model::CreatePlane(ResourceManager* rsmngr, 
+						const std::string& id, 
+						const std::string& diffuse, 
+						const std::string& bump, 
+						const glm::vec2& size, 
+						const glm::vec2& cellSize)
 {
 	MGLuint vbo = 0;
 	Model* model;
 	
-	
 	model = new Model(rsmngr, id, "");
 
-	w = w / 2.0f;
-	h = h / 2.0f;
+	try
+	{
+		model->mDiffuseMap = rsmngr->Get<Texture> (diffuse);
+		model->mBumpMap = rsmngr->Get<Texture> (bump);		
+	} 
+	catch (std::exception&)
+	{
+		delete model;
+		throw;
+	}
+		
+	float w = size.x / 2.0f, h = size.y / 2.0f;
 
 	model->mVertices.resize(6);
-	model->mVertices[0].Position = glm::vec3(-w, 0.0f, -h);
-	model->mVertices[0].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
-	model->mVertices[0].UV		 = glm::vec2(0.0f, 0.0f);
-	model->mVertices[1].Position = glm::vec3(-w, 0.0f, h);	
-	model->mVertices[1].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
-	model->mVertices[1].UV		 = glm::vec2(0.0f, 2.0f * h / ch);
-	model->mVertices[2].Position = glm::vec3(w, 0.0f, h);
-	model->mVertices[2].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
-	model->mVertices[2].UV		 = glm::vec2(2.0f * w / cw, 2.0f * h / ch);
-	model->mVertices[3].Position = glm::vec3(-w, 0.0f, -h);
-	model->mVertices[3].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
-	model->mVertices[3].UV		 = glm::vec2(0.0f, 0.0f);
-	model->mVertices[4].Position = glm::vec3(w, 0.0f, h);
-	model->mVertices[4].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
-	model->mVertices[4].UV		 = glm::vec2(2.0f * w / cw, 2.0f * h / ch);
-	model->mVertices[5].Position = glm::vec3(w, 0.0f, -h);
-	model->mVertices[5].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
-	model->mVertices[5].UV		 = glm::vec2(2.0f * w / cw, 0.0f);
 	model->mVertexCount = 6;
 
-	model->mMeshes.resize(1);
-	model->mMeshes[0].Diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
-	model->mMeshes[0].DiffuseMap = rsmngr->Get<Texture> ("grass");
-	model->mMeshes[0].VertexOffset = 0;
-	model->mMeshes[0].VertexCount = 6;
+	model->mVertices[0].Position = glm::vec3(-w, 0.0f, -h);
+	model->mVertices[1].Position = glm::vec3(-w, 0.0f,  h);	
+	model->mVertices[2].Position = glm::vec3( w, 0.0f,  h);
+	model->mVertices[3].Position = glm::vec3(-w, 0.0f, -h);
+	model->mVertices[4].Position = glm::vec3( w, 0.0f,  h);
+	model->mVertices[5].Position = glm::vec3( w, 0.0f, -h);
 
-	model->mFromFile = false;
+	model->mVertices[0].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
+	model->mVertices[1].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
+	model->mVertices[2].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
+	model->mVertices[3].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
+	model->mVertices[4].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
+	model->mVertices[5].Normal	 = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	model->mVertices[0].UV		 = glm::vec2(0.0f,					0.0f				 );
+	model->mVertices[1].UV		 = glm::vec2(0.0f,					2.0f * h / cellSize.y);
+	model->mVertices[2].UV		 = glm::vec2(2.0f * w / cellSize.x, 2.0f * h / cellSize.y);
+	model->mVertices[3].UV		 = glm::vec2(0.0f,					0.0f				 );
+	model->mVertices[4].UV		 = glm::vec2(2.0f * w / cellSize.x, 2.0f * h / cellSize.y);
+	model->mVertices[5].UV		 = glm::vec2(2.0f * w / cellSize.x, 0.0f				 );
 	
+	model->mCollision.resize(6);
+	model->mCollision[0] = glm::vec3(-w, 0.0f, -h);
+	model->mCollision[1] = glm::vec3(-w, 0.0f,  h);	
+	model->mCollision[2] = glm::vec3( w, 0.0f,  h);
+	model->mCollision[3] = glm::vec3(-w, 0.0f, -h);
+	model->mCollision[4] = glm::vec3( w, 0.0f,  h);
+	model->mCollision[5] = glm::vec3( w, 0.0f, -h);
+
 	rsmngr->Add(model);
 }

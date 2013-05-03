@@ -141,12 +141,25 @@ namespace MAZE
 		}
 
 		/**
+			Returns time difference
+		*/
+		float GetTimeDelta()
+		{
+			return mTimeDelta;
+		}
+
+		/**
 			Returns the mouse position
 		*/
 		glm::ivec2& GetMousePos()
 		{
 			return mMouse;
 		}
+
+		/**
+			Sets the mouse position
+		*/
+		void SetMousePos(const glm::ivec2& pos);
 
 		/**
 			Check if a key was pressed
@@ -182,6 +195,9 @@ namespace MAZE
 
 		/// Last frame time
 		float mLastFrameTime;
+
+		/// Delta time
+		float mTimeDelta;
 
 		/// Mouse coordinates
 		glm::ivec2 mMouse;

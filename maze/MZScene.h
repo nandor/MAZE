@@ -15,9 +15,6 @@
 namespace MAZE
 {
 	class Entity;
-	class Light;
-	class Object;
-	class Camera;
 	class RenderBuffer;
 	
 	/**
@@ -76,27 +73,43 @@ namespace MAZE
 		/**
 			Initializes the tree
 		*/
-		Scene(float width, float height, float depth);
+		Scene(Engine* engine, float width, float height, float depth);
+
+		/**
+			Initializes the tree
+		*/
+		Scene(Engine* engine, const glm::vec3& size);
 
 		/**
 			Clears up every entity
 		*/
 		~Scene();
-		
-		/**
-			Creates a new light source
-		*/
-		Light* CreateLight(Light::Type type);
-
-		/**
-			Creates a new object
-		*/
-		Object* CreateObject();
-		
+				
 		/**
 			Updates all entities
 		*/
 		void Update();
+
+		/**
+			Creates a new entity
+		*/
+		template <class T>
+		T* Create()
+		{
+			T* entity;
+			unsigned id;
+
+			id = ++mEntityCount;
+
+			entity = new T();
+			entity->fScene = this;
+			entity->fEngine = mEngine;
+			entity->fHandle = id;
+
+			mEntities.insert(std::make_pair(id, entity));
+
+			return entity;
+		}
 
 		/**
 			Retrieves all visible entities
@@ -112,18 +125,27 @@ namespace MAZE
 			Retrieves maximum move distance
 		*/
 		glm::vec3 QueryDistance(const BoundingBox& box, const glm::vec3& dir);
+		
+		/**
+			Updates the position of an entity
+		*/
+		void UpdateEntity(Entity *ent)
+		{
+			RemoveEntity(ent);
+			AddEntity(ent);
+		}
 
 	private:
 
 		/**
 			Removes an entity from the tree
 		*/
-		void RemoveEntity(Entity* entity);	
+		void RemoveEntity(Entity *ent);	
 
 		/**
 			Adds an entity to the tree
 		*/
-		void AddEntity(Entity* entity);
+		void AddEntity(Entity *ent);
 		
 	private:
 
@@ -132,6 +154,9 @@ namespace MAZE
 
 		/// Looseness factor
 		const static float NODE_SCALE;
+
+		/// Parent engine
+		Engine *mEngine;
 
 		/// Root of the tree
 		SceneNode *mRoot;

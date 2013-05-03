@@ -22,7 +22,7 @@ namespace MAZE
 		/**
 			Creates a new camera
 		*/
-		Camera(Engine* engine);
+		Camera();
 
 		/**
 			Destroys the camera
@@ -60,6 +60,15 @@ namespace MAZE
 		}
 
 		/**
+			Changes the aspect ratio
+		*/
+		void SetAspect(float aspect)
+		{
+			mAspect = aspect;
+			mDirty = true;
+		}
+
+		/**
 			Returns the direction of the camera
 		*/
 		glm::vec3 GetDirection()
@@ -91,16 +100,13 @@ namespace MAZE
 		/**
 			Prepares render data
 		*/
-		void Prepare(RenderBuffer*);
+		void Render(RenderBuffer*);
 
 	private:
 
 		/// Change flag
 		bool mDirty;
 		
-		/// Engine
-		Engine* mEngine;
-
 		/// Position of the camera
 		glm::vec3 mPosition;
 
@@ -119,6 +125,9 @@ namespace MAZE
 		/// Far plane
 		float mFarPlane;
 
+		/// Focal point
+		float mFocus;
+		
 		/// Field of view
 		float mFOV;
 

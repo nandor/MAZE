@@ -12,9 +12,7 @@ extern "C"
 
 #include "MZPlatform.h"
 	
-// ------------------------------------------------------------------------------------------------
-// Types
-// ------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------ 
 typedef char			MGLchar;
 typedef unsigned int	MGLenum;
 typedef unsigned int	MGLbitfield;
@@ -34,52 +32,18 @@ typedef double			MGLclampd;
 typedef void			MGLvoid;
 typedef ptrdiff_t		MGLintptr;
 typedef ptrdiff_t		MGLsizeiptr;
-
-/**
-	Struct containing state information
-*/
-typedef struct
-{
-	/// List of OpenGL extensions
-	const char* ExtList;
 	
-	/// Major version
-	MGLint MajorVersion;
+// ------------------------------------------------------------------------------------------------ 
+#define MWGL_CONTEXT_MAJOR_VERSION				0x2091
+#define MWGL_CONTEXT_MINOR_VERSION				0x2092
+#define MWGL_CONTEXT_LAYER_PLANE				0x2093
+#define MWGL_CONTEXT_FLAGS						0x2094
+#define MWGL_CONTEXT_PROFILE_MASK				0x9126	
+#define MWGL_CONTEXT_DEBUG_BIT					0x0001
+#define MWGL_CONTEXT_FORWARD_COMPATIBLE_BIT		0x0002
+#define MWGL_CONTEXT_CORE_PROFILE_BIT			0x00000001
+#define MWGL_CONTEXT_COMPATIBILITY_PROFILE_BIT	0x00000002    
 
-	/// Minor version
-	MGLint MinorVersion;
-	
-	/// Max anisotropy leve
-	MGLfloat Anisotropy;
-
-	/// Number of stencil bits
-	MGLint StencilBits;
-
-	/// True if multisampling is enable
-	MGLboolean Multisample;
-
-} GLState;
-
-/**
-	OpenGL information
-*/
-extern GLState GL;
-
-/**
-	Initializes OpenGL extensions
-*/
-int mglInit();
-
-/**
-	Check if an OpenGL extension if supported
-	@param ext Name of the extension
-*/
-int mglIsSupported(const char* ext);
-
-
-// ------------------------------------------------------------------------------------------------
-// Constants
-// ------------------------------------------------------------------------------------------------
 #define MGL_FALSE								0x0000
 #define MGL_NO_ERROR							0x0000
 #define MGL_ZERO								0x0000
@@ -169,6 +133,8 @@ int mglIsSupported(const char* ext);
 #define MGL_DEPTH_COMPONENT24					0x81A6
 #define MGL_DEPTH_COMPONENT32					0x81A7
 #define MGL_DEPTH_STENCIL_ATTACHMENT			0x821A
+#define MGL_MAJOR_VERSION						0x821B
+#define MGL_MINOR_VERSION						0x821C
 #define MGL_R8									0x8229
 #define MGL_ACTIVE_PROGRAM						0x8259
 #define MGL_TEXTURE								0x84C0
@@ -192,6 +158,10 @@ int mglIsSupported(const char* ext);
 #define MGL_TEXTURE_COMPARE_MODE				0x884C
 #define MGL_TEXTURE_COMPARE_FUNC				0x884D
 #define MGL_COMPARE_R_TO_TEXTURE				0x884E
+#define MGL_QUERY_COUNTER_BITS					0x8864
+#define MGL_CURRENT_QUERY						0x8865
+#define MGL_QUERY_RESULT						0x8866
+#define MGL_QUERY_RESULT_AVAILABLE				0x8867
 #define MGL_READ_ONLY							0x88B8
 #define MGL_WRITE_ONLY							0x88B9
 #define MGL_READ_WRITE							0x88BA
@@ -238,7 +208,10 @@ int mglIsSupported(const char* ext);
 #define MGL_ATTACHED_SHADERS					0x8B85
 #define MGL_ACTIVE_UNIFORMS						0x8B86
 #define MGL_ACTIVE_UNIFORM_MAX_LENGTH			0x8B87
+#define MGL_ACTIVE_ATTRIBUTES					0x8B89
+#define MGL_ACTIVE_ATTRIBUTE_MAX_LENGTH			0x8B8A
 #define MGL_TEXTURE_2D_ARRAY					0x8C1A
+#define MGL_ANY_SAMPLES_PASSED					0x8C2F
 #define MGL_READ_FRAMEBUFFER					0x8CA8
 #define MGL_DRAW_FRAMEBUFFER					0x8CA9
 #define MGL_FRAMEBUFFER_COMPLETE				0x8CD5
@@ -249,13 +222,10 @@ int mglIsSupported(const char* ext);
 #define MGL_RENDERBUFFER						0x8D41
 #define NGL_TEXTURE_MAX_ANISOTROPY_EXT			0x84FE
 #define MGL_TEXTURE_2D_MULTISAMPLE				0x9100
-
 #define MGL_DEPTH_BUFFER_BIT					0x00000100
 #define MGL_STENCIL_BUFFER_BIT					0x00000400
 #define MGL_COLOR_BUFFER_BIT					0x00004000
 
-// ------------------------------------------------------------------------------------------------
-// Core functions
 // ------------------------------------------------------------------------------------------------  
 typedef MGLenum (APIENTRY *mglGetErrorProc) (void);
 typedef const MGLubyte* (APIENTRY *mglGetStringProc) (MGLenum name);
@@ -278,35 +248,10 @@ typedef void (APIENTRY *mglStencilFuncProc) (MGLenum, MGLint, MGLuint);
 typedef void (APIENTRY *mglStencilOpProc) (MGLenum, MGLenum, MGLenum);
 typedef void (APIENTRY *mglClearStencilProc) (MGLint);
 typedef void (APIENTRY *mglPolygonOffsetProc) (MGLfloat, MGLfloat);
-
-extern mglGetErrorProc			mglGetError;
-extern mglClearProc				mglClear;
-extern mglClearColorProc		mglClearColor;
-extern mglGetIntegervProc		mglGetIntegerv;
-extern mglGetFloatvProc			mglGetFloatv;
-extern mglViewportProc			mglViewport;
-extern mglDepthMaskProc			mglDepthMask;
-extern mglColorMaskProc			mglColorMask;
-extern mglEnableProc			mglEnable;
-extern mglDisableProc			mglDisable;
-extern mglFrontFaceProc			mglFrontFace;
-extern mglFlushProc				mglFlush;
-extern mglFinishProc			mglFinish;
-extern mglGetStringProc			mglGetString;
-extern mglStencilFuncProc		mglStencilFunc;
-extern mglStencilOpProc			mglStencilOp;
-extern mglStencilMaskProc		mglStencilMask;
-extern mglBlendFuncProc			mglBlendFunc;
-extern mglCullFaceProc			mglCullFace;
-extern mglClearStencilProc		mglClearStencil;
-extern mglPolygonOffsetProc		mglPolygonOffset;
-
-// ------------------------------------------------------------------------------------------------
-// Shaders
-// ------------------------------------------------------------------------------------------------
 typedef MGLuint (APIENTRY *mglCreateProgramProc) ();
 typedef MGLuint (APIENTRY *mglCreateShaderProc) (MGLenum);
 typedef MGLint (APIENTRY *mglGetUniformLocationProc) (MGLuint, const MGLchar*);
+typedef MGLint (APIENTRY *mglGetAttribLocationProc) (MGLuint, const MGLchar*);
 typedef void (APIENTRY *mglUseProgramProc) (MGLuint);;
 typedef void (APIENTRY *mglShaderSourceProc) (MGLuint, MGLsizei, const MGLchar**, const MGLint*);
 typedef void (APIENTRY *mglCompileShaderProc) (MGLuint);
@@ -330,64 +275,17 @@ typedef void (APIENTRY *mglUniform1fvProc) (MGLint, MGLsizei, const MGLfloat *);
 typedef void (APIENTRY *mglUniform3fvProc) (MGLint, MGLsizei, const MGLfloat *);
 typedef void (APIENTRY *mglUniform4fvProc) (MGLint, MGLsizei, const MGLfloat *);
 typedef void (APIENTRY *mglGetActiveUniformProc) (MGLuint, MGLuint, MGLsizei, MGLsizei*, MGLint*, MGLenum*, MGLchar*);
-
-extern mglUseProgramProc			mglUseProgram;
-extern mglCreateShaderProc			mglCreateShader;
-extern mglCreateProgramProc			mglCreateProgram;
-extern mglShaderSourceProc			mglShaderSource;
-extern mglCompileShaderProc			mglCompileShader;
-extern mglGetShaderivProc			mglGetShaderiv;
-extern mglGetProgramivProc			mglGetProgramiv;
-extern mglGetShaderInfoLogProc		mglGetShaderInfoLog;
-extern mglGetProgramInfoLogProc		mglGetProgramInfoLog;
-extern mglAttachShaderProc			mglAttachShader;
-extern mglDetachShaderProc			mglDetachShader;
-extern mglLinkProgramProc			mglLinkProgram;
-extern mglValidateProgramProc		mglValidateProgram;
-extern mglGetAttachedShadersProc	mglGetAttachedShaders;
-extern mglDeleteShaderProc			mglDeleteShader;
-extern mglDeleteProgramProc			mglDeleteProgram;
-extern mglGetUniformLocationProc	mglGetUniformLocation;
-extern mglGetActiveUniformProc		mglGetActiveUniform;
-extern mglUniform1iProc				mglUniform1i;
-extern mglUniform1fProc				mglUniform1f;
-extern mglUniform1fvProc			mglUniform1fv;
-extern mglUniform3fvProc			mglUniform3fv;
-extern mglUniform4fvProc			mglUniform4fv;
-extern mglUniformMatrix3fvProc		mglUniformMatrix2fv;
-extern mglUniformMatrix3fvProc		mglUniformMatrix3fv;
-extern mglUniformMatrix4fvProc		mglUniformMatrix4fv;
-
-// ------------------------------------------------------------------------------------------------
-// Textures
-// ------------------------------------------------------------------------------------------------
-typedef void (APIENTRY* mglGenTexturesProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY* mglBindTextureProc) (MGLenum, MGLuint);
-typedef void (APIENTRY* mglTexParameterfProc) (MGLenum, MGLenum, MGLfloat);
-typedef void (APIENTRY* mglTexParameteriProc) (MGLenum, MGLenum, MGLint);
-typedef void (APIENTRY* mglTexImage2DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
-typedef void (APIENTRY* mglTexImage3DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
-typedef void (APIENTRY* mglGenerateMipmapProc) (MGLenum);
-typedef void (APIENTRY* mglActiveTextureProc) (MGLenum);
-typedef void (APIENTRY* mglClearDepthProc) (MGLdouble);
-typedef void (APIENTRY* mglDepthFuncProc) (MGLenum);
-typedef void (APIENTRY *mglTexImage2DMultisampleProc) (MGLenum, MGLsizei, MGLint, MGLsizei, MGLsizei, MGLboolean);
-
-extern mglGenTexturesProc			mglGenTextures;
-extern mglBindTextureProc			mglBindTexture;
-extern mglTexParameterfProc			mglTexParameterf; 
-extern mglTexParameteriProc			mglTexParameteri;
-extern mglTexImage2DProc			mglTexImage2D;
-extern mglTexImage3DProc			mglTexImage3D;
-extern mglActiveTextureProc			mglActiveTexture;
-extern mglClearDepthProc			mglClearDepth;
-extern mglDepthFuncProc				mglDepthFunc;
-extern mglGenerateMipmapProc		mglGenerateMipmap;
-extern mglTexImage2DMultisampleProc	mglTexImage2DMultisample;
-
-// ------------------------------------------------------------------------------------------------
-// Vertex array
-// ------------------------------------------------------------------------------------------------
+typedef void (APIENTRY *mglGetActiveAttribProc) (MGLuint, MGLuint, MGLsizei, MGLsizei*, MGLint*, MGLenum*, MGLchar*);
+typedef void (APIENTRY *mglGenTexturesProc) (MGLsizei, MGLuint*);
+typedef void (APIENTRY *mglBindTextureProc) (MGLenum, MGLuint);
+typedef void (APIENTRY *mglTexParameterfProc) (MGLenum, MGLenum, MGLfloat);
+typedef void (APIENTRY *mglTexParameteriProc) (MGLenum, MGLenum, MGLint);
+typedef void (APIENTRY *mglTexImage2DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
+typedef void (APIENTRY *mglTexImage3DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
+typedef void (APIENTRY *mglGenerateMipmapProc) (MGLenum);
+typedef void (APIENTRY *mglActiveTextureProc) (MGLenum);
+typedef void (APIENTRY *mglClearDepthProc) (MGLdouble);
+typedef void (APIENTRY *mglDepthFuncProc) (MGLenum);
 typedef void (APIENTRY *mglVertexPointerProc) (MGLint, MGLenum, MGLsizei, const MGLvoid *);
 typedef void (APIENTRY *mglNormalPointerProc) (MGLenum, MGLsizei, const MGLvoid *);
 typedef void (APIENTRY *mglTexCoordPointerProc) (MGLint, MGLenum, MGLsizei, const MGLvoid *);
@@ -402,27 +300,19 @@ typedef void (APIENTRY *mglBufferSubDataProc) (MGLenum, MGLintptr, MGLsizeiptr s
 typedef void (APIENTRY *mglBufferDataProc) (MGLenum, MGLsizeiptr, const MGLvoid *, MGLenum);
 typedef void* (APIENTRY *mglMapBufferProc) (MGLenum, MGLenum);
 typedef MGLboolean (APIENTRY *mglUnmapBufferProc) (MGLenum);
+typedef void (APIENTRY *mglEnableVertexAttribArrayProc) (MGLuint);
+typedef void (APIENTRY *mglDisableVertexAttribArrayProc) (MGLuint);
+typedef void (APIENTRY *mglVertexAttribPointerProc) (MGLuint, MGLint, MGLenum, MGLboolean, MGLsizei, const MGLvoid *);
+typedef void (APIENTRY *mglVertexAttribDivisorProc) (MGLuint, MGLuint);
+typedef void (APIENTRY *mglDrawArraysInstancedProc) (MGLenum, MGLint, MGLsizei, MGLsizei);
 typedef void (APIENTRY *mglClientActiveTextureProc) (MGLenum);
-
-extern mglVertexPointerProc			mglVertexPointer;
-extern mglNormalPointerProc			mglNormalPointer;
-extern mglEnableClientStateProc		mglEnableClientState;
-extern mglDisableClientStateProc	mglDisableClientState;
-extern mglDrawArraysProc			mglDrawArrays;
-extern mglTexCoordPointerProc		mglTexCoordPointer;
-extern mglDeleteTexturesProc		mglDeleteTextures;
-extern mglGenBuffersProc			mglGenBuffers;
-extern mglDeleteBuffersProc			mglDeleteBuffers;
-extern mglBindBufferProc			mglBindBuffer;
-extern mglBufferSubDataProc			mglBufferSubData;
-extern mglBufferDataProc			mglBufferData;
-extern mglMapBufferProc				mglMapBuffer;
-extern mglUnmapBufferProc			mglUnmapBuffer;
-extern mglClientActiveTextureProc	mglClientActiveTexture;
-
-// ------------------------------------------------------------------------------------------------
-// Framebuffer Object
-// ------------------------------------------------------------------------------------------------
+typedef void (APIENTRY *mglBeginConditionalRenderProc) (MGLuint, MGLenum);
+typedef void (APIENTRY *mglEndConditionalRenderProc) ();
+typedef void (APIENTRY *mglBeginQueryProc) (MGLenum, MGLuint);
+typedef void (APIENTRY *mglEndQueryProc) (MGLenum);
+typedef void (APIENTRY *mglGetQueryObjectuivProc) (MGLenum, MGLenum, MGLuint *);
+typedef void (APIENTRY *mglDeleteQueriesProc) (MGLsizei, const MGLuint*);
+typedef void (APIENTRY *mglGenQueriesProc) (MGLsizei, MGLuint*);
 typedef MGLboolean (APIENTRY *mglIsRenderbufferProc) (MGLuint);
 typedef MGLboolean (APIENTRY *mglIsFramebufferProc) (MGLuint);
 typedef MGLenum (APIENTRY *mglCheckFramebufferStatusProc) (MGLenum);
@@ -430,38 +320,153 @@ typedef void (APIENTRY *mglFramebufferTextureLayerProc) (MGLenum, MGLenum, MGLui
 typedef void (APIENTRY *mglGenFramebuffersProc) (MGLsizei, MGLuint*);
 typedef void (APIENTRY *mglDeleteFramebuffersProc) (MGLsizei, MGLuint*);
 typedef void (APIENTRY *mglBindFramebufferProc) (MGLenum, MGLuint);
-typedef void (APIENTRY *mglGetFramebufferAttachmentParameterivProc) (MGLenum, MGLenum, MGLenum, MGLint *);
 typedef void (APIENTRY *mglFramebufferTexture2DProc) (MGLenum, MGLenum, MGLenum, MGLuint, MGLint);
 typedef void (APIENTRY *mglFramebufferRenderbufferProc) (MGLenum, MGLenum, MGLenum, MGLuint);
 typedef void (APIENTRY *mglGenRenderbuffersProc) (MGLsizei, MGLuint*);
 typedef void (APIENTRY *mglDeleteRenderbuffersProc) (MGLsizei, const MGLuint *);
 typedef void (APIENTRY *mglBindRenderbufferProc) (MGLenum, MGLuint);
 typedef void (APIENTRY *mglRenderbufferStorageProc) (MGLenum, MGLenum, MGLsizei, MGLsizei);
-typedef void (APIENTRY *mglGetRenderbufferParameterivProc) (MGLenum, MGLenum, MGLint*);
 typedef void (APIENTRY *mglDrawBuffersProc) (MGLsizei, const MGLenum*);
 typedef void (APIENTRY *mglDrawBufferProc) (MGLenum);
 typedef void (APIENTRY *mglReadBufferProc) (MGLenum);
 typedef void (APIENTRY *mglBlitFramebufferProc) (MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLbitfield, MGLenum);
 
-extern mglIsRenderbufferProc mglIsRenderbuffer;
-extern mglIsFramebufferProc mglIsFramebuffer;
-extern mglCheckFramebufferStatusProc mglCheckFramebufferStatus;
-extern mglFramebufferTextureLayerProc mglFramebufferTextureLayer;
-extern mglGenFramebuffersProc mglGenFramebuffers;
-extern mglDeleteFramebuffersProc mglDeleteFramebuffers;
-extern mglBindFramebufferProc mglBindFramebuffer;
-extern mglGetFramebufferAttachmentParameterivProc mglGetFramebufferAttachmentParameteriv;
-extern mglFramebufferTexture2DProc mglFramebufferTexture2D;
-extern mglFramebufferRenderbufferProc mglFramebufferRenderbuffer;
-extern mglGenRenderbuffersProc mglGenRenderbuffers;
-extern mglDeleteRenderbuffersProc mglDeleteRenderbuffers;
-extern mglBindRenderbufferProc mglBindRenderbuffer;
-extern mglRenderbufferStorageProc mglRenderbufferStorage;
-extern mglGetRenderbufferParameterivProc mglGetRenderbufferParameteriv;
-extern mglDrawBuffersProc mglDrawBuffers;
-extern mglDrawBufferProc mglDrawBuffer;
-extern mglReadBufferProc mglReadBuffer;
-extern mglBlitFramebufferProc mglBlitFramebuffer;
+// ------------------------------------------------------------------------------------------------ 
+extern mglGetErrorProc							mglGetError;
+extern mglClearProc								mglClear;
+extern mglClearColorProc						mglClearColor;
+extern mglGetIntegervProc						mglGetIntegerv;
+extern mglGetFloatvProc							mglGetFloatv;
+extern mglViewportProc							mglViewport;
+extern mglDepthMaskProc							mglDepthMask;
+extern mglColorMaskProc							mglColorMask;
+extern mglEnableProc							mglEnable;
+extern mglDisableProc							mglDisable;
+extern mglFrontFaceProc							mglFrontFace;
+extern mglFlushProc								mglFlush;
+extern mglFinishProc							mglFinish;
+extern mglGetStringProc							mglGetString;
+extern mglStencilFuncProc						mglStencilFunc;
+extern mglStencilOpProc							mglStencilOp;
+extern mglStencilMaskProc						mglStencilMask;
+extern mglBlendFuncProc							mglBlendFunc;
+extern mglCullFaceProc							mglCullFace;
+extern mglClearStencilProc						mglClearStencil;
+extern mglPolygonOffsetProc						mglPolygonOffset;
+extern mglUseProgramProc						mglUseProgram;
+extern mglCreateShaderProc						mglCreateShader;
+extern mglCreateProgramProc						mglCreateProgram;
+extern mglShaderSourceProc						mglShaderSource;
+extern mglCompileShaderProc						mglCompileShader;
+extern mglGetShaderivProc						mglGetShaderiv;
+extern mglGetProgramivProc						mglGetProgramiv;
+extern mglGetShaderInfoLogProc					mglGetShaderInfoLog;
+extern mglGetProgramInfoLogProc					mglGetProgramInfoLog;
+extern mglAttachShaderProc						mglAttachShader;
+extern mglDetachShaderProc						mglDetachShader;
+extern mglLinkProgramProc						mglLinkProgram;
+extern mglValidateProgramProc					mglValidateProgram;
+extern mglGetAttachedShadersProc				mglGetAttachedShaders;
+extern mglDeleteShaderProc						mglDeleteShader;
+extern mglDeleteProgramProc						mglDeleteProgram;
+extern mglGetUniformLocationProc				mglGetUniformLocation;
+extern mglGetAttribLocationProc					mglGetAttribLocation;
+extern mglGetActiveUniformProc					mglGetActiveUniform;
+extern mglUniform1iProc							mglUniform1i;
+extern mglUniform1fProc							mglUniform1f;
+extern mglUniform1fvProc						mglUniform1fv;
+extern mglUniform3fvProc						mglUniform3fv;
+extern mglUniform4fvProc						mglUniform4fv;
+extern mglUniformMatrix3fvProc					mglUniformMatrix2fv;
+extern mglUniformMatrix3fvProc					mglUniformMatrix3fv;
+extern mglUniformMatrix4fvProc					mglUniformMatrix4fv;
+extern mglGetActiveAttribProc					mglGetActiveAttrib;
+extern mglGenTexturesProc						mglGenTextures;
+extern mglBindTextureProc						mglBindTexture;
+extern mglTexParameterfProc						mglTexParameterf; 
+extern mglTexParameteriProc						mglTexParameteri;
+extern mglTexImage2DProc						mglTexImage2D;
+extern mglTexImage3DProc						mglTexImage3D;
+extern mglActiveTextureProc						mglActiveTexture;
+extern mglClearDepthProc						mglClearDepth;
+extern mglDepthFuncProc							mglDepthFunc;
+extern mglGenerateMipmapProc					mglGenerateMipmap;
+extern mglVertexPointerProc						mglVertexPointer;
+extern mglNormalPointerProc						mglNormalPointer;
+extern mglEnableClientStateProc					mglEnableClientState;
+extern mglDisableClientStateProc				mglDisableClientState;
+extern mglDrawArraysProc						mglDrawArrays;
+extern mglTexCoordPointerProc					mglTexCoordPointer;
+extern mglDeleteTexturesProc					mglDeleteTextures;
+extern mglGenBuffersProc						mglGenBuffers;
+extern mglDeleteBuffersProc						mglDeleteBuffers;
+extern mglBindBufferProc						mglBindBuffer;
+extern mglBufferSubDataProc						mglBufferSubData;
+extern mglBufferDataProc						mglBufferData;
+extern mglMapBufferProc							mglMapBuffer;
+extern mglUnmapBufferProc						mglUnmapBuffer;
+extern mglEnableVertexAttribArrayProc			mglEnableVertexAttribArray;
+extern mglDisableVertexAttribArrayProc			mglDisableVertexAttribArray;
+extern mglVertexAttribPointerProc				mglVertexAttribPointer;
+extern mglVertexAttribDivisorProc				mglVertexAttribDivisor;
+extern mglDrawArraysInstancedProc				mglDrawArraysInstanced;
+extern mglClientActiveTextureProc				mglClientActiveTexture;
+extern mglIsRenderbufferProc					mglIsRenderbuffer;
+extern mglIsFramebufferProc						mglIsFramebuffer;
+extern mglCheckFramebufferStatusProc			mglCheckFramebufferStatus;
+extern mglFramebufferTextureLayerProc			mglFramebufferTextureLayer;
+extern mglGenFramebuffersProc					mglGenFramebuffers;
+extern mglDeleteFramebuffersProc				mglDeleteFramebuffers;
+extern mglBindFramebufferProc					mglBindFramebuffer;
+extern mglFramebufferTexture2DProc				mglFramebufferTexture2D;
+extern mglFramebufferRenderbufferProc			mglFramebufferRenderbuffer;
+extern mglGenRenderbuffersProc					mglGenRenderbuffers;
+extern mglDeleteRenderbuffersProc				mglDeleteRenderbuffers;
+extern mglBindRenderbufferProc					mglBindRenderbuffer;
+extern mglRenderbufferStorageProc				mglRenderbufferStorage;
+extern mglDrawBuffersProc						mglDrawBuffers;
+extern mglDrawBufferProc						mglDrawBuffer;
+extern mglReadBufferProc						mglReadBuffer;
+extern mglBlitFramebufferProc					mglBlitFramebuffer;
+extern mglBeginConditionalRenderProc			mglBeginConditionalRender;
+extern mglEndConditionalRenderProc				mglEndConditionalRender;
+extern mglBeginQueryProc						mglBeginQuery;
+extern mglEndQueryProc							mglEndQuery;
+extern mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
+extern mglDeleteQueriesProc						mglDeleteQueries;
+extern mglGenQueriesProc						mglGenQueries;
+/**
+	@brief 
+		Initializes OpenGL extensions
+
+	@note 
+		This function must be called from a 
+		thread with an OpenGL 3.3 context attached
+*/
+int mglInit();
+
+/**
+	@brief
+		Check if an OpenGL extension is supported
+
+	@note
+		Must be called after mglInit
+
+	@param ext Name of the extension
+*/
+int mglIsSupported(const char* ext);
+
+/**
+	@brief
+		Return the maximum anisotropy level 
+		supported by OpenGL
+
+	@note
+		Must be called after mglInit
+
+	@return Anisotropy from 0.0f to 16.0f
+*/
+float mglGetMaxAnisotropy();
 
 #ifdef __cplusplus
 }

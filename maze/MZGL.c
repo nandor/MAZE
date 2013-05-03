@@ -7,11 +7,31 @@
 #include <stdio.h>
 #include <gl/GL.h>
 
-#ifdef WIN32
-#	define GET_ADDR(func) m ## func = (m ## func ## Proc)wglGetProcAddress(#func)
-#else
-#	error "GLX is not supported yet"
-#endif
+#define GET_ADDR(func)\
+	m ## func = (m ## func ## Proc)wglGetProcAddress(#func);\
+	if (m ## func == NULL)\
+	{\
+		return 0;\
+	}
+	
+/**
+	Struct containing state information
+*/
+struct
+{
+	/// List of OpenGL extensions
+	const char *ExtList;
+	
+	/// Major version
+	MGLint MajorVersion;
+
+	/// Minor version
+	MGLint MinorVersion;
+	
+	/// Max anisotropy supported
+	MGLfloat Anisotropy;
+
+} GL;
 
 // Core -----------------------------------------------------------------------
 mglGetErrorProc								mglGetError;
@@ -36,8 +56,6 @@ mglCullFaceProc								mglCullFace;
 mglBlendFuncProc							mglBlendFunc;
 mglClearStencilProc							mglClearStencil;
 mglPolygonOffsetProc						mglPolygonOffset;
-
-// Shaders --------------------------------------------------------------------
 mglUseProgramProc							mglUseProgram;
 mglCreateShaderProc							mglCreateShader;
 mglCreateProgramProc						mglCreateProgram;
@@ -56,7 +74,9 @@ mglDeleteShaderProc							mglDeleteShader;
 mglDeleteProgramProc						mglDeleteProgram;
 mglViewportProc								mglViewport;
 mglGetActiveUniformProc						mglGetActiveUniform;
+mglGetActiveAttribProc						mglGetActiveAttrib;
 mglGetUniformLocationProc					mglGetUniformLocation;
+mglGetAttribLocationProc					mglGetAttribLocation;
 mglUniform1iProc							mglUniform1i;
 mglUniform1fProc							mglUniform1f;
 mglUniform1fvProc							mglUniform1fv;
@@ -65,8 +85,6 @@ mglUniform4fvProc							mglUniform4fv;
 mglUniformMatrix3fvProc						mglUniformMatrix2fv;
 mglUniformMatrix3fvProc						mglUniformMatrix3fv;
 mglUniformMatrix4fvProc						mglUniformMatrix4fv;
-
-// Textures ---- --------------------------------------------------------------
 mglGenTexturesProc							mglGenTextures;
 mglBindTextureProc							mglBindTexture;
 mglTexParameterfProc						mglTexParameterf;
@@ -76,9 +94,6 @@ mglTexImage3DProc							mglTexImage3D;
 mglDeleteTexturesProc						mglDeleteTextures;
 mglActiveTextureProc						mglActiveTexture;
 mglGenerateMipmapProc						mglGenerateMipmap;
-mglTexImage2DMultisampleProc				mglTexImage2DMultisample;
-
-// Vertex Arrays --------------------------------------------------------------
 mglVertexPointerProc						mglVertexPointer;
 mglNormalPointerProc						mglNormalPointer;
 mglEnableClientStateProc					mglEnableClientState;
@@ -92,8 +107,11 @@ mglBufferSubDataProc						mglBufferSubData;
 mglBufferDataProc							mglBufferData;
 mglMapBufferProc							mglMapBuffer;
 mglUnmapBufferProc							mglUnmapBuffer;
-
-// Framebuffer object ---------------------------------------------------------
+mglEnableVertexAttribArrayProc				mglEnableVertexAttribArray;
+mglDisableVertexAttribArrayProc				mglDisableVertexAttribArray;
+mglVertexAttribPointerProc					mglVertexAttribPointer;
+mglVertexAttribDivisorProc					mglVertexAttribDivisor;
+mglDrawArraysInstancedProc					mglDrawArraysInstanced;
 mglIsRenderbufferProc						mglIsRenderbuffer;
 mglIsFramebufferProc						mglIsFramebuffer;
 mglCheckFramebufferStatusProc				mglCheckFramebufferStatus;
@@ -101,21 +119,23 @@ mglFramebufferTextureLayerProc				mglFramebufferTextureLayer;
 mglGenFramebuffersProc						mglGenFramebuffers;
 mglDeleteFramebuffersProc					mglDeleteFramebuffers;
 mglBindFramebufferProc						mglBindFramebuffer;
-mglGetFramebufferAttachmentParameterivProc	mglGetFramebufferAttachmentParameteriv;
 mglFramebufferTexture2DProc					mglFramebufferTexture2D;
 mglFramebufferRenderbufferProc				mglFramebufferRenderbuffer;
 mglGenRenderbuffersProc						mglGenRenderbuffers;
 mglDeleteRenderbuffersProc					mglDeleteRenderbuffers;
 mglBindRenderbufferProc						mglBindRenderbuffer;
 mglRenderbufferStorageProc					mglRenderbufferStorage;
-mglGetRenderbufferParameterivProc			mglGetRenderbufferParameteriv;
 mglDrawBuffersProc							mglDrawBuffers;
 mglDrawBufferProc							mglDrawBuffer;
 mglReadBufferProc							mglReadBuffer;
 mglBlitFramebufferProc						mglBlitFramebuffer;
-
-// ------------------------------------------------------------------------------------------------
-GLState GL;
+mglBeginConditionalRenderProc				mglBeginConditionalRender;
+mglEndConditionalRenderProc					mglEndConditionalRender;
+mglBeginQueryProc							mglBeginQuery;
+mglEndQueryProc								mglEndQuery;
+mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
+mglDeleteQueriesProc						mglDeleteQueries;
+mglGenQueriesProc							mglGenQueries;
 
 // ------------------------------------------------------------------------------------------------
 int mglIsSupported(const char *ext)
@@ -141,16 +161,22 @@ int mglIsSupported(const char *ext)
 }
 
 // ------------------------------------------------------------------------------------------------
+float mglGetMaxAnisotropy()
+{
+	return GL.Anisotropy;
+}
+
+// ------------------------------------------------------------------------------------------------
 int mglInit()
 {
-	const char* ver;
-
 	// Retrieve version number
-	ver = (const char*)glGetString(GL_VERSION);
-	if (sscanf(ver, "%d.%d", &GL.MajorVersion, &GL.MinorVersion) != 2)
+	glGetIntegerv(MGL_MAJOR_VERSION, &GL.MajorVersion);
+	glGetIntegerv(MGL_MINOR_VERSION, &GL.MinorVersion);
+	
+	// OpenGL 3.3 is required
+	if (GL.MajorVersion < 2 || (GL.MajorVersion == 2 && GL.MinorVersion < 1))
 	{
-		GL.MajorVersion = 1; 
-		GL.MinorVersion = 0;
+		return 0;
 	}
 	
 	// Retrieve extension list
@@ -195,19 +221,7 @@ int mglInit()
 	mglClearStencil			= glClearStencil;
 	mglPolygonOffset		= glPolygonOffset;
 
-	// OpenGL 1.4 is required
-	if (GL.MajorVersion < 1 || (GL.MajorVersion == 1 && GL.MinorVersion < 4))
-		return 0;
-
 	GET_ADDR(glGenerateMipmap);
-	
-	// Vertex & fragment shaders are needed
-	if ((!mglIsSupported("GL_ARB_vertex_shader") || 
-		 !mglIsSupported("GL_ARB_fragment_shader")) && 
-		(!mglIsSupported("GL_EXT_vertex_shader") ||
-		 !mglIsSupported("GL_EXT_fragment_shader")))
-		return 0;
-
 	GET_ADDR(glUseProgram);
 	GET_ADDR(glCreateProgram);
 	GET_ADDR(glGetProgramiv);
@@ -216,7 +230,6 @@ int mglInit()
 	GET_ADDR(glValidateProgram);
 	GET_ADDR(glGetAttachedShaders);
 	GET_ADDR(glDeleteProgram);
-
 	GET_ADDR(glCreateShader);
 	GET_ADDR(glShaderSource);
 	GET_ADDR(glCompileShader);
@@ -225,10 +238,10 @@ int mglInit()
 	GET_ADDR(glAttachShader);
 	GET_ADDR(glDetachShader);
 	GET_ADDR(glDeleteShader);
-
 	GET_ADDR(glGetActiveUniform);
+	GET_ADDR(glGetActiveAttrib);
 	GET_ADDR(glGetUniformLocation);
-
+	GET_ADDR(glGetAttribLocation);
 	GET_ADDR(glUniform1i);
 	GET_ADDR(glUniform1f);
 	GET_ADDR(glUniform1fv);
@@ -237,15 +250,8 @@ int mglInit()
 	GET_ADDR(glUniformMatrix2fv);
 	GET_ADDR(glUniformMatrix3fv);
 	GET_ADDR(glUniformMatrix4fv);
-	
-	// Multitexturing was included in 2.0
 	GET_ADDR(glActiveTexture);
 	GET_ADDR(glTexImage3D);
-
-	// VBOs are supported by lots of cards
-	if (!mglIsSupported("GL_ARB_vertex_buffer_object"))
-		return 0;
-
 	GET_ADDR(glGenBuffers);
 	GET_ADDR(glDeleteBuffers);
 	GET_ADDR(glBindBuffer);
@@ -253,13 +259,12 @@ int mglInit()
 	GET_ADDR(glBufferData);
 	GET_ADDR(glMapBuffer);
 	GET_ADDR(glUnmapBuffer);
+	GET_ADDR(glEnableVertexAttribArray);
+	GET_ADDR(glDisableVertexAttribArray);
+	GET_ADDR(glVertexAttribPointer);
+	GET_ADDR(glVertexAttribDivisor);
+	GET_ADDR(glDrawArraysInstanced);
 	GET_ADDR(glDrawArrays);
-	
-	// FBOs are supported by nearly all the cards which support OpenGL 2.0
-	if (!mglIsSupported("GL_ARB_framebuffer_object") && 
-		!mglIsSupported("GL_EXT_framebuffer_object"))
-		return 0;
-	
 	GET_ADDR(glGenFramebuffers);
 	GET_ADDR(glDeleteFramebuffers);
 	GET_ADDR(glBindFramebuffer);
@@ -267,36 +272,28 @@ int mglInit()
 	GET_ADDR(glFramebufferTexture2D);
 	GET_ADDR(glFramebufferRenderbuffer);
 	GET_ADDR(glCheckFramebufferStatus);
-	GET_ADDR(glGetFramebufferAttachmentParameteriv);
 	GET_ADDR(glFramebufferTextureLayer);
-
 	GET_ADDR(glGenRenderbuffers);
 	GET_ADDR(glDeleteRenderbuffers);
 	GET_ADDR(glIsRenderbuffer);
 	GET_ADDR(glBindRenderbuffer);
 	GET_ADDR(glRenderbufferStorage);
-	GET_ADDR(glGetRenderbufferParameteriv);
 	GET_ADDR(glBlitFramebuffer);
-
-	if (!mglIsSupported("GL_ARB_draw_buffers"))
-		return 0;
-
-	GET_ADDR(glDrawBuffers);
+	GET_ADDR(glDrawBuffers);	
+	GET_ADDR(glBeginConditionalRender);
+	GET_ADDR(glEndConditionalRender);
+	GET_ADDR(glBeginQuery);
+	GET_ADDR(glEndQuery);
+	GET_ADDR(glGetQueryObjectuiv);
+	GET_ADDR(glDeleteQueries);
+	GET_ADDR(glGenQueries);
 
 	// Anisotropic filtering is a plus	
 	GL.Anisotropy = 0.0f;
 	if (mglIsSupported("GL_EXT_texture_filter_anisotropic"))
+	{
 		mglGetFloatv(MGL_MAX_TEXTURE_MAX_ANISOTROPY, &GL.Anisotropy);
-	
-	// Multisampling
-	GL.Multisample = 0;
-	if (mglIsSupported("GL_ARB_texture_multisample"))
-		GL.Multisample = 1;
-	
-	GET_ADDR(glTexImage2DMultisample);
-
-	// Stencil buffer
-	mglGetIntegerv(MGL_STENCIL_BITS, &GL.StencilBits);
+	}
 
 	return 1;
 }

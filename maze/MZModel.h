@@ -27,27 +27,7 @@ namespace MAZE
 			glm::vec3 Normal;
 			glm::vec2 UV;
 		};
-
-		/**
-			Mesh & material associated with it
-		*/
-		class Mesh
-		{
-		public:
-
-			/// Diffuse color of the surface
-			glm::vec3 Diffuse;
-
-			/// Texture map
-			Resource::Ptr<Texture> DiffuseMap;
-
-			/// Number of vertices composing the mesh
-			size_t VertexCount;
-			
-			/// Start of the mesh
-			size_t VertexOffset;
-		};
-
+				
 	public:
 
 		/**
@@ -89,34 +69,49 @@ namespace MAZE
 			Creates a simple plane mesh
 			@param rsmngr	Target rsmngr
 			@param id		ID of the mesh
-			@param w		Width of the plane
-			@param h		Height of the plane
-			@param cw		Texture repeat cell width
-			@param ch		Texture repeat cell height
+			@param size		Size of the plane
+			@param cellSize Size of a texture cell
 		*/
-		static void CreatePlane(ResourceManager* rsmngr, const std::string& id, float w, float h, float cw, float ch);
+		static void CreatePlane(ResourceManager* rsmngr, 
+								const std::string& id, 
+								const std::string& diffuse,
+								const std::string& bump,
+								const glm::vec2& size,
+								const glm::vec2& cellSize);
 
 	private:
 
-		/// Name of the model file
+		/// Name of the source file
 		std::string mFile;
-
-		/// Meshes composing the model
-		std::vector<Mesh> mMeshes;
-
-		/// All vertices from the model
-		std::vector<Vertex> mVertices;
 		
-		/// VBO id
-		MGLuint mVBO;
+		/// List of vertices of the mesh
+		std::vector<Vertex> mVertices;
 
-		/// Vertex count
+		/// Number of vertices of the mesh
 		size_t mVertexCount;
+		
+		/// Mesh VBO
+		MGLuint mMeshVBO;
+		
+		/// List of vertices of the collision mesh
+		std::vector<glm::vec3> mCollision;
+		
+		/// Diffuse map
+		Resource::Ptr<Texture> mDiffuseMap;
 
-		/// True if the model is loaded from a file
-		bool mFromFile;
+		/// Normal map
+		Resource::Ptr<Texture> mBumpMap;
 
+		/// Bounding box min point
+		glm::vec3 mBoxMin;
+
+		/// Bounding box max point
+		glm::vec3 mBoxMax;
+
+		/// Pointer modifies reference count
 		friend class Resource::Ptr<Model>;
+
+		/// Renderer needs access to the vbo
 		friend class Renderer;
 	};
 };
