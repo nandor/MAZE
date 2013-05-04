@@ -213,6 +213,21 @@ void Scene::AddEntity(Entity* entity)
 }
 
 // ------------------------------------------------------------------------------------------------
+void Scene::UpdateEntity(Entity* ent)
+{
+	RemoveEntity(ent);
+	AddEntity(ent);
+}
+
+// ------------------------------------------------------------------------------------------------
+void Scene::DestroyEntity(Entity *ent)
+{
+	RemoveEntity(ent);
+	mEntities.erase(mEntities.find(ent->fHandle));
+	delete ent;
+}
+
+// ------------------------------------------------------------------------------------------------
 void Scene::QueryScene(const ViewFrustum& volume, RenderBuffer* buffer)
 {
 	SceneNode* node = mRoot;

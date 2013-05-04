@@ -5,44 +5,48 @@
 #include "MZPlatform.h"
 #include "MZException.h"
 #include "MZEngine.h"
-#include "MZMath.h"
 #include "MZRsmngr.h"
 #include "MZWorld.h"
 #include "MZModel.h"
 #include "MZLight.h"
 #include "MZCamera.h"
 #include "MZObject.h"
-#include "MZScript.h"
+#include "MZScene.h"
+#include "MZLuaMath.h"
+#include "MZLuaScene.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 World::World(Engine* engine)
 	: mEngine(engine),
 	  mScene(NULL),
-	  mPlayer(NULL),
-	  mScript(new Script(engine))
+	  mScript(NULL),
+	  mPlayer(NULL)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 World::~World()
 {
-	if (mScript != NULL) { delete mScript; mScript = NULL; }
+	if (mScript != NULL) { lua_close(mScript); mScript = NULL; }
 	if (mScene != NULL)  { delete mScene;  mScene = NULL; }
 }
 
 // ------------------------------------------------------------------------------------------------
 void World::Init()
 {
+	InitScene();
+	InitScript();
+}
+
+// ------------------------------------------------------------------------------------------------
+void World::InitScene()
+{
 	mSkyTexture = mEngine->GetResourceManager()->Get<Texture> ("sky");
 	
 	mSize = glm::vec3(100.0f, 100.0f, 100.0f);
 	mScene = new Scene(mEngine, mSize);
-
-	mScript->Include("core.lua");
-	mScript->Include("maze.lua");
-	mScript->Execute("on_world_init");
-
+	
 	mPlayer = mScene->Create<Player> ();
 	mPlayer->SetPosition(glm::vec3(10.0f, 3.0f, 10.0f));
 
@@ -73,12 +77,22 @@ void World::Init()
 		obj->SetShadowCaster(false);
 	}
 
-	for (size_t i = 0; i < 500; ++i)
+	for (size_t i = 0; i < 200; ++i)
 	{
 		Object* obj = mScene->Create<Object>();
 		obj->SetModel(mEngine->GetResourceManager()->Get<Model> ("pillar"));
 		obj->SetPosition(glm::vec3(rand() % 100, 0.0f, rand() % 100));
 		obj->SetBoundingBox(BoundingBox(glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 4.0, 2.0f)));
+	}
+
+	mCoins.resize(100);
+	for (size_t i = 0; i < mCoins.size(); ++i)
+	{
+		mCoins[i] = mScene->Create<Object>();
+		mCoins[i]->SetModel(mEngine->GetResourceManager()->Get<Model> ("coin"));
+		mCoins[i]->SetPosition(glm::vec3(rand() % 100, 1.0f, rand() % 100));
+		mCoins[i]->SetCollision(false);
+		mCoins[i]->SetBoundingBox(BoundingBox(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f)));
 	}
 
 	Model::CreatePlane(mEngine->GetResourceManager(), "floor", "floor_diffuse", "floor_bump", glm::vec2(100.0f), glm::vec2(1.5f));
@@ -93,8 +107,32 @@ void World::Init()
 }
 
 // ------------------------------------------------------------------------------------------------
-void World::Generate()
+void World::InitScript()
 {
+	if (!(mScript = luaL_newstate()))
+	{
+		throw Exception("[Script] Cannot create Lua VM");
+	}
+
+	luaL_openlibs(mScript);
+	mzlRegisterMath(mScript);
+	
+	lua_pushcfunction(mScript, mzlDefaultPrint);
+	lua_setglobal(mScript, "print");
+	
+	lua_pushlightuserdata(mScript, mScene);
+	lua_setglobal(mScript, "__scene");
+	mzlRegisterScene(mScript);
+	
+	lua_getglobal(mScript, "package");
+	lua_pushstring(mScript, (mEngine->GetConfig().ResourceDir + "/script/?.lua").c_str());
+	lua_setfield(mScript, -2, "path");
+	lua_pop(mScript, 1);
+
+	if (luaL_dofile(mScript, "./data/script/maze.lua"))
+	{
+		throw Exception("[Script] ") << lua_tostring(mScript, -1);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -106,13 +144,27 @@ void World::Update(float time, float dt)
 	}
 	
 	mPlayer->Update(time, dt);
+
+	for (size_t i = 0; i < mCoins.size(); ++i)
+	{
+		if (mCoins[i] != NULL)
+		{
+			mCoins[i]->SetRotation(0.0f, i + (time / 10.0f), 0.0f);
+		
+			if (mCoins[i]->GetBoundingBox().Intersect(mPlayer->GetBoundingBox()))
+			{
+				mScene->DestroyEntity(mCoins[i]);
+				mCoins[i] = NULL;
+			}
+		}
+	}
 	
 	float phi = 0.3f;
-	float sunTheta = time / 20000.0f;
+	float sunTheta = time / 5000.0f;
 	float moonTheta = sunTheta + PI;
-	/*
-	glm::vec3 sunDir, moonDir;
 	
+	glm::vec3 sunDir, moonDir;
+	/*
 	sunDir.x = -cos(sunTheta) * cos(phi);
 	sunDir.y = -sin(sunTheta);
 	sunDir.z = -cos(sunTheta) * sin(phi);
@@ -125,7 +177,8 @@ void World::Update(float time, float dt)
 	mSun->SetActive(sunDir.y < 0.0f);
 
 	mMoon->SetDirection(moonDir);
-	mMoon->SetActive(moonDir.y < 0.0f);*/
+	mMoon->SetActive(moonDir.y < 0.0f);
+	*/
 }
 
 

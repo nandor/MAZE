@@ -11,6 +11,9 @@ set (SOURCES MZCamera.cc
 			 MZGL.c
 			 MZLight.cc
 			 MZLog.cc
+             MZLua.cc
+			 MZLuaMath.cc
+			 MZLuaScene.cc
 			 MZMain.cc
 			 MZMath.cc
 			 MZModel.cc
@@ -22,7 +25,6 @@ set (SOURCES MZCamera.cc
 			 MZResource.cc
 			 MZRsmngr.cc
 			 MZScene.cc
-             MZScript.cc
 			 MZTexture.cc
 			 MZThread.cc
 			 MZWorld.cc)
@@ -36,6 +38,9 @@ set (HEADERS MZAtomic.h
 			 MZGL.h
 			 MZLight.h
 			 MZLog.h
+             MZLua.h
+			 MZLuaMath.h
+			 MZLuaScene.h
 			 MZMath.h
 			 MZModel.h
 			 MZObject.h
@@ -47,7 +52,6 @@ set (HEADERS MZAtomic.h
 			 MZResource.h
 			 MZRsmngr.h
 			 MZScene.h
-             MZScript.h
 			 MZSingleton.h
 			 MZString.h
 			 MZTexture.h

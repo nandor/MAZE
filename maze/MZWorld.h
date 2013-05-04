@@ -6,14 +6,15 @@
 #define WORLD_H
 #pragma once
 
-#include "MZScene.h"
 #include "MZPlayer.h"
 #include "MZTexture.h"
+#include "MZLua.h"
 
 namespace MAZE
 {
 	class Engine;
-	class Script;
+	class Object;
+	class Scene;
 	class RenderBuffer;
 
 	/**
@@ -40,11 +41,6 @@ namespace MAZE
 		void Init();
 
 		/**
-			Generate the world
-		*/
-		void Generate();
-
-		/**
 			Update method - runs in the main thread
 			@param time Total time
 			@param dt	Delta time
@@ -58,15 +54,20 @@ namespace MAZE
 		
 	private:
 
+		void InitScene();
+		void InitScript();
+
+	private:
+
 		/// Reference to the engine
 		Engine *mEngine;
 		
 		/// Scene manager
 		Scene *mScene;
-
-		/// Script state
-		Script *mScript;
 		
+		/// Lua VM
+		lua_State *mScript;
+
 		/// Player
 		Player *mPlayer;
 
@@ -78,6 +79,9 @@ namespace MAZE
 
 		/// Light provided by the sun
 		Light *mSun;
+
+		/// List of coins
+		std::vector<Object*> mCoins;
 
 		/// Skybox cube map
 		Resource::Ptr<Texture> mSkyTexture;

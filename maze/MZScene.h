@@ -129,11 +129,12 @@ namespace MAZE
 		/**
 			Updates the position of an entity
 		*/
-		void UpdateEntity(Entity *ent)
-		{
-			RemoveEntity(ent);
-			AddEntity(ent);
-		}
+		void UpdateEntity(Entity *ent);
+
+		/**
+			Removes an entity completely
+		*/
+		void DestroyEntity(Entity *ent);
 
 	private:
 

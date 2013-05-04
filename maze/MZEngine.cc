@@ -106,7 +106,6 @@ void Engine::Init()
 	// Initialise the world
 	mWorld = new World(this);	
 	mWorld->Init();
-	mWorld->Generate();
 }
 
 // ------------------------------------------------------------------------------------------------

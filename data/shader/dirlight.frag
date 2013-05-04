@@ -64,7 +64,7 @@ float GetShadow(in vec3 position, in float depth)
     {
         for (float y = -1.5; y <= 1.5; y += 1.0)
         {
-            shadow += shadow2DArray(uShadow, shadowPos + vec4(x / 2000.0, y / 2000.0, 0.0, -0.002)).x;
+            shadow += shadow2DArray(uShadow, shadowPos + vec4(x / 2000.0, y / 2000.0, 0.0, -0.001)).x;
         }
     }
     
