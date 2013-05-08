@@ -47,10 +47,10 @@ void World::InitScene()
 	mSize = glm::vec3(100.0f, 100.0f, 100.0f);
 	mScene = new Scene(mEngine, mSize);
 	
-	mPlayer = mScene->Create<Player> ();
+	mPlayer = mScene->Create<Player> ("player");
 	mPlayer->SetPosition(glm::vec3(10.0f, 3.0f, 10.0f));
 
-	mMoon = mScene->Create<Light>();
+	mMoon = mScene->Create<Light>("moon");
 	mMoon->SetType(Light::DIRECTIONAL);
 	mMoon->SetDiffuse(glm::vec3(0.1f, 0.1f, 0.6f));
 	mMoon->SetSpecular(glm::vec3(0.2f, 0.2f, 1.0f));
@@ -58,7 +58,7 @@ void World::InitScene()
 	mMoon->SetDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
 	mMoon->SetShadowCaster(true);
 
-	mSun = mScene->Create<Light>();
+	mSun = mScene->Create<Light>("light");
 	mSun->SetType(Light::DIRECTIONAL);
 	mSun->SetDiffuse(glm::vec3(1.0f, 1.0f, 0.5f));
 	mSun->SetSpecular(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -67,7 +67,7 @@ void World::InitScene()
 	mSun->SetShadowCaster(true);
 	mSun->SetActive(false);
 
-	for (size_t i = 0; i < 50; ++i)
+	for (size_t i = 0; i < 10; ++i)
 	{
 		Light* obj = mScene->Create<Light>();
 		obj->SetType(Light::POINT);
@@ -91,7 +91,7 @@ void World::InitScene()
 		mCoins[i] = mScene->Create<Object>();
 		mCoins[i]->SetModel(mEngine->GetResourceManager()->Get<Model> ("coin"));
 		mCoins[i]->SetPosition(glm::vec3(rand() % 100, 1.0f, rand() % 100));
-		mCoins[i]->SetCollision(false);
+		mCoins[i]->SetCollider(false);
 		mCoins[i]->SetBoundingBox(BoundingBox(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1.0f, 1.0f, 1.0f)));
 	}
 
@@ -119,9 +119,11 @@ void World::InitScript()
 	
 	lua_pushcfunction(mScript, mzlDefaultPrint);
 	lua_setglobal(mScript, "print");
-	
+
 	lua_pushlightuserdata(mScript, mScene);
 	lua_setglobal(mScript, "__scene");
+	lua_pushlightuserdata(mScript, mEngine->GetResourceManager());
+	lua_setglobal(mScript, "__rsmngr");
 	mzlRegisterScene(mScript);
 	
 	lua_getglobal(mScript, "package");
@@ -130,6 +132,13 @@ void World::InitScript()
 	lua_pop(mScript, 1);
 
 	if (luaL_dofile(mScript, "./data/script/maze.lua"))
+	{
+		throw Exception("[Script] ") << lua_tostring(mScript, -1);
+	}
+	
+	// Call the lua init method
+	lua_getglobal(mScript, "on_world_init");
+	if (lua_pcall(mScript, 0, 0, 0))
 	{
 		throw Exception("[Script] ") << lua_tostring(mScript, -1);
 	}
@@ -144,6 +153,15 @@ void World::Update(float time, float dt)
 	}
 	
 	mPlayer->Update(time, dt);
+		
+	// Call the lua update method
+	lua_getglobal(mScript, "on_world_update");
+	lua_pushnumber(mScript, time);
+	lua_pushnumber(mScript, dt);
+	if (lua_pcall(mScript, 2, 0, 0))
+	{
+		throw Exception("[Script] ") << lua_tostring(mScript, -1);
+	}
 
 	for (size_t i = 0; i < mCoins.size(); ++i)
 	{
@@ -158,13 +176,17 @@ void World::Update(float time, float dt)
 			}
 		}
 	}
-	
+}
+
+// ------------------------------------------------------------------------------------------------
+void World::UpdateDayCycle(float time, float dt)
+{
 	float phi = 0.3f;
 	float sunTheta = time / 5000.0f;
 	float moonTheta = sunTheta + PI;
 	
 	glm::vec3 sunDir, moonDir;
-	/*
+	
 	sunDir.x = -cos(sunTheta) * cos(phi);
 	sunDir.y = -sin(sunTheta);
 	sunDir.z = -cos(sunTheta) * sin(phi);
@@ -178,9 +200,7 @@ void World::Update(float time, float dt)
 
 	mMoon->SetDirection(moonDir);
 	mMoon->SetActive(moonDir.y < 0.0f);
-	*/
 }
-
 
 // ------------------------------------------------------------------------------------------------
 void World::Render(RenderBuffer* buffer)

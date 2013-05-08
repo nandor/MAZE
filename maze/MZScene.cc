@@ -224,6 +224,13 @@ void Scene::DestroyEntity(Entity *ent)
 {
 	RemoveEntity(ent);
 	mEntities.erase(mEntities.find(ent->fHandle));
+
+	std::hash_map<std::string, Entity*>::iterator it;
+	if ((it = mNamedEntities.find(ent->fName)) != mNamedEntities.end())
+	{
+		mNamedEntities.erase(it);
+	}
+
 	delete ent;
 }
 

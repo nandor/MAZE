@@ -5,7 +5,7 @@
 #version 120
 #extension GL_EXT_texture_array : enable
 
-const float BIAS = 0.3;
+const float BIAS = 0.6;
 const float CLAMP = 1.5;
 
 uniform sampler2D uPosition;

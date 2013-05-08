@@ -159,7 +159,6 @@ MGLuint CreateTarget(MGLenum format, size_t width, size_t height)
 // ------------------------------------------------------------------------------------------------
 Renderer::Renderer(Engine* engine)
 	: mObjectProgram(NULL),
-	  mInstanceProgram(NULL),
 	  mSkyboxProgram(NULL),
 	  mDirlightProgram(NULL),
 	  mSpotlightProgram(NULL),
@@ -313,12 +312,7 @@ void Renderer::InitPrograms()
 	mObjectProgram->Compile(Program::VERTEX, dir + "object.vert");
 	mObjectProgram->Compile(Program::FRAGMENT, dir + "object.frag");
 	mObjectProgram->Link();
-	
-	mInstanceProgram = new Program("instance");
-	mInstanceProgram->Compile(Program::VERTEX, dir + "instance.vert");
-	mInstanceProgram->Compile(Program::FRAGMENT, dir + "object.frag");
-	mInstanceProgram->Link();
-	
+		
 	mSkyboxProgram = new Program("skybox");
 	mSkyboxProgram->Compile(Program::VERTEX, dir + "skybox.vert");
 	mSkyboxProgram->Compile(Program::FRAGMENT, dir + "skybox.frag");
@@ -436,7 +430,6 @@ void Renderer::DestroyTargets()
 void Renderer::DestroyPrograms()
 {
 	if (mObjectProgram)		{ delete mObjectProgram;	 mObjectProgram		= NULL; }
-	if (mInstanceProgram)	{ delete mInstanceProgram;	 mInstanceProgram	= NULL; }
 	if (mSkyboxProgram)		{ delete mSkyboxProgram;	 mSkyboxProgram		= NULL; }
 	if (mDirlightProgram)	{ delete mDirlightProgram;	 mDirlightProgram	= NULL; }
 	if (mSpotlightProgram)	{ delete mSpotlightProgram;	 mSpotlightProgram	= NULL; }
@@ -519,8 +512,6 @@ void Renderer::RenderSkybox()
 // ------------------------------------------------------------------------------------------------
 void Renderer::RenderObjects()
 {
-	glm::mat4 modelProj = mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix;
-
 	mglEnable(MGL_DEPTH_TEST);
 	mglEnable(MGL_CULL_FACE);
 	mglCullFace(MGL_BACK);		
@@ -529,121 +520,79 @@ void Renderer::RenderObjects()
 	mglClear(MGL_DEPTH_BUFFER_BIT);
 	
 	mObjectProgram->Use();
-	mObjectProgram->Uniform("uNear", mFront->Camera.NearPlane);
-	mObjectProgram->Uniform("uFar", mFront->Camera.FarPlane);
 	mObjectProgram->Uniform("uProj", mFront->Camera.ProjMatrix);
 	mObjectProgram->Uniform("uView", mFront->Camera.ViewMatrix);
 	mObjectProgram->Uniform("uPosition", mFront->Camera.Position);
 
-	mInstanceProgram->Use();	
-	mInstanceProgram->Uniform("uNear", mFront->Camera.NearPlane);
-	mInstanceProgram->Uniform("uFar", mFront->Camera.FarPlane);
-	mInstanceProgram->Uniform("uProj", mFront->Camera.ProjMatrix);
-	mInstanceProgram->Uniform("uView", mFront->Camera.ViewMatrix);
-	mInstanceProgram->Uniform("uPosition", mFront->Camera.Position);
-	
+	MGLuint index0 = mObjectProgram->Attribute("aModel0");
+	MGLuint index1 = mObjectProgram->Attribute("aModel1");
+	MGLuint index2 = mObjectProgram->Attribute("aModel2");
+	MGLuint index3 = mObjectProgram->Attribute("aModel3");
+				
 	mglEnableClientState(MGL_VERTEX_ARRAY);
 	mglEnableClientState(MGL_NORMAL_ARRAY);
 	mglEnableClientState(MGL_TEXTURE_COORD_ARRAY);
+	mglEnableVertexAttribArray(index0);
+	mglEnableVertexAttribArray(index1);
+	mglEnableVertexAttribArray(index2);
+	mglEnableVertexAttribArray(index3);
+
+	mglVertexAttribDivisor(index0, 1);				
+	mglVertexAttribDivisor(index1, 1);				
+	mglVertexAttribDivisor(index2, 1);								
+	mglVertexAttribDivisor(index3, 1);
+	
+	size_t count = mFront->Objects.size();
+	
+	while (count)
+	{
+		Model *model = mFront->Objects[0].Model;	
+
+		size_t instanceCount = 0;
+		for (size_t j = 0; j < count && instanceCount < INSTANCE_BATCH;)
+		{
+			if (mFront->Objects[j].Model->GetID() != model->GetID())
+			{
+				++j;
+				continue;
+			}
+
+			mInstances[instanceCount++] = mFront->Objects[j].ModelMatrix;
+			std::swap(mFront->Objects[j], mFront->Objects[--count]);
+		}	
 		
-	for (size_t i = 0; i < mFront->Objects.size(); ++i)
-	{
-		mFront->Objects[i].Rendered = false;
-	}
-
-	for (size_t i = 0; i < mFront->Objects.size(); ++i)
-	{
-		ObjectRenderData *base = &mFront->Objects[i];			
-		Model *model = base->Model;	
-
-		if (base->Rendered)
-		{
-			continue;
-		}
-			
-		if (model && model->GetState() == Resource::LOADED && model->mMeshVBO)
-		{
-			// Check if there are enough objects for instancing
-			size_t instanceCount = 0;
-			for (size_t j = i; j < mFront->Objects.size() && instanceCount < INSTANCE_BATCH; ++j)
-			{
-				ObjectRenderData *second = &mFront->Objects[j];
-
-				if (second->Rendered == false && second->Model == model)
-				{
-					mInstances[instanceCount++] = second->ModelMatrix;
-					second->Rendered = true;
-				}
-			}
-
-			if (instanceCount == 1)
-			{	
-				mObjectProgram->Use();
-				mObjectProgram->Uniform("uModel", base->ModelMatrix);
-				mObjectProgram->Uniform("uNormal", base->NormalMatrix);
-				mObjectProgram->Uniform("uTexture", base->TextureMatrix);
-				mObjectProgram->Uniform("uDiffuseMap", MGL_TEXTURE_2D, 0, model->mDiffuseMap->mTexture);
-				mObjectProgram->Uniform("uNormalMap", MGL_TEXTURE_2D, 1, model->mBumpMap->mTexture);
-
-				mglBindBuffer(MGL_ARRAY_BUFFER, base->Model->mMeshVBO);
-
-				mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
-				mglNormalPointer(MGL_FLOAT, sizeof(Model::Vertex), (void*)12);
-				mglTexCoordPointer(2, MGL_FLOAT, sizeof(Model::Vertex), (void*)24);
-			
-				mglDrawArrays(MGL_TRIANGLES, 0, model->mVertexCount);
-			}
-			else
-			{
-				MGLuint index0 = mInstanceProgram->Attribute("aModel0");
-				MGLuint index1 = mInstanceProgram->Attribute("aModel1");
-				MGLuint index2 = mInstanceProgram->Attribute("aModel2");
-				MGLuint index3 = mInstanceProgram->Attribute("aModel3");
-
-				mInstanceProgram->Use();
-				mInstanceProgram->Uniform("uNormal", base->NormalMatrix);
-				mInstanceProgram->Uniform("uTexture", base->TextureMatrix);					
-				mInstanceProgram->Uniform("uDiffuseMap", MGL_TEXTURE_2D, 0, model->mDiffuseMap->mTexture);
-				mInstanceProgram->Uniform("uNormalMap", MGL_TEXTURE_2D, 1, model->mBumpMap->mTexture);
+		if (model && model->GetState() == Resource::LOADED && model->mVBO)
+		{			
+			mObjectProgram->Uniform("uTexture", mFront->Objects[0].TextureMatrix);	
+			mObjectProgram->Uniform("uDiffuseMap", MGL_TEXTURE_2D, 0, model->mDiffuseMap->mTexture);
+			mObjectProgram->Uniform("uNormalMap", MGL_TEXTURE_2D, 1, model->mBumpMap->mTexture);
 				
-				mglBindBuffer(MGL_ARRAY_BUFFER, base->Model->mMeshVBO);
-				mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
-				mglNormalPointer(MGL_FLOAT, sizeof(Model::Vertex), (void*)12);
-				mglTexCoordPointer(2, MGL_FLOAT, sizeof(Model::Vertex), (void*)24);
-				
-				mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);				
-				mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
+			mglBindBuffer(MGL_ARRAY_BUFFER, model->mVBO);
+			mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
+			mglNormalPointer(MGL_FLOAT, sizeof(Model::Vertex), (void*)12);
+			mglTexCoordPointer(2, MGL_FLOAT, sizeof(Model::Vertex), (void*)24);
 
-				mglEnableVertexAttribArray(index0);
-				mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)0);
-				mglVertexAttribDivisor(index0, 1);
-				
-				mglEnableVertexAttribArray(index1);
-				mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)16);
-				mglVertexAttribDivisor(index1, 1);
-				
-				mglEnableVertexAttribArray(index2);
-				mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)32);
-				mglVertexAttribDivisor(index2, 1);
-								
-				mglEnableVertexAttribArray(index3);
-				mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)48);
-				mglVertexAttribDivisor(index3, 1);
+			mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);				
+			mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
+			mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)0);
+			mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)16);
+			mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)32);
+			mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)48);
 
-				mglDrawArraysInstanced(MGL_TRIANGLES, 0, model->mVertexCount, instanceCount);
-				
-				mglDisableVertexAttribArray(index0);
-				mglDisableVertexAttribArray(index1);
-				mglDisableVertexAttribArray(index2);
-				mglDisableVertexAttribArray(index3);
-			}
+			mglDrawArraysInstanced(MGL_TRIANGLES, 0, model->mVertexCount, instanceCount);
 		}
 	}
-
+	
+	mglDisableVertexAttribArray(index3);
+	mglDisableVertexAttribArray(index2);
+	mglDisableVertexAttribArray(index1);
+	mglDisableVertexAttribArray(index0);
 	mglDisableClientState(MGL_TEXTURE_COORD_ARRAY);
 	mglDisableClientState(MGL_NORMAL_ARRAY);
 	mglDisableClientState(MGL_VERTEX_ARRAY);
-	
+
+	mglBindVertexArray(0);
+		
 	mglDisable(MGL_DEPTH_TEST);
 	mglDisable(MGL_CULL_FACE);
 }
@@ -665,7 +614,6 @@ void Renderer::RenderPointlights()
 	mglEnableClientState(MGL_VERTEX_ARRAY);
 	mglVertexPointer(3, MGL_FLOAT, 12, (void*)0);
 
-	mglEnable(MGL_DEPTH_TEST);
 	mglEnable(MGL_CULL_FACE);
 	mglEnable(MGL_BLEND);
 
@@ -680,6 +628,8 @@ void Renderer::RenderPointlights()
 				
 		if (light->Type == Light::POINT)
 		{
+			light->Inside ? mglEnable(MGL_DEPTH_TEST) : mglDisable(MGL_DEPTH_TEST);
+
 			mPointlightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
 			mPointlightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
 			mPointlightProgram->Uniform("lPosition", light->Position);
@@ -714,7 +664,6 @@ void Renderer::RenderSpotlights()
 	mglEnableClientState(MGL_VERTEX_ARRAY);
 	mglVertexPointer(3, MGL_FLOAT, 12, (void*)0);
 
-	mglEnable(MGL_DEPTH_TEST);
 	mglEnable(MGL_CULL_FACE);
 	mglEnable(MGL_BLEND);
 
@@ -729,6 +678,8 @@ void Renderer::RenderSpotlights()
 				
 		if (light->Type == Light::SPOT)
 		{
+			light->Inside ? mglEnable(MGL_DEPTH_TEST) : mglDisable(MGL_DEPTH_TEST);
+
 			mSpotlightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
 			mSpotlightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
 			mSpotlightProgram->Uniform("lPosition", light->Position);
@@ -786,10 +737,10 @@ void Renderer::RenderDirlights()
 					for (size_t j = 0; j < light->Shadow[i].Count; ++j)
 					{
 						ObjectRenderData* obj = &mFront->ShadowCasters[light->Shadow[i].Index + j];		
-						if (obj->Model && obj->Model->GetState() == Resource::LOADED && obj->Model->mMeshVBO)
+						if (obj->Model && obj->Model->GetState() == Resource::LOADED && obj->Model->mVBO)
 						{
 							mVolumeProgram->Uniform("uMVP", light->Shadow[i].MVP * obj->ModelMatrix);
-							mglBindBuffer(MGL_ARRAY_BUFFER, obj->Model->mMeshVBO);
+							mglBindBuffer(MGL_ARRAY_BUFFER, obj->Model->mVBO);
 							mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), 0);
 							mglDrawArrays(MGL_TRIANGLES, 0, obj->Model->mVertexCount);
 						}

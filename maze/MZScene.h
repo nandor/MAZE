@@ -112,6 +112,29 @@ namespace MAZE
 		}
 
 		/**
+			Creates a new entity
+		*/
+		template <class T>
+		T* Create(const std::string& name)
+		{
+			T* entity;
+			unsigned id;
+
+			id = ++mEntityCount;
+
+			entity = new T();
+			entity->fScene = this;
+			entity->fEngine = mEngine;
+			entity->fHandle = id;
+			entity->fName = name;
+
+			mEntities.insert(std::make_pair(id, entity));
+			mNamedEntities.insert(std::make_pair(name, entity));
+
+			return entity;
+		}
+
+		/**
 			Retrieves all visible entities
 		*/
 		void QueryScene(const ViewFrustum& volume, RenderBuffer* buffer);
@@ -164,6 +187,9 @@ namespace MAZE
 
 		/// Handle - Entity mapping
 		std::hash_map<unsigned, Entity*> mEntities;
+
+		/// Name - Entity mapping
+		std::hash_map<std::string, Entity*> mNamedEntities;
 
 		/// Entity count
 		Atomic<unsigned> mEntityCount;

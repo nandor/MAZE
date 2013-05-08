@@ -29,6 +29,8 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 	{
 		case Light::POINT:
 		{
+			data->Inside = buffer->ViewVolume.Intersect(fBox) == INSIDE;
+
 			data->Position.x = mPosition.x;
 			data->Position.y = mPosition.y;
 			data->Position.z = mPosition.z;
@@ -47,6 +49,8 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 		{
 			float d = mRadius * tan(mAngle / 2.0f) * 2.15f;
 			
+			data->Inside = buffer->ViewVolume.Intersect(fBox) == INSIDE;
+
 			data->Position.x = mPosition.x;
 			data->Position.y = mPosition.y;
 			data->Position.z = mPosition.z;

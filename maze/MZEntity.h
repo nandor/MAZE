@@ -64,6 +64,7 @@ namespace MAZE
 		Entity(Type type)
 			: mType(type),
 			  mActive(true),
+			  fName(""),
 			  fScene(NULL),
 			  fParentNode(NULL)
 		{
@@ -82,6 +83,22 @@ namespace MAZE
 		bool IsCollider() const
 		{
 			return mCollider;
+		}
+
+		/**
+			Check if the object can be picked up
+		*/
+		bool IsPickable() const
+		{
+			return mPickable;
+		}
+
+		/**
+			Check if the object can be used
+		*/
+		bool IsUsable() const
+		{
+			return mUsable;
 		}
 					
 		/**
@@ -107,14 +124,6 @@ namespace MAZE
 		{
 			return mActive;
 		}
-		
-		/**
-			Activates the entity
-		*/
-		void SetActive(bool flag)
-		{
-			mActive = flag;
-		}
 
 		/**
 			Returns the type of the entity
@@ -135,10 +144,50 @@ namespace MAZE
 		/**
 			Prevents the entity from colliding
 		*/
-		void SetCollision(bool flag)
+		void SetCollider(bool flag)
 		{
 			mCollider = flag;
 		}
+
+		/**
+			Allows the object to be picked up
+		*/
+		void SetPickable(bool flag)
+		{
+			mPickable = flag;
+		}
+
+		/**
+			Activates the object to be activated by pressing 'F'
+		*/
+		void SetUsable(bool flag)
+		{
+			mUsable = flag;
+		}
+
+		/**
+			Allows the object to be rendered
+		*/
+		void SetRenderable(bool flag)
+		{
+			mRenderable = flag;
+		}	
+
+		/**
+			Allows the object to cast shadows
+		*/
+		void SetShadowCaster(bool flag)
+		{
+			mRenderable = flag;
+		}	
+
+		/**
+			Activates the object
+		*/
+		void SetActive(bool flag)
+		{
+			mActive = flag;
+		}				
 
 		/**
 			Updates the entity on each frame
@@ -157,6 +206,12 @@ namespace MAZE
 		/// True if the entity collides with the player
 		bool mCollider;
 
+		/// True if the entity can be picked up by the player
+		bool mPickable;
+
+		/// True if the player can use the entity
+		bool mUsable;
+
 		/// True if the object is renderable
 		bool mRenderable;
 
@@ -168,6 +223,9 @@ namespace MAZE
 
 		/// Type of the entity
 		Type mType;
+
+		/// ID of the entity
+		std::string fName;
 
 		/// Unique numeric handle
 		unsigned fHandle;

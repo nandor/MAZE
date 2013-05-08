@@ -46,14 +46,14 @@ struct MZOHeader
 Model::Model(ResourceManager* rsmngr, const std::string& id, const std::string& fn)
 	: Resource(rsmngr, Resource::MODEL, id),
 	  mFile(fn),
-	  mMeshVBO(0)
+	  mVBO(0)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 Model::~Model()
 {
-	if (mMeshVBO)	   { mglDeleteBuffers(1, &mMeshVBO);	  mMeshVBO = 0;	    }
+	if (mVBO) { mglDeleteBuffers(1, &mVBO);		 mVBO = 0; }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -107,12 +107,14 @@ void Model::Load()
 	// Upload the model to the GPU
 	if (mVertices.size() > 0)
 	{
-		mglGenBuffers(1, &mMeshVBO);
-		mglBindBuffer(MGL_ARRAY_BUFFER, mMeshVBO);
+		mglGenBuffers(1, &mVBO);
+		mglBindBuffer(MGL_ARRAY_BUFFER, mVBO);
 		mglBufferData(MGL_ARRAY_BUFFER, mVertices.size() * sizeof(mVertices[0]), &mVertices[0], MGL_STATIC_DRAW);
 		mglBindBuffer(MGL_ARRAY_BUFFER, 0);
+
 		mVertices.clear();
 
+		mglBindBuffer(MGL_ARRAY_BUFFER, 0);
 		mglFinish();	
 	}
 }
@@ -126,7 +128,7 @@ void Model::Unload()
 	mVertices.clear();
 	mCollision.clear();
 
-	if (mMeshVBO)	   { mglDeleteBuffers(1, &mMeshVBO);	  mMeshVBO = 0;	    }
+	if (mVBO) { mglDeleteBuffers(1, &mVBO);		 mVBO = 0; }
 }
 
 

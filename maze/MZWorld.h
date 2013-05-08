@@ -57,6 +57,8 @@ namespace MAZE
 		void InitScene();
 		void InitScript();
 
+		void UpdateDayCycle(float time, float dt);
+
 	private:
 
 		/// Reference to the engine

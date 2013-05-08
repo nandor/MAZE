@@ -52,17 +52,8 @@ namespace MAZE
 	{
 	public:
 
-		ObjectRenderData() : Rendered(false)
-		{
-		}
-
-	public:
-
 		/// Local matrix of the object
 		glm::mat4 ModelMatrix;
-
-		/// Inverse model matrix
-		glm::mat4 NormalMatrix;
 
 		/// Texture matrix
 		glm::mat2 TextureMatrix;
@@ -75,10 +66,7 @@ namespace MAZE
 
 		/// Depth of the object
 		float Z;
-
-		/// Render flag
-		bool Rendered;
-
+		
 		/// ID of the entity
 		unsigned Handle;
 	};
@@ -116,6 +104,9 @@ namespace MAZE
 
 		/// True if the light casts shadows
 		bool CastsShadows;
+
+		/// Intersection result
+		bool Inside;
 
 		/// List of shadow maps
 		struct

@@ -49,7 +49,6 @@ void Object::Render(RenderBuffer* buffer, RenderMode mode)
 	data->ModelMatrix *= glm::rotate(mRotation.y, glm::vec3(0.0, 1.0, 0.0));
 	data->ModelMatrix *= glm::rotate(mRotation.z, glm::vec3(0.0, 0.0, 1.0));
 
-	data->NormalMatrix = glm::inverseTranspose(data->ModelMatrix);
 	data->TextureMatrix = glm::mat2(1.0f);
 	data->Position = mPosition;
 	data->Model = mModel;

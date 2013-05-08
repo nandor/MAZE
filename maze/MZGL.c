@@ -111,6 +111,9 @@ mglEnableVertexAttribArrayProc				mglEnableVertexAttribArray;
 mglDisableVertexAttribArrayProc				mglDisableVertexAttribArray;
 mglVertexAttribPointerProc					mglVertexAttribPointer;
 mglVertexAttribDivisorProc					mglVertexAttribDivisor;
+mglGenVertexArraysProc						mglGenVertexArrays;
+mglDeleteVertexArraysProc					mglDeleteVertexArrays;
+mglBindVertexArrayProc						mglBindVertexArray;
 mglDrawArraysInstancedProc					mglDrawArraysInstanced;
 mglIsRenderbufferProc						mglIsRenderbuffer;
 mglIsFramebufferProc						mglIsFramebuffer;
@@ -220,6 +223,7 @@ int mglInit()
 	mglBlendFunc			= glBlendFunc;
 	mglClearStencil			= glClearStencil;
 	mglPolygonOffset		= glPolygonOffset;
+	mglDrawArrays			= glDrawArrays;
 
 	GET_ADDR(glGenerateMipmap);
 	GET_ADDR(glUseProgram);
@@ -263,8 +267,10 @@ int mglInit()
 	GET_ADDR(glDisableVertexAttribArray);
 	GET_ADDR(glVertexAttribPointer);
 	GET_ADDR(glVertexAttribDivisor);
+	GET_ADDR(glGenVertexArrays);
+	GET_ADDR(glDeleteVertexArrays);
+	GET_ADDR(glBindVertexArray);
 	GET_ADDR(glDrawArraysInstanced);
-	GET_ADDR(glDrawArrays);
 	GET_ADDR(glGenFramebuffers);
 	GET_ADDR(glDeleteFramebuffers);
 	GET_ADDR(glBindFramebuffer);

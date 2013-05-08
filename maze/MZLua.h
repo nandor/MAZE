@@ -21,10 +21,8 @@ namespace MAZE
 		@param s	Static table
 		@param m	Metatable
 	*/
-	void mzlClass(lua_State *L, 
-				  const std::string& name, const std::string& base, 
-				  lua_CFunction ctor, 
-				  const luaL_Reg *s, const luaL_Reg *m);
+	void mzlClass(lua_State *L, const std::string& name, const std::string& base, 
+				  lua_CFunction ctor, const luaL_Reg *s, const luaL_Reg *m);
 	
 	/**
 		Default print method

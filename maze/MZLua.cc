@@ -9,13 +9,11 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-void MAZE::mzlClass(lua_State* L, 
-					const std::string& name, const std::string& base, 
-					lua_CFunction ctor, 
-					const luaL_Reg *s, const luaL_Reg *m)
+void MAZE::mzlClass(lua_State* L, const std::string& name, const std::string& base, 
+					lua_CFunction ctor, const luaL_Reg *s, const luaL_Reg *m)
 {
 	// Initialize the static table
-	s ? luaL_newlib(L, s) : lua_createtable(L, 0, 0);
+	s ? luaL_newlib(L, s) : lua_createtable(L, 0, 1);
 	lua_pushvalue(L, -1);
 	lua_setglobal(L, name.c_str());
 

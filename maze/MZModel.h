@@ -81,20 +81,28 @@ namespace MAZE
 
 	private:
 
+		/// Pointer modifies reference count
+		friend class Resource::Ptr<Model>;
+
+		/// Renderer needs access to the vbo
+		friend class Renderer;
+
+	private:
+
 		/// Name of the source file
 		std::string mFile;
 		
 		/// List of vertices of the mesh
 		std::vector<Vertex> mVertices;
 
+		/// List of vertices of the collision mesh
+		std::vector<glm::vec3> mCollision;
+
 		/// Number of vertices of the mesh
 		size_t mVertexCount;
 		
 		/// Mesh VBO
-		MGLuint mMeshVBO;
-		
-		/// List of vertices of the collision mesh
-		std::vector<glm::vec3> mCollision;
+		MGLuint mVBO;
 		
 		/// Diffuse map
 		Resource::Ptr<Texture> mDiffuseMap;
@@ -107,12 +115,6 @@ namespace MAZE
 
 		/// Bounding box max point
 		glm::vec3 mBoxMax;
-
-		/// Pointer modifies reference count
-		friend class Resource::Ptr<Model>;
-
-		/// Renderer needs access to the vbo
-		friend class Renderer;
 	};
 };
 

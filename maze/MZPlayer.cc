@@ -10,7 +10,7 @@ using namespace MAZE;
 // ------------------------------------------------------------------------------------------------
 const float Player::ROTATE_SPEED = 1 / 200.0f;
 const float Player::MOVE_SPEED = 0.007f;
-const float Player::JUMP_SPEED = 0.015f;
+const float Player::JUMP_SPEED = 0.017f;
 const float Player::GRAVITY = 0.00005f;
 
 // ------------------------------------------------------------------------------------------------
@@ -162,6 +162,7 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 	light->Position	= glm::vec4(mPosition, 20.0f);	
 	light->ModelMatrix = glm::translate(mPosition);
 	light->ModelMatrix *= glm::scale(glm::vec3(20.0f * 2.15));
+	light->Inside = false;
 }
 
 // ------------------------------------------------------------------------------------------------

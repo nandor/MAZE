@@ -91,8 +91,8 @@ static int vec3__tostring(lua_State *L)
 // ------------------------------------------------------------------------------------------------
 static int vec3__getter(lua_State *L)
 {
-	const char* name = luaL_checkstring(L, 2);
 	glm::vec3* obj = (glm::vec3*)mzlGetObject(L,  1, "vec3");
+	const char* name = luaL_checkstring(L, 2);
 
 	if (!strcmp(name, "x"))
 	{
@@ -116,8 +116,8 @@ static int vec3__getter(lua_State *L)
 // ------------------------------------------------------------------------------------------------
 static int vec3__setter(lua_State *L)
 {
-	const char* name = luaL_checkstring(L, 2);
 	glm::vec3* obj = (glm::vec3*)mzlGetObject(L,  1, "vec3");
+	const char* name = luaL_checkstring(L, 2);
 
 	if (!strcmp(name, "x"))
 	{
@@ -136,7 +136,7 @@ static int vec3__setter(lua_State *L)
 	}
 
 	lua_pushnil(L);
-	return 0;
+	return 1;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -168,12 +168,12 @@ static int vec3dot(lua_State *L)
 // ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg vec3_m[] = 
 {
-	{"length",		vec3length},
 	{"__add",		vec3__add},
 	{"__sub",		vec3__sub},
 	{"__tostring",	vec3__tostring},
 	{"__setter",	vec3__setter},
 	{"__getter",	vec3__getter},
+	{"length",		vec3length},
 	{NULL, NULL}
 };
 
@@ -187,7 +187,7 @@ static const struct luaL_Reg vec3_s[] =
 // ------------------------------------------------------------------------------------------------
 // box
 // ------------------------------------------------------------------------------------------------
-static int box_ctor(lua_State* L)
+static int box__ctor(lua_State* L)
 {
 	glm::vec3 *a, *b;
 	BoundingBox *box;
@@ -195,15 +195,95 @@ static int box_ctor(lua_State* L)
 	a = (glm::vec3*)mzlGetObject (L, 2, "vec3");
 	b = (glm::vec3*)mzlGetObject (L, 3, "vec3");
 
-	box = (BoundingBox*)mzlCreateObject(L, sizeof(BoundingBox), "vec3");
+	box = (BoundingBox*)mzlCreateObject(L, sizeof(BoundingBox), "box");
 	new (box) BoundingBox(*a, *b);
 
 	return 1;
 }
 
 // ------------------------------------------------------------------------------------------------
+static int box__setter(lua_State *L)
+{
+	BoundingBox *obj = (BoundingBox*)mzlGetObject(L,  1, "box");
+	const char *name = luaL_checkstring(L, 2);
+	glm::vec3 *v;
+
+	if (!strcmp(name, "position"))
+	{
+		v = (glm::vec3*)mzlGetObject(L, 3, "vec3");
+		obj->SetPosition(*v);
+		return 0;
+	}
+	else if (!strcmp(name, "size"))
+	{
+		v = (glm::vec3*)mzlGetObject(L, 3, "vec3");
+		obj->SetSize(*v);
+		return 0;
+	}
+
+	lua_pushnil(L);
+	return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
+static int box__getter(lua_State *L)
+{
+	BoundingBox *obj = (BoundingBox*)mzlGetObject(L,  1, "box");
+	const char *name = luaL_checkstring(L, 2);
+	glm::vec3 *v;
+
+	if (!strcmp(name, "position"))
+	{
+		v = (glm::vec3*)mzlCreateObject(L, sizeof(glm::vec3), "vec3");
+		new (v) glm::vec3(obj->GetPosition());
+
+		return 1;
+	}
+	else if (!strcmp(name, "size"))
+	{		
+		v = (glm::vec3*)mzlCreateObject(L, sizeof(glm::vec3), "vec3");
+		new (v) glm::vec3(obj->GetSize());
+
+		return 1;
+	}
+
+	return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+static int boxintersect(lua_State *L)
+{
+	BoundingBox *a = (BoundingBox*)mzlGetObject(L,  1, "box");
+	BoundingBox *b = (BoundingBox*)mzlGetObject(L,  2, "box");
+
+	lua_pushnumber(L, a->Intersect(*b));
+	return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
+static int box__tostring(lua_State *L)
+{
+	BoundingBox *a;
+	std::stringstream ss;
+	
+	a = (BoundingBox*)mzlGetObject (L, 1, "box");
+
+	ss << "box((" 
+	   << a->GetMin().x << ", " << a->GetMin().y << ", " << a->GetMin().z << "), ("
+	   << a->GetMax().x << ", " << a->GetMax().y << ", " << a->GetMax().z << "))";
+				
+
+	lua_pushstring(L, ss.str().c_str());
+	return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg box_m[] = 
 {
+	{"__setter",	box__setter},
+	{"__getter",	box__getter},
+	{"__tostring",	box__tostring},
+	{"intersect",	boxintersect},
 	{NULL, NULL}
 };
 
@@ -216,5 +296,5 @@ static const struct luaL_Reg box_s[] =
 void MAZE::mzlRegisterMath(lua_State* L)
 {
 	mzlClass(L, "vec3", "", vec3__ctor, vec3_s, vec3_m);
-	mzlClass(L, "box", "", box_ctor, box_s, box_m);
+	mzlClass(L, "box", "", box__ctor, box_s, box_m);
 }

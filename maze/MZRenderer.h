@@ -101,7 +101,6 @@ namespace MAZE
 
 		// List of shader programs
 		Program *mObjectProgram;
-		Program *mInstanceProgram;
 		Program *mSkyboxProgram;
 		Program *mDirlightProgram;
 		Program *mSpotlightProgram;
