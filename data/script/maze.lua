@@ -15,11 +15,12 @@ function on_world_init()
         coin.pickable = true     
         
         coin.on_pick = function (ent)
+            coin_count = coin_count + 1
             coin:delete()
         end
         
         coin.on_update = function (t, dt)
-           coin.rotation = vec3(0.0, t / 15.0, 0.0)
+           coin.rotation = vec3(0.0, t / 15.0 + i, 0.0)
         end
     end
         

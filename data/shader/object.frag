@@ -14,7 +14,7 @@ varying vec3 vVertex;
 varying vec3 vNormal;
 varying vec2 vUV;
 
-mat3 inverse(mat3 m)
+mat3 matrixInverse(in mat3 m)
 {  
    float det = dot(cross(m[0], m[1]), m[2]);
    mat3 t = transpose(m);
@@ -34,7 +34,7 @@ void main()
     vec3 dpx = dFdx(view), dpy = dFdy(view);
     vec2 dtx = dFdx(vUV), dty = dFdy(vUV);
    
-    mat3 m = inverse(mat3(dpx, dpy, cross(dpx, dpy)));
+    mat3 m = matrixInverse(mat3(dpx, dpy, cross(dpx, dpy)));
     vec3 t = m * vec3(dtx.x, dty.x, 0.0);
     vec3 b = m * vec3(dtx.y, dty.y, 0.0);
     

@@ -25,6 +25,38 @@ namespace MAZE
 			Destroys the player
 		*/
 		~Player();
+
+		/**
+			Checks if the object is jumping
+		*/
+		bool IsJumping() const
+		{
+			return mIsJumping;
+		}
+
+		/**
+			Checks if the object is falling
+		*/
+		bool IsFalling() const
+		{
+			return mIsFalling;
+		}
+
+		/**
+			Checks if the object is sprinting
+		*/
+		bool IsSprinting() const
+		{
+			return mIsSprinting;
+		}
+
+		/**
+			Checks if the object is sprinting
+		*/
+		bool IsMoving() const
+		{
+			return mIsMoving;
+		}
 		
 		/**
 			Returns the movement speed

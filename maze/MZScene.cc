@@ -420,7 +420,6 @@ Entity* Scene::QueryUseable(Entity *who)
 				(*it)->IsActive() &&
 				(*it)->GetBoundingBox().Intersect(who->GetBoundingBox()))
 			{
-				(*it)->OnPick(who);
 			}
 		}
 

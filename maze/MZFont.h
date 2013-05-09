@@ -6,9 +6,20 @@
 #define MZFONT_H
 #pragma once
 
+#include "MZResource.h"
+
 namespace MAZE
 {
+	class Font : public Resource
+	{
+	public:
 
+		Font(const std::string& id, const std::string& fn, size_t h);
+		virtual ~Font();
+
+	private:
+
+	};
 };
 
 #endif

@@ -19,7 +19,7 @@ varying vec3 vVertex;
 varying vec3 vNormal;
 varying vec2 vUV;
 
-mat3 inverse(mat3 m)
+mat3 matrixInverse(in mat3 m)
 {  
    float det = dot(cross(m[0], m[1]), m[2]);
    mat3 t = transpose(m);
@@ -31,7 +31,7 @@ void main()
     mat4 aModel = mat4(aModel0, aModel1, aModel2, aModel3);
     
     vVertex = vec3(aModel * gl_Vertex);
-    vNormal = vec3(inverse(mat3(aModel)) * gl_Normal);
+    vNormal = vec3(matrixInverse(mat3(aModel)) * gl_Normal);
     vUV = uTexture * gl_MultiTexCoord0.st;
 
     gl_Position = uProj * uView * vec4(vVertex, 1.0);

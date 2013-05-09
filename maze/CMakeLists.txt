@@ -9,6 +9,7 @@ set (SOURCES MZCamera.cc
              MZEngine.cc
 			 MZException.cc
 			 MZBound.cc
+			 MZFont.cc
 			 MZGL.c
 			 MZLight.cc
 			 MZLog.cc
@@ -37,6 +38,7 @@ set (HEADERS MZAtomic.h
 			 MZEntity.h
 			 MZException.h
 			 MZBound.h
+			 MZFont.h
 			 MZGL.h
 			 MZLight.h
 			 MZLog.h
