@@ -25,6 +25,14 @@ namespace MAZE
 			Destroys the player
 		*/
 		~Player();
+		
+		/**
+			Returns the movement speed
+		*/
+		float GetMoveSpeed() const
+		{
+			return mMoveSpeed;
+		}
 
 		/**
 			Returns the camera attached to the player
@@ -35,14 +43,12 @@ namespace MAZE
 		}
 
 		/**
-			Sets the position of the player
+			Changes the movement speed
 		*/
-		void SetPosition(const glm::vec3& position)
+		void SetMoveSpeed(float speed)
 		{
-			mPosition = position;
-			InternalUpdate();
+			mMoveSpeed = speed;
 		}
-		
 
 		/**
 			Places the entity in the renderbuffer
@@ -58,7 +64,7 @@ namespace MAZE
 
 	private:
 
-		void InternalUpdate();
+		void UpdateInternals();
 		
 	private:
 		
@@ -77,12 +83,6 @@ namespace MAZE
 		/// FPS camera
 		Camera *mCamera;
 			
-		/// Orientation
-		glm::vec3 mRotation;
-
-		/// Position
-		glm::vec3 mPosition;
-
 		/// Velocity
 		glm::vec3 mVelocity;
 
@@ -101,11 +101,14 @@ namespace MAZE
 		/// Movement flag
 		bool mIsMoving;
 
-		/// Movement start time
-		float mMoveStart;
+		/// Movement speed
+		float mMoveSpeed;
 		
 		/// Size of the entity
 		glm::vec3 mSize;
+
+		/// Closest object which is useable
+		Entity *mUseable;
 	};
 };
 

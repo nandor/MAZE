@@ -614,6 +614,7 @@ void Renderer::RenderPointlights()
 	mglEnableClientState(MGL_VERTEX_ARRAY);
 	mglVertexPointer(3, MGL_FLOAT, 12, (void*)0);
 
+	mglEnable(MGL_DEPTH_TEST);
 	mglEnable(MGL_CULL_FACE);
 	mglEnable(MGL_BLEND);
 

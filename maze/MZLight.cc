@@ -17,8 +17,7 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 {
 	LightRenderData *data;
 
-	buffer->Lights.resize(buffer->Lights.size() + 1);
-	data = &(*buffer->Lights.rbegin());
+	data = buffer->AddLight();
 
 	data->Type = mType;
 	data->Specular = mSpecular;	
@@ -29,7 +28,7 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 	{
 		case Light::POINT:
 		{
-			data->Inside = buffer->ViewVolume.Intersect(fBox) == INSIDE;
+			data->Inside = buffer->ViewVolume.Intersect(mBoxWorld) == INSIDE;
 
 			data->Position.x = mPosition.x;
 			data->Position.y = mPosition.y;
@@ -49,7 +48,7 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 		{
 			float d = mRadius * tan(mAngle / 2.0f) * 2.15f;
 			
-			data->Inside = buffer->ViewVolume.Intersect(fBox) == INSIDE;
+			data->Inside = buffer->ViewVolume.Intersect(mBoxWorld) == INSIDE;
 
 			data->Position.x = mPosition.x;
 			data->Position.y = mPosition.y;
@@ -98,42 +97,41 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 					data->Shadow[j].NearZ = begin;	
 
 					data->Shadow[j].Index = buffer->ShadowCasters.size();			
-					fScene->QueryShadows(lightvol, buffer);
+					fScene->QueryShadowCasters(lightvol, buffer);
 					data->Shadow[j].Count = buffer->ShadowCasters.size() - data->Shadow[j].Index;
 				}
 			}
+
 			break;
 		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------
-void Light::InternalUpdate()
+void Light::UpdateInternals()
 {
 	switch (mType)
 	{
 		case Light::POINT:
 		{		
 			glm::vec3 halfSize = glm::vec3(mRadius * 2.0f);
-			fBox.SetPosition(mPosition - halfSize);
-			fBox.SetSize(halfSize * 2.0f);
+			mBoxWorld.SetPosition(mPosition - halfSize);
+			mBoxWorld.SetSize(halfSize * 2.0f);
 			break;
 		}
 		case Light::SPOT:
 		{
 			glm::vec3 halfSize = glm::vec3(mRadius * 2.0f);
-			fBox.SetPosition(mPosition - halfSize);
-			fBox.SetSize(halfSize * 2.0f);
+			mBoxWorld.SetPosition(mPosition - halfSize);
+			mBoxWorld.SetSize(halfSize * 2.0f);
 			break;
 		}
 		case Light::DIRECTIONAL:
 		{
-			fBox.SetPosition(glm::vec3(-1e10f));
-			fBox.SetSize(glm::vec3(2e10f));
+			mBoxWorld.SetPosition(glm::vec3(-1e10f));
+			mBoxWorld.SetSize(glm::vec3(2e10f));
 			break;
 		}
 	}
-
-	fScene->UpdateEntity(this);
 }
 

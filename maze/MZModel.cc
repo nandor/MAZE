@@ -72,13 +72,13 @@ void Model::Load()
 			throw Exception("Invalid mzo: '" + mFile + "'");
 		}
 		
-		mBoxMin.x = header.Box.MinX;
-		mBoxMin.y = header.Box.MinY;
-		mBoxMin.z = header.Box.MinZ;
+		mBoxWorldMin.x = header.Box.MinX;
+		mBoxWorldMin.y = header.Box.MinY;
+		mBoxWorldMin.z = header.Box.MinZ;
 		
-		mBoxMax.x = header.Box.MaxX;
-		mBoxMax.y = header.Box.MaxY;
-		mBoxMax.z = header.Box.MaxZ;
+		mBoxWorldMax.x = header.Box.MaxX;
+		mBoxWorldMax.y = header.Box.MaxY;
+		mBoxWorldMax.z = header.Box.MaxZ;
 
 		mVertices.resize(header.MeshVertices);
 		mCollision.resize(header.CollisionFaces);

@@ -111,10 +111,10 @@ namespace MAZE
 		Resource::Ptr<Texture> mBumpMap;
 
 		/// Bounding box min point
-		glm::vec3 mBoxMin;
+		glm::vec3 mBoxWorldMin;
 
 		/// Bounding box max point
-		glm::vec3 mBoxMax;
+		glm::vec3 mBoxWorldMax;
 	};
 };
 

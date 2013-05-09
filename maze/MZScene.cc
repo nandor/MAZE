@@ -93,7 +93,7 @@ Scene::Scene(Engine* engine, float width, float height, float depth)
 	  mRoot(new SceneNode(BoundingBox(
 		-width, -height, -depth, 
 		width * 2.0f, height * 2.0f, depth * 2.0f
-	)))
+	  )))
 {
 }
 
@@ -213,29 +213,41 @@ void Scene::AddEntity(Entity* entity)
 }
 
 // ------------------------------------------------------------------------------------------------
-void Scene::UpdateEntity(Entity* ent)
+void Scene::Update(float time, float dt)
 {
-	RemoveEntity(ent);
-	AddEntity(ent);
-}
-
-// ------------------------------------------------------------------------------------------------
-void Scene::DestroyEntity(Entity *ent)
-{
-	RemoveEntity(ent);
-	mEntities.erase(mEntities.find(ent->fHandle));
-
-	std::hash_map<std::string, Entity*>::iterator it;
-	if ((it = mNamedEntities.find(ent->fName)) != mNamedEntities.end())
+	std::hash_map<unsigned, Entity*>::iterator it = mEntities.begin();
+	while (it != mEntities.end())
 	{
-		mNamedEntities.erase(it);
-	}
+		Entity *ent = it->second;
 
-	delete ent;
+		if (ent->fDelete)
+		{
+			mNamedEntities.erase(ent->GetName());
+			RemoveEntity(ent);
+			delete ent;
+			mEntities.erase(it++);
+			continue;
+		}
+
+		if (ent->IsActive())
+		{
+			ent->Update(time, dt);
+
+			if (ent->fDirty)
+			{
+				RemoveEntity(ent);
+				ent->UpdateInternals();
+				ent->fDirty = false;
+				AddEntity(ent);
+			}
+		}
+
+		++it;
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
-void Scene::QueryScene(const ViewFrustum& volume, RenderBuffer* buffer)
+void Scene::QueryRenderables(const ViewFrustum& volume, RenderBuffer* buffer)
 {
 	SceneNode* node = mRoot;
 	std::vector<Entity*>::iterator it;
@@ -259,7 +271,7 @@ void Scene::QueryScene(const ViewFrustum& volume, RenderBuffer* buffer)
 }
 
 // ------------------------------------------------------------------------------------------------
-void Scene::QueryShadows(const ViewFrustum& volume, RenderBuffer* buffer)
+void Scene::QueryShadowCasters(const ViewFrustum& volume, RenderBuffer* buffer)
 {
 	SceneNode* node = mRoot;
 	std::vector<Entity*>::iterator it;
@@ -268,9 +280,10 @@ void Scene::QueryShadows(const ViewFrustum& volume, RenderBuffer* buffer)
 	{
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
-			if ((*it)->GetEntityType() == Entity::OBJECT && 
-				(*it)->IsActive() &&
+			if ((*it)->IsActive() &&
+				(*it)->IsRenderable() &&
 				(*it)->IsShadowCaster() &&
+				(*it)->GetType() != Entity::LIGHT &&
 				(*it)->GetBoundingBox().Intersect(volume) != OUTSIDE)
 			{
 				(*it)->Render(buffer, Entity::RENDER_SHADOW);
@@ -282,16 +295,17 @@ void Scene::QueryShadows(const ViewFrustum& volume, RenderBuffer* buffer)
 }
 
 // ------------------------------------------------------------------------------------------------
-glm::vec3 Scene::QueryDistance(const BoundingBox& entity, const glm::vec3& dir)
+glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 {	
+	BoundingBox entity = who->GetBoundingBox();
 	BoundingBox extended = entity.Extend(dir);
 	std::vector<Entity*> objects;
-	std::vector<Entity*>::iterator it;
 	glm::vec3 final = dir;
 	
 	SceneNode* node = mRoot;
 	while (node)
 	{
+		std::vector<Entity*>::iterator it;
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
 			if ((*it)->IsCollider() &&
@@ -364,4 +378,54 @@ glm::vec3 Scene::QueryDistance(const BoundingBox& entity, const glm::vec3& dir)
 	}
 
 	return dir;
+}
+
+// ------------------------------------------------------------------------------------------------
+void Scene::QueryPickables(Entity *who)
+{
+	std::vector<Entity*> objects;	
+	SceneNode* node = mRoot;
+
+	while (node)
+	{
+		std::vector<Entity*>::iterator it;
+		for (it = node->Items.begin(); it != node->Items.end(); ++it)
+		{
+			if ((*it)->IsPickable() &&
+				(*it)->IsActive() &&
+				(*it)->GetBoundingBox().Intersect(who->GetBoundingBox()))
+			{
+				(*it)->OnPick(who);
+			}
+		}
+
+		node = node->Next(who->GetBoundingBox());
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+Entity* Scene::QueryUseable(Entity *who)
+{
+	std::vector<Entity*> objects;	
+	SceneNode* node = mRoot;
+	Entity* entity = NULL;
+	float angle = PI / 2.0f;
+
+	while (node)
+	{
+		std::vector<Entity*>::iterator it;
+		for (it = node->Items.begin(); it != node->Items.end(); ++it)
+		{
+			if ((*it)->IsPickable() &&
+				(*it)->IsActive() &&
+				(*it)->GetBoundingBox().Intersect(who->GetBoundingBox()))
+			{
+				(*it)->OnPick(who);
+			}
+		}
+
+		node = node->Next(who->GetBoundingBox());
+	}
+
+	return entity;
 }

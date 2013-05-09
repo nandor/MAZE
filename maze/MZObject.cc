@@ -14,13 +14,11 @@ using namespace MAZE;
 Object::Object()
 	: Entity(Entity::OBJECT)
 {
-
 }
 
 // ------------------------------------------------------------------------------------------------
 Object::~Object()
 {
-
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -56,10 +54,9 @@ void Object::Render(RenderBuffer* buffer, RenderMode mode)
 }
 
 // ------------------------------------------------------------------------------------------------
-void Object::InternalUpdate()
+void Object::UpdateInternals()
 {
-	fBox.SetPosition(mPosition + mBoundingBox.GetPosition());
-	fBox.SetSize(mBoundingBox.GetSize());
-
-	fScene->UpdateEntity(this);
+	mBoxWorld.SetPosition(mPosition + mBoxModel.GetPosition());
+	mBoxWorld.SetSize(mBoxModel.GetSize());
 }
+	

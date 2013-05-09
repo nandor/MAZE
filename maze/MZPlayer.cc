@@ -9,24 +9,25 @@ using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 const float Player::ROTATE_SPEED = 1 / 200.0f;
-const float Player::MOVE_SPEED = 0.007f;
 const float Player::JUMP_SPEED = 0.017f;
 const float Player::GRAVITY = 0.00005f;
 
 // ------------------------------------------------------------------------------------------------
 Player::Player()
 	: Entity(PLAYER),
-	  mPosition(0.0f, 2.0f, 0.0f),
-	  mRotation(0.0f, 0.0f, 0.0f),
 	  mVelocity(0.0f, 0.0f, 0.0f),
 	  mAccel(0.0f, -GRAVITY, 0.0f),
 	  mIsJumping(false),
 	  mIsFalling(false),
 	  mIsSprinting(false),
 	  mIsMoving(true),
-	  mSize(1.0f, 2.0f, 1.0f)
+	  mMoveSpeed(0.007f),
+	  mSize(1.0f, 2.0f, 1.0f),
+	  mUseable(NULL)
 {
 	mCamera = new Camera();
+	mPosition = glm::vec3(0.0f, 2.0f, 0.0f);
+	mRenderable = false;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -40,8 +41,12 @@ void Player::Update(float time, float dt)
 {
 	int width = fEngine->GetConfig().WindowWidth;
 	int height = fEngine->GetConfig().WindowHeight;
-	glm::ivec2 pos = fEngine->GetMousePos();
+	glm::ivec2 pos;
 	glm::vec3 moveDir(0.0f), moveDist(0.0f), lookDir(0.0f), actualDist;
+
+	// Handle the mouse
+	pos = fEngine->GetMousePos();
+	fEngine->SetMousePos(glm::ivec2(width, height) >> 1);
 
 	// Compute rotation
 	mRotation.y += ((width >> 1) - pos.x) * ROTATE_SPEED;
@@ -81,16 +86,11 @@ void Player::Update(float time, float dt)
 	// Compute movement direction & speed
 	if (glm::length(moveDir) > 0.0f)
 	{
-		moveDir = glm::normalize(moveDir) * MOVE_SPEED;
+		moveDir = glm::normalize(moveDir) * mMoveSpeed;
 
 		if (!mIsMoving)
 		{
 			mIsMoving = !mIsJumping && !mIsFalling;
-
-			if (mIsMoving)
-			{
-				mMoveStart = time;
-			}
 		}
 
 		if (mIsJumping)
@@ -122,11 +122,11 @@ void Player::Update(float time, float dt)
 	moveDist = mVelocity * dt + mAccel * dt * dt * 0.5f;
 	mVelocity = mVelocity + mAccel * dt;
 
-	fBox.SetSize(1.0f, 3.0f, 1.0f);
-	fBox.SetPosition(mPosition - glm::vec3(0.5f, 1.5f, 0.5f));
+	mBoxWorld.SetSize(1.0f, 3.0f, 1.0f);
+	mBoxWorld.SetPosition(mPosition - glm::vec3(0.5f, 1.5f, 0.5f));
 		
 	// Move the player
-	actualDist = fScene->QueryDistance(fBox, moveDist);
+	actualDist = fScene->QueryDistance(this, moveDist);
 	mPosition = mPosition + actualDist;
 
 	if (abs(actualDist.y) < abs(moveDist.y))
@@ -148,7 +148,12 @@ void Player::Update(float time, float dt)
 	mCamera->SetDirection(lookDir);
 	mCamera->SetAspect((float)width / (float)height);
 	
-	fEngine->SetMousePos(glm::ivec2(width, height) >> 1);
+	mBoxWorld.SetSize(1.0f, 3.0f, 1.0f);
+	mBoxWorld.SetPosition(mPosition - glm::vec3(0.5f, 1.5f, 0.5f));
+	
+	// Interavt with the environment
+	fScene->QueryPickables(this);
+	mUseable = fScene->QueryUseable(this);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -162,10 +167,10 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 	light->Position	= glm::vec4(mPosition, 20.0f);	
 	light->ModelMatrix = glm::translate(mPosition);
 	light->ModelMatrix *= glm::scale(glm::vec3(20.0f * 2.15));
-	light->Inside = false;
+	light->Inside = true;
 }
 
 // ------------------------------------------------------------------------------------------------
-void Player::InternalUpdate()
+void Player::UpdateInternals()
 {
 }

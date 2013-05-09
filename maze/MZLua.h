@@ -12,7 +12,6 @@
 
 namespace MAZE
 {
-
 	/**
 		Registers a new class
 		@param L	Lua VM

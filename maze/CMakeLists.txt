@@ -5,6 +5,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 set (SOURCES MZCamera.cc
+			 MZCallback.cc
              MZEngine.cc
 			 MZException.cc
 			 MZBound.cc
@@ -31,6 +32,7 @@ set (SOURCES MZCamera.cc
 			 
 set (HEADERS MZAtomic.h
 			 MZCamera.h
+			 MZCallback.h
 			 MZEngine.h
 			 MZEntity.h
 			 MZException.h

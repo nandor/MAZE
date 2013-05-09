@@ -9,6 +9,7 @@
 #include "MZMath.h"
 #include "MZModel.h"
 #include "MZEntity.h"
+#include "MZCallback.h"
 
 namespace MAZE
 {
@@ -41,38 +42,59 @@ namespace MAZE
 		}
 
 		/**
-			Sets the position of the object
+			Sets the OnPick callback
 		*/
-		void SetPosition(const glm::vec3& position)
+		void SetPickCall(const Callback& call)
 		{
-			mPosition = position;
-			InternalUpdate();
+			mPickCall = call;
 		}
 
 		/**
-			Sets the rotation of the object
+			Sets the OnUpdate
 		*/
-		void SetRotation(float x, float y, float z)
+		void SetUpdateCall(const Callback& call)
 		{
-			mRotation = glm::vec3(x, y, z);
-			InternalUpdate();
+			mUpdateCall = call;
+		}
+
+		/**
+			Sets the OnUse callback
+		*/
+		void SetUseCall(const Callback& call)
+		{			
+			mUseCall = call;
 		}
 		
 		/**
-			Attaches a bounding box to the object
+			Returns the model used by the object
 		*/
-		void SetBoundingBox(const BoundingBox& box)
+		Resource::Ptr<Model> GetModel() const
 		{
-			mBoundingBox = box;
-			InternalUpdate();
+			return mModel;
+		}
+		
+		/**
+			Called when the object is picked
+		*/
+		void OnPick(Entity *who)
+		{
+			mPickCall.Call(who);
+		}
+		
+		/**
+			Called when the object is used
+		*/
+		void OnUse(Entity *who)
+		{
+			mUseCall.Call(who);
 		}
 
 		/**
-			Allows the object to cast shadows
+			Updates the entity
 		*/
-		void SetShadowCaster(bool flag)
+		void Update(float time, float dt)
 		{
-			mShadowCaster = true;
+			mUpdateCall.Call(time, dt);
 		}
 
 		/**
@@ -80,36 +102,27 @@ namespace MAZE
 		*/
 		void Render(RenderBuffer* buffer, RenderMode mode);
 
-		/**
-			Updates the entity
-		*/
-		void Update(float time, float dt)
-		{
-		}
-
 	private:
 
 		/**
 			Updates the object
 		*/
-		void InternalUpdate();
+		void UpdateInternals();
 
 	private:
 
 		/// Model used by this entity
 		Resource::Ptr<Model> mModel;
 
-		/// Position of the entity
-		glm::vec3 mPosition;
+		/// Callback used when the object is picked up
+		Callback mPickCall;
 
-		/// Rotation of the entity
-		glm::vec3 mRotation;
+		/// Callback in the update loop
+		Callback mUpdateCall;
 
-		/// Texture matrix
-		glm::mat2 mTexture;
+		/// Callback on use of the object
+		Callback mUseCall;
 
-		/// Bounding box of the entity
-		BoundingBox mBoundingBox;
 	};
 };
 

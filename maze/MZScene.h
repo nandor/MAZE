@@ -84,11 +84,6 @@ namespace MAZE
 			Clears up every entity
 		*/
 		~Scene();
-				
-		/**
-			Updates all entities
-		*/
-		void Update();
 
 		/**
 			Creates a new entity
@@ -119,6 +114,17 @@ namespace MAZE
 		{
 			T* entity;
 			unsigned id;
+			std::hash_map<std::string, Entity*>::iterator it;
+
+			if (name == "")
+			{
+				return Create<T> ();
+			}
+
+			if ((it = mNamedEntities.find(name)) != mNamedEntities.end())
+			{
+				throw Exception("Duplicate entity name: '" + name + "'");
+			}
 
 			id = ++mEntityCount;
 
@@ -135,29 +141,50 @@ namespace MAZE
 		}
 
 		/**
+			Retrieves an entity
+		*/
+		template <class  T>
+		T* Get(const std::string& name)
+		{
+			std::hash_map<std::string, Entity*>::iterator it;
+
+			if ((it = mNamedEntities.find(name)) != mNamedEntities.end())
+			{
+				throw Exception("Entity '" + name + "' not found");
+			}
+
+			return static_cast<T*> (it->second);
+		}
+
+		/**
 			Retrieves all visible entities
 		*/
-		void QueryScene(const ViewFrustum& volume, RenderBuffer* buffer);
+		void QueryRenderables(const ViewFrustum& volume, RenderBuffer* buffer);
 
 		/**
 			Retrieves all shadows casters from a volume
 		*/
-		void QueryShadows(const ViewFrustum& volume, RenderBuffer* buffer);
-
+		void QueryShadowCasters(const ViewFrustum& volume, RenderBuffer* buffer);
+		
 		/**
 			Retrieves maximum move distance
 		*/
-		glm::vec3 QueryDistance(const BoundingBox& box, const glm::vec3& dir);
-		
-		/**
-			Updates the position of an entity
-		*/
-		void UpdateEntity(Entity *ent);
+		glm::vec3 QueryDistance(Entity* who, const glm::vec3& dir);
 
 		/**
-			Removes an entity completely
+			Handle all entities which can be picked up
 		*/
-		void DestroyEntity(Entity *ent);
+		void QueryPickables(Entity *who);
+
+		/**
+			Get an entity which might be used by the player
+		*/
+		Entity* QueryUseable(Entity *who);
+
+		/**
+			Updates every entity from the scene
+		*/
+		void Update(float time, float dt);
 
 	private:
 

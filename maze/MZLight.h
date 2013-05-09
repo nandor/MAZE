@@ -42,14 +42,69 @@ namespace MAZE
 			  mDiffuse(1.0f, 1.0f, 1.0f),
 			  mSpecular(1.0f, 1.0f, 1.0f),
 			  mAmbient(0.2f, 0.2f, 0.2f),
-			  mPosition(0.0f),
 			  mDirection(0.0f, -1.0f, 0.0f),
 			  mRadius(1.0f),
-			  mAngle(PIOVER4),
-			  mShadowCaster(false)
+			  mAngle(PIOVER4)
 		{
 			mCollider = false;
 		}
+
+		/**
+			Returns the diffuse color of the light
+		*/
+		glm::vec3 GetDiffuse() const
+		{
+			return mDiffuse;
+		}
+
+		/**
+			Returns the specular color of the light
+		*/
+		glm::vec3 GetSpecular() const
+		{
+			return mSpecular;
+		}
+
+		/**
+			Returns the ambient color of the light
+		*/
+		glm::vec3 GetAmbient() const
+		{
+			return mAmbient;
+		}
+
+		/**
+			Returns the type of light
+		*/
+		Type GetType() const
+		{
+			return mType;
+		}
+
+		/**
+			Returns the radius of the light
+		*/
+		float GetRadius() const
+		{
+			return mRadius;
+		}
+
+		/**
+			Returns the direction of the spotlight
+		*/
+		glm::vec3 GetDirection() const
+		{
+			return mDirection;
+		}
+		
+		/**
+			Returns the angle of the spotlight
+		*/
+		float GetAngle() const
+		{
+			return mAngle;
+		}
+		
 		
 		/**
 			Sets the diffuse color of the light
@@ -81,16 +136,7 @@ namespace MAZE
 		void SetType(Type type)
 		{
 			mType = type;
-			InternalUpdate();
-		}
-
-		/**
-			Sets the position of the light
-		*/
-		void SetPosition(const glm::vec3& position)
-		{
-			mPosition = position;
-			InternalUpdate();
+			fDirty = true;
 		}
 
 		/**
@@ -99,7 +145,7 @@ namespace MAZE
 		void SetRadius(float radius)
 		{
 			mRadius = radius;
-			InternalUpdate();
+			fDirty = true;
 		}
 
 		/**
@@ -108,6 +154,7 @@ namespace MAZE
 		void SetDirection(const glm::vec3& direction)
 		{
 			mDirection = glm::normalize(direction);
+			fDirty = true;
 		}
 		
 		/**
@@ -116,21 +163,9 @@ namespace MAZE
 		void SetAngle(float angle)
 		{
 			mAngle = angle;
+			fDirty = true;
 		}
-
-		/**
-			Allow the light to cast shadows
-		*/
-		void SetShadowCaster(bool flag)
-		{
-			mShadowCaster = flag;
-		}
-
-		/**
-			Computes the bounding volumes
-		*/
-		BoundingBox GetBoundingBox() const;
-
+		
 		/**
 			Places the entity in the renderbuffer
 		*/
@@ -147,7 +182,7 @@ namespace MAZE
 		
 	private:
 
-		void InternalUpdate();
+		void UpdateInternals();
 
 	private:
 
@@ -163,9 +198,6 @@ namespace MAZE
 		/// Specular color
 		glm::vec3 mSpecular;
 		
-		/// Position of the light
-		glm::vec3 mPosition;
-
 		/// Ambient color
 		glm::vec3 mAmbient;
 
@@ -177,9 +209,6 @@ namespace MAZE
 
 		/// Angle of the light (in radians)
 		float mAngle;
-
-		/// Shadow flag
-		bool mShadowCaster;
 	};
 };
 

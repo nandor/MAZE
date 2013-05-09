@@ -33,7 +33,7 @@ void MAZE::mzlClass(lua_State* L, const std::string& name, const std::string& ba
 	lua_pushstring(L, name.c_str());
 	lua_setfield(L, -2, "__type");
 	
-	lua_getglobal(L, base.c_str());
+	lua_getglobal(L, (base + "__meta").c_str());
 	lua_setfield(L, -2, "__base");
 
 	lua_pushcfunction(L, mzlDefaultGetter);
@@ -41,9 +41,6 @@ void MAZE::mzlClass(lua_State* L, const std::string& name, const std::string& ba
 
 	lua_pushcfunction(L, mzlDefaultSetter);
 	lua_setfield(L, -2, "__newindex");
-
-	lua_pushnil(L);
-	lua_setfield(L, -2, "__metatable");
 
 	lua_setglobal(L, (name + "__meta").c_str());
 }
@@ -126,8 +123,6 @@ int MAZE::mzlDefaultPrint(lua_State *L)
 int MAZE::mzlDefaultGetter(lua_State *L)
 {
 	lua_getmetatable(L, 1);
-	
-	// t k m f
 
 	while (lua_istable(L, -1))
 	{

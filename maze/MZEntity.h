@@ -6,14 +6,15 @@
 #define ENTITY_H
 #pragma once
 
-#include "MZMath.h"
+#include <glm/glm.hpp>
 #include "MZBound.h"
-#include "MZRenderBuffer.h"
 
 namespace MAZE
 {
-	class SceneNode;
 	class Scene;
+	class SceneNode;
+	class Engine;
+	class RenderBuffer;
 
     class Entity
 	{
@@ -24,6 +25,9 @@ namespace MAZE
 		*/
 		enum Type
 		{
+			/// Void type
+			NONE,
+
 			/// Light
 			LIGHT,
 				
@@ -48,12 +52,14 @@ namespace MAZE
 		*/
 		enum RenderMode
 		{
-			/// The entity is rendered into the GBuffer
+			/// The entity is rendered into the geometry buffer
 			RENDER_GBUFFER,
 
 			/// The entity is rendered into a shadow map
-			RENDER_SHADOW
+			RENDER_SHADOW,
 
+			/// Debug overlay is rendered after PostFX
+			RENDER_DEBUG
 		};
 
 	public:
@@ -62,11 +68,26 @@ namespace MAZE
 			Creates a new entity
 		*/
 		Entity(Type type)
-			: mType(type),
+			: mCollider(false),
+			  mPickable(false),
+			  mUseable(false),
+			  mUseText("Activate"),
+			  mRenderable(true),
+			  mShadowCaster(false),
 			  mActive(true),
+			  mPosition(0.0f),
+			  mRotation(0.0f),
+			  mScale(1.0f),
+			  mType(type),
+			  mBoxModel(glm::vec3(-0.5f), glm::vec3(1.0f)),
+			  mBoxWorld(glm::vec3(-0.5f), glm::vec3(1.0f)),
 			  fName(""),
+			  fHandle(0),
 			  fScene(NULL),
-			  fParentNode(NULL)
+			  fEngine(NULL),
+			  fParentNode(NULL),
+			  fDelete(false),
+			  fDirty(true)
 		{
 		}
 
@@ -96,9 +117,18 @@ namespace MAZE
 		/**
 			Check if the object can be used
 		*/
-		bool IsUsable() const
+		bool IsUseable() const
 		{
-			return mUsable;
+			return mUseable;
+		}
+
+		/**
+			Returns the text displayed when
+			the entity can be used
+		*/
+		std::string GetUseText() const
+		{
+			return mUseText;
 		}
 					
 		/**
@@ -128,17 +158,57 @@ namespace MAZE
 		/**
 			Returns the type of the entity
 		*/
-		Type GetEntityType() const
+		Type GetType() const
 		{
 			return mType;
 		}
+
+		/**
+			Returns the handle
+		*/
+		unsigned GetHandle() const
+		{
+			return fHandle;
+		}
+
+		/**
+			Returns the identifier
+		*/
+		std::string GetName() const
+		{
+			return fName;
+		}
+		
+		/**
+			Returns the position of the object
+		*/
+		glm::vec3 GetPosition()
+		{
+			return mPosition;
+		}	
+
+		/**
+			Returns the rotation of the object
+		*/
+		glm::vec3 GetRotation()
+		{
+			return mRotation;
+		}	
+
+		/**
+			Returns the scaleing of the object
+		*/
+		glm::vec3 GetScale()
+		{
+			return mScale;
+		}	
 				
 		/**
 			Returns the bounding box of the entity
 		*/
 		BoundingBox GetBoundingBox() const
 		{
-			return fBox;
+			return mBoxWorld;
 		}
 
 		/**
@@ -147,6 +217,7 @@ namespace MAZE
 		void SetCollider(bool flag)
 		{
 			mCollider = flag;
+			mPickable = !flag;
 		}
 
 		/**
@@ -155,14 +226,25 @@ namespace MAZE
 		void SetPickable(bool flag)
 		{
 			mPickable = flag;
+			mCollider = !flag;
+			mUseable  = !flag;
 		}
 
 		/**
 			Activates the object to be activated by pressing 'F'
 		*/
-		void SetUsable(bool flag)
+		void SetUseable(bool flag)
 		{
-			mUsable = flag;
+			mUseable  = flag;
+			mPickable = !flag;
+		}
+
+		/**
+			Changes the use text of the object
+		*/
+		void SetUseText(const std::string& text)
+		{
+			mUseText = text;
 		}
 
 		/**
@@ -178,7 +260,7 @@ namespace MAZE
 		*/
 		void SetShadowCaster(bool flag)
 		{
-			mRenderable = flag;
+			mShadowCaster = flag;
 		}	
 
 		/**
@@ -187,7 +269,93 @@ namespace MAZE
 		void SetActive(bool flag)
 		{
 			mActive = flag;
-		}				
+		}	
+
+		/**
+			Sets the position of the object
+		*/
+		void SetPosition(float x, float y, float z)
+		{
+			mPosition = glm::vec3(x, y, z);
+			fDirty = true;
+		}
+
+		/**
+			Sets the position of the player
+		*/
+		void SetPosition(const glm::vec3& position)
+		{
+			mPosition = position;
+			fDirty = true;
+		}
+		
+		/**
+			Sets the rotation of the object
+		*/
+		void SetRotation(float x, float y, float z)
+		{
+			mRotation = glm::vec3(x, y, z);
+			fDirty = true;
+		}
+		
+		/**
+			Sets the rotation of the object
+		*/
+		void SetRotation(const glm::vec3& v)
+		{
+			mRotation = v;
+			fDirty = true;
+		}
+		
+		/**
+			Sets the scale of the object
+		*/
+		void SetScale(float x, float y, float z)
+		{
+			mScale = glm::vec3(x, y, z);
+			fDirty = true;
+		}
+
+		/**
+			Sets the rotation of the object
+		*/
+		void SetScale(const glm::vec3& v)
+		{
+			mScale = v;
+			fDirty = true;
+		}
+
+		/**
+			Sets the model space bounding box
+		*/
+		void SetBoundingBox(const BoundingBox& box)
+		{
+			mBoxModel = box;
+			fDirty = true;
+		}
+
+		/**
+			Marks the entity for deletion
+		*/
+		void Delete()
+		{
+			fDelete = true;
+			mActive = false;
+		}
+
+		/**
+			Called when the object is picked
+		*/
+		virtual void OnPick(Entity *who)
+		{
+		}
+		
+		/**
+			Called when the object is used
+		*/
+		virtual void OnUse(Entity *who)
+		{
+		}
 
 		/**
 			Updates the entity on each frame
@@ -203,14 +371,24 @@ namespace MAZE
 
 	protected:
 
+		/**
+			Update the internal, cached objects of the entity
+		*/
+		virtual void UpdateInternals() = 0;
+
+	protected:
+
 		/// True if the entity collides with the player
 		bool mCollider;
 
 		/// True if the entity can be picked up by the player
 		bool mPickable;
-
+		
 		/// True if the player can use the entity
-		bool mUsable;
+		bool mUseable;
+
+		/// Text displayed when the entity can be used
+		std::string mUseText;
 
 		/// True if the object is renderable
 		bool mRenderable;
@@ -220,10 +398,25 @@ namespace MAZE
 				
 		/// True if the entity is active
 		bool mActive;
+		
+		/// Position of the entity in the world
+		glm::vec3 mPosition;
+
+		/// Rotation of the entity
+		glm::vec3 mRotation;
+
+		/// Scale of the entity
+		glm::vec3 mScale;
 
 		/// Type of the entity
 		Type mType;
+		
+		/// Bounding box in model space
+		BoundingBox mBoxModel;
 
+		/// Bounding box in world space
+		BoundingBox mBoxWorld;
+		
 		/// ID of the entity
 		std::string fName;
 
@@ -239,10 +432,13 @@ namespace MAZE
 		/// Parent octree node
 		SceneNode *fParentNode;
 
-		/// Bounding box
-		BoundingBox fBox;
+		/// True if the entity is queued for deletion
+		bool fDelete;
 
-		/// Scene is our friend
+		/// True if the entity was modifies
+		bool fDirty;
+		
+		/// Scene needs access to Entity
 		friend class Scene;
 	};
 };

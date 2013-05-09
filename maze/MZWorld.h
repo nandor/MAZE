@@ -57,8 +57,6 @@ namespace MAZE
 		void InitScene();
 		void InitScript();
 
-		void UpdateDayCycle(float time, float dt);
-
 	private:
 
 		/// Reference to the engine
@@ -78,13 +76,7 @@ namespace MAZE
 
 		/// Light provided by the moon
 		Light *mMoon;
-
-		/// Light provided by the sun
-		Light *mSun;
-
-		/// List of coins
-		std::vector<Object*> mCoins;
-
+		
 		/// Skybox cube map
 		Resource::Ptr<Texture> mSkyTexture;
 	};
