@@ -90,7 +90,7 @@ void World::InitScript()
 	mzlRegisterScene(mScript);
 	
 	lua_getglobal(mScript, "package");
-	lua_pushstring(mScript, (mEngine->GetConfig().ResourceDir + "/script/?.lua").c_str());
+	lua_pushstring(mScript, (mEngine->GetSetup().ResourceDir + "/script/?.lua").c_str());
 	lua_setfield(mScript, -2, "path");
 	lua_pop(mScript, 1);
 

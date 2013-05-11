@@ -39,8 +39,8 @@ Player::~Player()
 // ------------------------------------------------------------------------------------------------
 void Player::Update(float time, float dt)
 {
-	int width = fEngine->GetConfig().WindowWidth;
-	int height = fEngine->GetConfig().WindowHeight;
+	int width = fEngine->GetSetup().WindowWidth;
+	int height = fEngine->GetSetup().WindowHeight;
 	glm::ivec2 pos;
 	glm::vec3 moveDir(0.0f), moveDist(0.0f), lookDir(0.0f), actualDist;
 

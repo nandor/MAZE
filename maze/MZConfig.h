@@ -8,21 +8,14 @@
 
 #include <cassert>
 #include <vector>
-#include <istream>
-#include <ostream>
 #include <hash_map>
 
 namespace MAZE
 {
-	// Forward declaration
-	class JSONArray;
-	class JSONObject;
-	class JSONValue;
-
 	/**
 		Class containing JSON value
 	*/
-    class JSONValue
+    class Config
     {
 	public:
 
@@ -40,45 +33,45 @@ namespace MAZE
 		};
 
 		/// Type used for the JSON array
-		typedef std::vector<JSONValue> ArrayType;
+		typedef std::vector<Config> ArrayType;
 
 		/// Type used for the JSON object
-		typedef std::hash_map<std::string, JSONValue> ObjectType;
+		typedef std::hash_map<std::string, Config> ObjectType;
 
 	public:
 
 		/**
 			Creates a new value, setting it to boolean false
 		*/
-		JSONValue();
+		Config();
 		
 		/**
 			Creates a new value, copying another one into it
 			@param rhs Source node
 		*/
-		JSONValue(const JSONValue& rhs);
+		Config(const Config& rhs);
 
 		/**
 			Creates a new value of a given type
 		*/
-		explicit JSONValue(Type type);
+		explicit Config(Type type);
 
 		/**
 			Destroys the value
 		*/
-		virtual ~JSONValue();
+		virtual ~Config();
 
 		/**
 			Reads the contents of a JSON stream into the object
 			@param is Input stream
 		*/
-		void Read(std::istream& is);
+		void Read(const std::string& fn);
 
 		/**
 			Writes the contents of the JSON node to the stream
 			@param os Output stream
 		*/
-		void Write(std::ostream& os);
+		void Write(const std::string& fn);
 
 		/**
 			Retrieves a boolean value
@@ -141,22 +134,27 @@ namespace MAZE
 		}
 
 		/**
+			Retrievs the number of elements
+		*/
+		size_t Length() const;
+
+		/**
 			Retrieves an array element
 			@param idx Index
 		*/
-		JSONValue& operator[] (size_t idx);
+		Config& operator[] (size_t idx);
 		
 		/**
 			Retrieves an object element
 			@param key Key
 		*/
-		JSONValue& operator[] (const std::string& key);
+		Config& operator[] (const std::string& key);
 
 		void operator = (bool rhs);
 		void operator = (int rhs);
 		void operator = (float rhs);
 		void operator = (const std::string& rhs);
-		void operator = (const JSONValue& rhs);
+		void operator = (const Config& rhs);
 
 	private:
 
@@ -192,8 +190,8 @@ namespace MAZE
 		};
 
 		// They need access
-		friend class JSONReader;
-		friend class JSONWriter;
+		friend class ConfigReader;
+		friend class ConfigWriter;
     };
 };
 

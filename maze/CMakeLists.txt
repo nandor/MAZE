@@ -6,12 +6,12 @@ cmake_minimum_required(VERSION 2.8)
 
 set (SOURCES MZCamera.cc
 			 MZCallback.cc
+             MZConfig.cc
              MZEngine.cc
 			 MZException.cc
 			 MZBound.cc
 			 MZFont.cc
 			 MZGL.c
-             MZJSON.cc
 			 MZLight.cc
 			 MZLog.cc
              MZLua.cc
@@ -35,13 +35,13 @@ set (SOURCES MZCamera.cc
 set (HEADERS MZAtomic.h
 			 MZCamera.h
 			 MZCallback.h
+             MZConfig.h
 			 MZEngine.h
 			 MZEntity.h
 			 MZException.h
 			 MZBound.h
 			 MZFont.h
 			 MZGL.h
-             MZJSON.h
 			 MZLight.h
 			 MZLog.h
              MZLua.h

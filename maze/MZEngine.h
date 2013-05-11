@@ -7,8 +7,8 @@
 #pragma once
 
 #include <string>
+#include <glm/glm.hpp>
 #include "MZPlatform.h"
-#include "MZMath.h"
 
 namespace MAZE 
 {
@@ -26,7 +26,7 @@ namespace MAZE
 		/**
 			Configuration
 		*/
-		struct Config 
+		struct Setup 
 		{
 			/// Width of the rendering window
 			unsigned WindowWidth;
@@ -119,9 +119,9 @@ namespace MAZE
 		/**
 			Returns the current configuration
 		*/
-		Config& GetConfig() 
+		Setup& GetSetup() 
 		{
-			return mConfig;
+			return mSetup;
 		}
 
 		/**
@@ -188,7 +188,7 @@ namespace MAZE
 		World* mWorld;
 
 		/// Configuration data
-		Config mConfig;
+		Setup mSetup;
 
 		/// Loop state
 		bool mRunning;

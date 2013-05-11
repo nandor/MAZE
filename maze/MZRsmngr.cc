@@ -55,7 +55,7 @@ void ResourceManager::Init()
 	}
 
 	wglShareLists(mEngine->GetRenderer()->GetContext(), mContext);
-	DiscoverFolder(mEngine->GetConfig().ResourceDir);
+	DiscoverFolder(mEngine->GetSetup().ResourceDir);
 }
 
 // ------------------------------------------------------------------------------------------------

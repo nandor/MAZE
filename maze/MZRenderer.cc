@@ -184,8 +184,8 @@ Renderer::Renderer(Engine* engine)
 	  mEngine(engine),
 	  mContext(NULL)
 {	
-	mWidth = mEngine->GetConfig().WindowWidth;
-	mHeight = mEngine->GetConfig().WindowHeight;
+	mWidth = mEngine->GetSetup().WindowWidth;
+	mHeight = mEngine->GetSetup().WindowHeight;
 
 	mBuffers[0].Ready = false;
 	mBuffers[1].Ready = false;
@@ -309,7 +309,7 @@ void Renderer::InitTargets()
 // ------------------------------------------------------------------------------------------------
 void Renderer::InitPrograms()
 {
-	const std::string dir = mEngine->GetConfig().ResourceDir + "/shader/";
+	const std::string dir = mEngine->GetSetup().ResourceDir + "/shader/";
 
 	mObjectProgram = new Program("object");
 	mObjectProgram->Compile(Program::VERTEX, dir + "object.vs.glsl");

@@ -14,38 +14,6 @@
 namespace MAZE
 {
 	/**
-		Camera render data
-	*/
-	class CameraRenderData
-	{
-	public:
-
-		/// Projection matrix
-		glm::mat4 ProjMatrix;
-
-		/// View matrix
-		glm::mat4 ViewMatrix;
-
-		/// Sky view matrix
-		glm::mat4 SkyMatrix;
-
-		/// Camera position
-		glm::vec3 Position;
-
-		/// Camera direction
-		glm::vec3 Direction;
-
-		/// Near plane
-		float NearPlane;
-
-		/// Far plane
-		float FarPlane;
-
-		/// Focal distance
-		float Focus;
-	};
-
-	/**
 		Object render data
 	*/
 	class ObjectRenderData
@@ -158,8 +126,48 @@ namespace MAZE
 
     public:
 
-		/// Camera
-		CameraRenderData Camera;
+		/// Camera		
+		struct
+		{
+			/// Projection matrix
+			glm::mat4 ProjMatrix;
+
+			/// View matrix
+			glm::mat4 ViewMatrix;
+
+			/// Sky view matrix
+			glm::mat4 SkyMatrix;
+
+			/// Camera position
+			glm::vec3 Position;
+
+			/// Camera direction
+			glm::vec3 Direction;
+
+			/// Near plane
+			float NearPlane;
+
+			/// Far plane
+			float FarPlane;
+
+			/// Focal distance
+			float Focus;
+
+		} Camera;
+
+		/// Fog
+		struct
+		{
+			/// Color of the fog
+			glm::vec3 Color;
+
+			/// Density of the fog (0.03 is okay)
+			float Density;
+
+			/// Height of the fog (30.0)
+			float Height;
+
+		} Fog;
                
         /// Active lights
         std::vector<LightRenderData> Lights;
@@ -175,19 +183,6 @@ namespace MAZE
 		        
         /// Texture of the skybox
         Resource::Ptr<Texture> SkyTexture;
-
-		/// Fog
-		struct
-		{
-			/// Color of the fog
-			glm::vec3 Color;
-
-			/// Density of the fog (0.03 is okay)
-			float Density;
-
-			/// Height of the fog (30.0)
-			float Height;
-		} Fog;
 
         /// Ready state
         bool Ready;

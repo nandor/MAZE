@@ -4,7 +4,7 @@
 
 #version 120
 
-const float BIAS = 0.6;
+const float BIAS = 0.2;
 const float CLAMP = 1.5;
 
 uniform sampler2D uPosition;
@@ -25,31 +25,31 @@ void main()
     
     vec4 color = vec4(0.0);    
     
-    color +=  1.0 * texture2D(uColor, vTexCoord + vec2(-1.5, -1.5) * off);
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-1.5, -0.7) * off);
-    color +=  7.0 * texture2D(uColor, vTexCoord + vec2(-1.5,  0.0) * off);
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-1.5,  0.7) * off);
-    color +=  1.0 * texture2D(uColor, vTexCoord + vec2(-1.5,  1.5) * off);    
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-0.7, -1.5) * off);
-    color += 16.0 * texture2D(uColor, vTexCoord + vec2(-0.7, -0.7) * off);
-    color += 26.0 * texture2D(uColor, vTexCoord + vec2(-0.7,  0.0) * off);
-    color += 16.0 * texture2D(uColor, vTexCoord + vec2(-0.7,  0.7) * off);
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-0.7,  1.5) * off);    
-    color +=  7.0 * texture2D(uColor, vTexCoord + vec2( 0.0, -1.5) * off);
-    color += 26.0 * texture2D(uColor, vTexCoord + vec2( 0.0, -0.7) * off);
+    color +=  1.0 * texture2D(uColor, vTexCoord + vec2(-2.0, -2.0) * off);
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-2.0, -1.0) * off);
+    color +=  7.0 * texture2D(uColor, vTexCoord + vec2(-2.0,  0.0) * off);
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-2.0,  1.0) * off);
+    color +=  1.0 * texture2D(uColor, vTexCoord + vec2(-2.0,  2.0) * off);    
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-1.0, -2.0) * off);
+    color += 16.0 * texture2D(uColor, vTexCoord + vec2(-1.0, -1.0) * off);
+    color += 26.0 * texture2D(uColor, vTexCoord + vec2(-1.0,  0.0) * off);
+    color += 16.0 * texture2D(uColor, vTexCoord + vec2(-1.0,  1.0) * off);
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2(-1.0,  2.0) * off);    
+    color +=  7.0 * texture2D(uColor, vTexCoord + vec2( 0.0, -2.0) * off);
+    color += 26.0 * texture2D(uColor, vTexCoord + vec2( 0.0, -1.0) * off);
     color += 41.0 * texture2D(uColor, vTexCoord + vec2( 0.0,  0.0) * off);
-    color += 26.0 * texture2D(uColor, vTexCoord + vec2( 0.0,  0.7) * off);
-    color +=  7.0 * texture2D(uColor, vTexCoord + vec2( 0.0,  1.5) * off);    
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 0.7, -1.5) * off);
-    color += 16.0 * texture2D(uColor, vTexCoord + vec2( 0.7, -0.7) * off);
-    color += 26.0 * texture2D(uColor, vTexCoord + vec2( 0.7,  0.0) * off);
-    color += 16.0 * texture2D(uColor, vTexCoord + vec2( 0.7,  0.7) * off);
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 0.7,  1.5) * off);    
-    color +=  1.0 * texture2D(uColor, vTexCoord + vec2( 1.5, -1.5) * off);
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 1.5, -0.7) * off);
-    color +=  7.0 * texture2D(uColor, vTexCoord + vec2( 1.5,  0.0) * off);
-    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 1.5,  0.7) * off);
-    color +=  1.0 * texture2D(uColor, vTexCoord + vec2( 1.5,  1.5) * off);
+    color += 26.0 * texture2D(uColor, vTexCoord + vec2( 0.0,  1.0) * off);
+    color +=  7.0 * texture2D(uColor, vTexCoord + vec2( 0.0,  2.0) * off);    
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 1.0, -2.0) * off);
+    color += 16.0 * texture2D(uColor, vTexCoord + vec2( 1.0, -1.0) * off);
+    color += 26.0 * texture2D(uColor, vTexCoord + vec2( 1.0,  0.0) * off);
+    color += 16.0 * texture2D(uColor, vTexCoord + vec2( 1.0,  1.0) * off);
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 1.0,  2.0) * off);    
+    color +=  1.0 * texture2D(uColor, vTexCoord + vec2( 2.0, -2.0) * off);
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 2.0, -1.0) * off);
+    color +=  7.0 * texture2D(uColor, vTexCoord + vec2( 2.0,  0.0) * off);
+    color +=  4.0 * texture2D(uColor, vTexCoord + vec2( 2.0,  1.0) * off);
+    color +=  1.0 * texture2D(uColor, vTexCoord + vec2( 2.0,  2.0) * off);
     
     gl_FragColor = color / 273.0;
 }

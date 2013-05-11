@@ -9,7 +9,7 @@
 #include "MZRsmngr.h"
 #include "MZEngine.h"
 #include "MZWorld.h"
-#include "MZJSON.h"
+#include "MZConfig.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ Engine::~Engine()
 
 	if (mWindow)
 	{
-		if (mConfig.FullScreen)
+		if (mSetup.FullScreen)
 		{
 			::ChangeDisplaySettings(NULL, 0);
 		}
@@ -112,16 +112,16 @@ void Engine::Init()
 // ------------------------------------------------------------------------------------------------
 void Engine::LoadConfig(const std::string& cfg)
 {
-	JSONValue config;
+	Config config;
 
-	config.Read(std::ifstream(cfg));
-	mConfig.WindowWidth   = config["window"].AsInt(1024);
-	mConfig.WindowHeight  = config["window"].AsInt(576);
-	mConfig.FullScreen    = config["window"].AsBool(false);
-	mConfig.WindowTitle	  = config["window"].AsString("MAZE");
-	mConfig.ResourceDir   = config["rsmgr"].AsString("./data");
-	mConfig.Anisotropy    = config["gfx"].AsFloat(0.0f);
-	mConfig.TextureFilter = config["gfx"].AsInt(0);
+	config.Read(cfg);
+	mSetup.WindowWidth   = config["window"]["width"].AsInt(1024);
+	mSetup.WindowHeight  = config["window"]["height"].AsInt(576);
+	mSetup.FullScreen    = config["window"]["fullscreen"].AsBool(false);
+	mSetup.WindowTitle	 = config["window"]["title"].AsString("MAZE");
+	mSetup.ResourceDir   = config["rsmngr"]["dir"].AsString("./data");
+	mSetup.Anisotropy    = config["gfx"]["anisotropy"].AsFloat(0.0f);
+	mSetup.TextureFilter = config["gfx"]["texture"].AsInt(0);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -157,16 +157,16 @@ void Engine::InitWindow()
 
 	wndRect.left = 0;
 	wndRect.top = 0;
-	wndRect.bottom = mConfig.WindowHeight;
-	wndRect.right = mConfig.WindowWidth;
+	wndRect.bottom = mSetup.WindowHeight;
+	wndRect.right = mSetup.WindowWidth;
 
-	if (mConfig.FullScreen) 
+	if (mSetup.FullScreen) 
 	{		
 		DEVMODE dmScreenSettings;
 		::EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &dmScreenSettings);
 
-		dmScreenSettings.dmPelsWidth = mConfig.WindowWidth;
-		dmScreenSettings.dmPelsHeight = mConfig.WindowHeight;
+		dmScreenSettings.dmPelsWidth = mSetup.WindowWidth;
+		dmScreenSettings.dmPelsHeight = mSetup.WindowHeight;
 		dmScreenSettings.dmBitsPerPel = 32;
 		dmScreenSettings.dmFields = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 		
@@ -190,7 +190,7 @@ void Engine::InitWindow()
 	mWindow = ::CreateWindowEx(
 		exStyle, 
 		"MAZE", 
-		mConfig.WindowTitle.c_str(),
+		mSetup.WindowTitle.c_str(),
 		style | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 		0, 0,
 		wndRect.right - wndRect.left,
@@ -246,7 +246,7 @@ void Engine::MainLoop()
 {
 	::ShowWindow(mWindow, SW_SHOW);
 	::SetForegroundWindow(mWindow);
-	::SetCursorPos(mConfig.WindowWidth >> 1, mConfig.WindowHeight >> 1);
+	::SetCursorPos(mSetup.WindowWidth >> 1, mSetup.WindowHeight >> 1);
 	::ShowCursor(FALSE);
 
 	mRsmngr->Start();
