@@ -15,7 +15,7 @@ Camera::Camera()
 	  mDirection(glm::vec3(0.0, 0.0, -1.0)),
 	  mUp(glm::vec3(0.0, 1.0, 0.0)),
 	  mNearPlane(0.3f),
-	  mFarPlane(100.0f),
+	  mFarPlane(50.0f),
 	  mFocus(10.0f),
 	  mFOV(45.0f),
 	  mAspect(800.0f / 600.0f),
@@ -35,6 +35,7 @@ void Camera::Render(RenderBuffer* buf)
 	buf->Camera.ViewMatrix = glm::lookAt(mPosition, mPosition + mDirection, mUp);
 	buf->Camera.SkyMatrix = glm::lookAt(glm::vec3(0.0f), mDirection, mUp);
 	buf->Camera.Position = mPosition;
+	buf->Camera.Direction = mDirection;
 	buf->Camera.NearPlane = mNearPlane;
 	buf->Camera.FarPlane = mFarPlane;
 	buf->Camera.Focus = mFocus;

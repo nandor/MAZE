@@ -164,6 +164,7 @@ Renderer::Renderer(Engine* engine)
 	  mSpotlightProgram(NULL),
 	  mPointlightProgram(NULL),
 	  mVolumeProgram(NULL),
+	  mFogProgram(NULL),
 	  mDOFProgram(NULL),
 	  mBlurProgram(NULL),
 	  mGeomDiffuseTarget(NULL),
@@ -189,6 +190,8 @@ Renderer::Renderer(Engine* engine)
 	mBuffers[0].Ready = false;
 	mBuffers[1].Ready = false;
 	mFront = &mBuffers[0];
+
+	::QueryPerformanceFrequency(&mFreq);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -309,43 +312,48 @@ void Renderer::InitPrograms()
 	const std::string dir = mEngine->GetConfig().ResourceDir + "/shader/";
 
 	mObjectProgram = new Program("object");
-	mObjectProgram->Compile(Program::VERTEX, dir + "object.vert");
-	mObjectProgram->Compile(Program::FRAGMENT, dir + "object.frag");
+	mObjectProgram->Compile(Program::VERTEX, dir + "object.vs.glsl");
+	mObjectProgram->Compile(Program::FRAGMENT, dir + "object.fs.glsl");
 	mObjectProgram->Link();
 		
 	mSkyboxProgram = new Program("skybox");
-	mSkyboxProgram->Compile(Program::VERTEX, dir + "skybox.vert");
-	mSkyboxProgram->Compile(Program::FRAGMENT, dir + "skybox.frag");
+	mSkyboxProgram->Compile(Program::VERTEX, dir + "skybox.vs.glsl");
+	mSkyboxProgram->Compile(Program::FRAGMENT, dir + "skybox.fs.glsl");
 	mSkyboxProgram->Link();
 
 	mDirlightProgram = new Program("dirlight");
-	mDirlightProgram->Compile(Program::VERTEX, dir + "dirlight.vert");
-	mDirlightProgram->Compile(Program::FRAGMENT, dir + "dirlight.frag");
+	mDirlightProgram->Compile(Program::VERTEX, dir + "dirlight.vs.glsl");
+	mDirlightProgram->Compile(Program::FRAGMENT, dir + "dirlight.fs.glsl");
 	mDirlightProgram->Link();
 
 	mSpotlightProgram = new Program("spotlight");
-	mSpotlightProgram->Compile(Program::VERTEX, dir + "spotlight.vert");
-	mSpotlightProgram->Compile(Program::FRAGMENT, dir + "spotlight.frag");
+	mSpotlightProgram->Compile(Program::VERTEX, dir + "spotlight.vs.glsl");
+	mSpotlightProgram->Compile(Program::FRAGMENT, dir + "spotlight.fs.glsl");
 	mSpotlightProgram->Link();
 
 	mPointlightProgram = new Program("pointlight");
-	mPointlightProgram->Compile(Program::VERTEX, dir + "pointlight.vert");
-	mPointlightProgram->Compile(Program::FRAGMENT, dir + "pointlight.frag");
+	mPointlightProgram->Compile(Program::VERTEX, dir + "pointlight.vs.glsl");
+	mPointlightProgram->Compile(Program::FRAGMENT, dir + "pointlight.fs.glsl");
 	mPointlightProgram->Link();
 
 	mVolumeProgram = new Program("volume");
-	mVolumeProgram->Compile(Program::VERTEX, dir + "volume.vert");
-	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.frag");
+	mVolumeProgram->Compile(Program::VERTEX, dir + "volume.vs.glsl");
+	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.fs.glsl");
 	mVolumeProgram->Link();
-
+		
+	mFogProgram = new Program("fog");
+	mFogProgram->Compile(Program::VERTEX, dir + "fog.vs.glsl");
+	mFogProgram->Compile(Program::FRAGMENT, dir + "fog.fs.glsl");
+	mFogProgram->Link();
+	
 	mDOFProgram = new Program("dof");
-	mDOFProgram->Compile(Program::VERTEX, dir + "dof.vert");
-	mDOFProgram->Compile(Program::FRAGMENT, dir + "dof.frag");
+	mDOFProgram->Compile(Program::VERTEX, dir + "dof.vs.glsl");
+	mDOFProgram->Compile(Program::FRAGMENT, dir + "dof.fs.glsl");
 	mDOFProgram->Link();
 
 	mBlurProgram = new Program("blur");
-	mBlurProgram->Compile(Program::VERTEX, dir + "blur.vert");
-	mBlurProgram->Compile(Program::FRAGMENT, dir + "blur.frag");
+	mBlurProgram->Compile(Program::VERTEX, dir + "blur.vs.glsl");
+	mBlurProgram->Compile(Program::FRAGMENT, dir + "blur.fs.glsl");
 	mBlurProgram->Link();
 }
 
@@ -435,6 +443,7 @@ void Renderer::DestroyPrograms()
 	if (mSpotlightProgram)	{ delete mSpotlightProgram;	 mSpotlightProgram	= NULL; }
 	if (mPointlightProgram) { delete mPointlightProgram; mPointlightProgram = NULL; }
 	if (mVolumeProgram)		{ delete mVolumeProgram;	 mVolumeProgram		= NULL; }
+	if (mFogProgram)		{ delete mFogProgram;		 mFogProgram		= NULL; }
 	if (mDOFProgram)		{ delete mDOFProgram;		 mDOFProgram		= NULL; }
 	if (mBlurProgram)		{ delete mBlurProgram;		 mBlurProgram		= NULL; }
 }
@@ -478,7 +487,7 @@ void Renderer::RenderGeometry()
 	mglDrawBuffers(4, &BUFFERS[0]);
 	mglClear(MGL_COLOR_BUFFER_BIT);
 		
-	mglDrawBuffers(1, &BUFFERS[3]);	
+	mglDrawBuffers(2, &BUFFERS[2]);	
 	RenderSkybox();
 	
 	mglDrawBuffers(4, &BUFFERS[0]);
@@ -494,6 +503,8 @@ void Renderer::RenderSkybox()
 	mglActiveTexture(MGL_TEXTURE + 0);
 	mglBindTexture(MGL_TEXTURE_CUBE_MAP, mFront->SkyTexture->mTexture);
 	mSkyboxProgram->Uniform("uTexture", 0);
+	mSkyboxProgram->Uniform("uFarPlane", mFront->Camera.FarPlane);
+	mSkyboxProgram->Uniform("uPosition", mFront->Camera.Position);
 
 	mglDisable(MGL_DEPTH_TEST);
 	mglEnable(MGL_CULL_FACE);		
@@ -629,8 +640,6 @@ void Renderer::RenderPointlights()
 				
 		if (light->Type == Light::POINT)
 		{
-			light->Inside ? mglEnable(MGL_DEPTH_TEST) : mglDisable(MGL_DEPTH_TEST);
-
 			mPointlightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
 			mPointlightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
 			mPointlightProgram->Uniform("lPosition", light->Position);
@@ -679,8 +688,6 @@ void Renderer::RenderSpotlights()
 				
 		if (light->Type == Light::SPOT)
 		{
-			light->Inside ? mglEnable(MGL_DEPTH_TEST) : mglDisable(MGL_DEPTH_TEST);
-
 			mSpotlightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
 			mSpotlightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
 			mSpotlightProgram->Uniform("lPosition", light->Position);
@@ -803,7 +810,17 @@ void Renderer::RenderDirlights()
 // ------------------------------------------------------------------------------------------------
 void Renderer::RenderPostFX()
 {
+	mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mPostFXFBO);
+	mglDrawBuffer(MGL_COLOR_ATTACHMENT + 0);
+		
+	mglEnableClientState(MGL_VERTEX_ARRAY);
+	mglBindBuffer(MGL_ARRAY_BUFFER, mQuadVBO);
+	mglVertexPointer(2, MGL_FLOAT, 2 * sizeof(float), 0);
+
+	RenderFog();
 	RenderDOF();
+
+	mglDisableClientState(MGL_VERTEX_ARRAY);
 
 	// Copy the color target to the fbo
 	mglBindFramebuffer(MGL_READ_FRAMEBUFFER, mPostFXFBO);
@@ -813,13 +830,32 @@ void Renderer::RenderPostFX()
 }
 
 // ------------------------------------------------------------------------------------------------
-void Renderer::RenderDOF()
+void Renderer::RenderFog()
 {
-	mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mPostFXFBO);
     mglFramebufferTexture2D(MGL_FRAMEBUFFER, MGL_COLOR_ATTACHMENT + 0, MGL_TEXTURE_2D, mColor1Target, 0);
-	mglDrawBuffer(MGL_COLOR_ATTACHMENT + 0);
 	mglClear(MGL_COLOR_BUFFER_BIT);
 
+	mFogProgram->Use(); 
+	mFogProgram->Uniform("uViewDir", mFront->Camera.Direction);
+	mFogProgram->Uniform("uPosition", mFront->Camera.Position);
+	mFogProgram->Uniform("uFarPlane", mFront->Camera.FarPlane);
+	mFogProgram->Uniform("uFogColor", mFront->Fog.Color);
+	mFogProgram->Uniform("uFogDensity", mFront->Fog.Density);
+	mFogProgram->Uniform("uFogHeight", mFront->Fog.Height);
+	mFogProgram->Uniform("uTime", mTime);
+	mFogProgram->Uniform("uGPosition", MGL_TEXTURE_2D, 1, mGeomPositionTarget);
+	mFogProgram->Uniform("uGColor", MGL_TEXTURE_2D, 2, mColor0Target);
+
+	mglDrawArrays(MGL_TRIANGLES, 0, 6);	
+	std::swap(mColor0Target, mColor1Target);
+}
+
+// ------------------------------------------------------------------------------------------------
+void Renderer::RenderDOF()
+{
+    mglFramebufferTexture2D(MGL_FRAMEBUFFER, MGL_COLOR_ATTACHMENT + 0, MGL_TEXTURE_2D, mColor1Target, 0);
+	mglClear(MGL_COLOR_BUFFER_BIT);
+	
 	mDOFProgram->Use();
 	mDOFProgram->Uniform("uWidth", mWidth);
 	mDOFProgram->Uniform("uHeight",	mHeight);
@@ -827,18 +863,15 @@ void Renderer::RenderDOF()
 	mDOFProgram->Uniform("uPosition", MGL_TEXTURE_2D, 1, mGeomPositionTarget);
 	mDOFProgram->Uniform("uColor", MGL_TEXTURE_2D, 2, mColor0Target);
 		
-	mglEnableClientState(MGL_VERTEX_ARRAY);
-	mglBindBuffer(MGL_ARRAY_BUFFER, mQuadVBO);
-	mglVertexPointer(2, MGL_FLOAT, 2 * sizeof(float), 0);
 	mglDrawArrays(MGL_TRIANGLES, 0, 6);		
-	mglDisableClientState(MGL_VERTEX_ARRAY);
-
 	std::swap(mColor0Target, mColor1Target);
 }
 
 // ------------------------------------------------------------------------------------------------
 int Renderer::Worker()
 {
+	LARGE_INTEGER time;
+
 	try 
 	{
 		wglMakeCurrent(mEngine->GetDC(), mContext);
@@ -853,6 +886,9 @@ int Renderer::Worker()
 
 			{
 				Mutex::ScopedLock lock(mBufferMutex);
+
+				::QueryPerformanceCounter(&time);
+				mTime = time.QuadPart * 1000.0f / mFreq.QuadPart;
 
 				RenderGeometry();
 				RenderPointlights();

@@ -9,6 +9,7 @@
 #include "MZRsmngr.h"
 #include "MZEngine.h"
 #include "MZWorld.h"
+#include "MZJSON.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -111,13 +112,16 @@ void Engine::Init()
 // ------------------------------------------------------------------------------------------------
 void Engine::LoadConfig(const std::string& cfg)
 {
-	mConfig.WindowWidth = 1024;
-	mConfig.WindowHeight = 576;
-	mConfig.FullScreen = false;
-	mConfig.WindowTitle = "MAZE";
-	mConfig.ResourceDir = "./data";
-	mConfig.Anisotropy = 16.0f;
-	mConfig.TextureFilter = 2;
+	JSONValue config;
+
+	config.Read(std::ifstream(cfg));
+	mConfig.WindowWidth   = config["window"].AsInt(1024);
+	mConfig.WindowHeight  = config["window"].AsInt(576);
+	mConfig.FullScreen    = config["window"].AsBool(false);
+	mConfig.WindowTitle	  = config["window"].AsString("MAZE");
+	mConfig.ResourceDir   = config["rsmgr"].AsString("./data");
+	mConfig.Anisotropy    = config["gfx"].AsFloat(0.0f);
+	mConfig.TextureFilter = config["gfx"].AsInt(0);
 }
 
 // ------------------------------------------------------------------------------------------------

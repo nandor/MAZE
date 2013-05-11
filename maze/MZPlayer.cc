@@ -93,11 +93,6 @@ void Player::Update(float time, float dt)
 			mIsMoving = !mIsJumping && !mIsFalling;
 		}
 
-		if (mIsJumping)
-		{
-			moveDir *= 0.7f;
-		}
-		
 		if (mIsSprinting)
 		{
 			moveDir *= 2.0f;
@@ -148,7 +143,7 @@ void Player::Update(float time, float dt)
 	mCamera->SetDirection(lookDir);
 	mCamera->SetAspect((float)width / (float)height);
 	
-	mBoxWorld.SetSize(1.0f, 3.0f, 1.0f);
+	mBoxWorld.SetSize(1.0f, 1.5f, 1.0f);
 	mBoxWorld.SetPosition(mPosition - glm::vec3(0.5f, 1.5f, 0.5f));
 	
 	// Interavt with the environment
@@ -167,7 +162,6 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 	light->Position	= glm::vec4(mPosition, 20.0f);	
 	light->ModelMatrix = glm::translate(mPosition);
 	light->ModelMatrix *= glm::scale(glm::vec3(20.0f * 2.15));
-	light->Inside = true;
 }
 
 // ------------------------------------------------------------------------------------------------

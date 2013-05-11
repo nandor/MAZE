@@ -305,17 +305,17 @@ static int light__setter(lua_State *L)
 		const char *type;
 		
 		type = luaL_checkstring(L, 3);
-		if (!strcmp(field, "directional"))
+		if (!strcmp(type, "directional"))
 		{
 			(*light)->SetType(Light::DIRECTIONAL);
 			return 0;
 		}
-		else if (!strcmp(field, "point"))
+		else if (!strcmp(type, "point"))
 		{
 			(*light)->SetType(Light::POINT);
 			return 0;
 		}
-		else if (!strcmp(field, "spot"))
+		else if (!strcmp(type, "spot"))
 		{
 			(*light)->SetType(Light::SPOT);
 			return 0;

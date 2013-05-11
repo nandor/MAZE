@@ -77,6 +77,7 @@ namespace MAZE
 		void RenderPointlights();
 		void RenderSpotlights();
 		void RenderDirlights();
+		void RenderFog();
 		void RenderDOF();
 
 		void InitTargets();
@@ -106,6 +107,7 @@ namespace MAZE
 		Program *mSpotlightProgram;
 		Program *mPointlightProgram;
 		Program *mVolumeProgram;
+		Program *mFogProgram;
 		Program *mDOFProgram;
 		Program *mBlurProgram;
 
@@ -144,6 +146,8 @@ namespace MAZE
 		RenderBuffer *mFront;
 		Mutex mBufferMutex;
 		HGLRC mContext;
+		LARGE_INTEGER mFreq;
+		float mTime;
 	};	
 };
 

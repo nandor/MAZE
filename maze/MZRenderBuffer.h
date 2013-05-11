@@ -104,10 +104,7 @@ namespace MAZE
 
 		/// True if the light casts shadows
 		bool CastsShadows;
-
-		/// Intersection result
-		bool Inside;
-
+		
 		/// List of shadow maps
 		struct
 		{
@@ -178,6 +175,19 @@ namespace MAZE
 		        
         /// Texture of the skybox
         Resource::Ptr<Texture> SkyTexture;
+
+		/// Fog
+		struct
+		{
+			/// Color of the fog
+			glm::vec3 Color;
+
+			/// Density of the fog (0.03 is okay)
+			float Density;
+
+			/// Height of the fog (30.0)
+			float Height;
+		} Fog;
 
         /// Ready state
         bool Ready;

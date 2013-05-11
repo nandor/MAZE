@@ -3,7 +3,6 @@
 // (C) 2012 The MAZE project. All rights reserved.
 
 #version 120
-#extension GL_EXT_texture_array : enable
 
 const float BIAS = 0.6;
 const float CLAMP = 1.5;

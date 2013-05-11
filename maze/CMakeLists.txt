@@ -11,6 +11,7 @@ set (SOURCES MZCamera.cc
 			 MZBound.cc
 			 MZFont.cc
 			 MZGL.c
+             MZJSON.cc
 			 MZLight.cc
 			 MZLog.cc
              MZLua.cc
@@ -40,6 +41,7 @@ set (HEADERS MZAtomic.h
 			 MZBound.h
 			 MZFont.h
 			 MZGL.h
+             MZJSON.h
 			 MZLight.h
 			 MZLog.h
              MZLua.h

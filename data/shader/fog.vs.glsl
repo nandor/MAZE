@@ -4,10 +4,10 @@
 
 #version 120
 
-uniform samplerCube uTexture;
-varying vec3 vVertex;
+varying vec2 vTexCoord;
 
 void main()
 {
-    gl_FragColor = vec4(textureCube(uTexture, vVertex).rgb, 1.0);
+    gl_Position = vec4(gl_Vertex.xy, 1.0, 1.0);
+    vTexCoord = gl_Vertex.xy / 2.0 + vec2(0.5);
 }

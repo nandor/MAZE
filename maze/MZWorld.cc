@@ -57,27 +57,6 @@ void World::InitScene()
 	mMoon->SetAmbient(glm::vec3(0.05f, 0.05f, 0.05f));
 	mMoon->SetDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
 	mMoon->SetShadowCaster(true);
-	
-	for (size_t i = 0; i < 10; ++i)
-	{
-		Light* obj = mScene->Create<Light>();
-		obj->SetType(Light::POINT);
-		obj->SetPosition(glm::vec3(rand() % 100, 1.0f, rand() % 100));
-		obj->SetDiffuse(glm::vec3(rand() % 100 / 100.0f, rand() % 100 / 100.0f, rand() % 100 / 100.0f));
-		obj->SetRadius(rand() % 100 / 10.0f);
-		obj->SetShadowCaster(false);
-	}
-
-	for (size_t i = 0; i < 200; ++i)
-	{
-		Object* obj = mScene->Create<Object>();
-		obj->SetModel(mEngine->GetResourceManager()->Get<Model> ("pillar"));
-		obj->SetPosition(glm::vec3(rand() % 100, 0.0f, rand() % 100));
-		obj->SetBoundingBox(BoundingBox(glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(2.0f, 4.0, 2.0f)));
-		obj->SetCollider(true);
-		obj->SetShadowCaster(true);
-	}
-
 	Model::CreatePlane(mEngine->GetResourceManager(), "floor", "floor_diffuse", "floor_bump", glm::vec2(100.0f), glm::vec2(1.5f));
 
 	Object* floor = mScene->Create<Object>();
@@ -122,7 +101,7 @@ void World::InitScript()
 	
 	// Call the lua init method
 	lua_getglobal(mScript, "on_world_init");
-	if (lua_pcall(mScript, 0, 0, 0))
+	if (lua_isfunction(mScript, -1) && lua_pcall(mScript, 0, 0, 0))
 	{
 		throw Exception("[Script] ") << lua_tostring(mScript, -1);
 	}
@@ -142,7 +121,7 @@ void World::Update(float time, float dt)
 	lua_getglobal(mScript, "on_world_update");
 	lua_pushnumber(mScript, time);
 	lua_pushnumber(mScript, dt);
-	if (lua_pcall(mScript, 2, 0, 0))
+	if (lua_isfunction(mScript, -1) && lua_pcall(mScript, 2, 0, 0))
 	{
 		throw Exception("[Script] ") << lua_tostring(mScript, -1);
 	}
@@ -153,6 +132,9 @@ void World::Render(RenderBuffer* buffer)
 {
 	// Global data
 	buffer->WorldSize = mSize;
+	buffer->Fog.Color = glm::vec3(0.4f, 0.4f, 0.7f);
+	buffer->Fog.Density = 0.04f;
+	buffer->Fog.Height = 7.0f;
 	buffer->SkyTexture = mSkyTexture;
 	buffer->ViewVolume = mPlayer->GetCamera()->GetVolume();
 	
