@@ -23,13 +23,39 @@ LightRenderData* RenderBuffer::AddLight()
 }
 
 // ------------------------------------------------------------------------------------------------
+WidgetRenderData* RenderBuffer::AddWidget()
+{
+	Widgets.resize(Widgets.size() + 1);
+	return &(*Widgets.rbegin());
+}
+
+// ------------------------------------------------------------------------------------------------
+ObjectRenderData* RenderBuffer::AddObject()
+{
+	Objects.resize(Objects.size() + 1);
+	return &(*Objects.rbegin());
+}
+
+// ------------------------------------------------------------------------------------------------
+TextRenderData* RenderBuffer::AddText()
+{
+	Text.resize(Text.size() + 1);
+	return &(*Text.rbegin());
+}
+
+// ------------------------------------------------------------------------------------------------
 void RenderBuffer::Clear()
 {
-	Objects.resize(0);
-	Objects.reserve(1000);
+	Text.resize(0);
 	Lights.resize(0);
-	Lights.reserve(1000);
+	Widgets.resize(0);
+	Objects.resize(0);
 	ShadowCasters.resize(0);
+	
+	Text.reserve(1000);
+	Lights.reserve(1000);
+	Widgets.reserve(1000);
+	Objects.reserve(1000);
 	ShadowCasters.reserve(1000);
 }
 // ------------------------------------------------------------------------------------------------

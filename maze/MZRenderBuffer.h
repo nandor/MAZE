@@ -8,6 +8,7 @@
 
 #include "MZPlatform.h"
 #include "MZTexture.h"
+#include "MZFont.h"
 #include "MZModel.h"
 #include "MZBound.h"
 
@@ -91,7 +92,47 @@ namespace MAZE
 		} Shadow[4];
 	};	
 	
+	/**
+		2D Widget render data
+	*/
+	class WidgetRenderData
+	{
+	public:
 
+		/// Texture of the widget
+		Resource::Ptr<Texture> Texture;
+		
+		/// Position of the widget
+		glm::vec2 Position;
+
+		/// Size of the widget
+		glm::vec2 Size;
+		
+		/// Layer
+		float Z;
+	};
+
+	/**
+		2D Font render data
+	*/
+	class TextRenderData
+	{
+	public:
+
+		/// Font used
+		Resource::Ptr<Font> Font;
+
+		/// Text
+		std::string Text;
+
+		/// Position
+		glm::vec2 Position;
+		
+		/// Layer
+		float Z;
+
+	};
+		
     /**
         Buffer which stores render data
     */
@@ -118,6 +159,21 @@ namespace MAZE
 			Creates a new light
 		*/
 		LightRenderData* AddLight();
+
+		/**
+			Creates a new widget
+		*/
+		WidgetRenderData* AddWidget();
+
+		/**
+			Creates a new object
+		*/
+		ObjectRenderData* AddObject();
+
+		/**
+			Creates a new text widget
+		*/
+		TextRenderData* AddText();
 
 		/**
 			Sorts objects front to back
@@ -177,6 +233,12 @@ namespace MAZE
         
 		/// List of shadow casters
 		std::vector<ObjectRenderData> ShadowCasters;
+
+		/// List of UI widgets
+		std::vector<WidgetRenderData> Widgets;
+
+		/// List of UI text widgets
+		std::vector<TextRenderData> Text;
 
         /// Size of the world
         glm::vec3 WorldSize;

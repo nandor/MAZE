@@ -67,7 +67,7 @@ namespace MAZE
 		/**	
 			Creates a new entity
 		*/
-		Entity(Type type)
+		Entity(Engine *engine, Type type)
 			: mCollider(false),
 			  mPickable(false),
 			  mUseable(false),
@@ -84,7 +84,7 @@ namespace MAZE
 			  fName(""),
 			  fHandle(0),
 			  fScene(NULL),
-			  fEngine(NULL),
+			  fEngine(engine),
 			  fParentNode(NULL),
 			  fDelete(false),
 			  fDirty(true)
@@ -209,6 +209,14 @@ namespace MAZE
 		BoundingBox GetBoundingBox() const
 		{
 			return mBoxWorld;
+		}
+
+		/**
+			Checks if the entity was queued for deletion
+		*/
+		bool IsDeleted() const
+		{
+			return fDelete;
 		}
 
 		/**

@@ -178,14 +178,20 @@ Renderer::Renderer(Engine* engine)
 	  mLightVBO(NULL),
 	  mSkyboxVBO(NULL),
 	  mQuadVBO(NULL),
+	  mWidgetVBO(NULL),
+	  mWidgets(NULL),
 	  mInstanceVBO(NULL),
 	  mInstances(NULL),
 	  mMapSize(1024),
 	  mEngine(engine),
 	  mContext(NULL)
 {	
-	mWidth = mEngine->GetSetup().WindowWidth;
-	mHeight = mEngine->GetSetup().WindowHeight;
+	Engine::Setup& setup = mEngine->GetSetup();
+	mWidth = setup.WindowWidth;
+	mHeight = setup.WindowHeight;
+	mEnableShadows = setup.EnableShadows;
+	mEnableFog = setup.EnableFog;
+	mEnableDOF = setup.EnableDOF;
 
 	mBuffers[0].Ready = false;
 	mBuffers[1].Ready = false;
@@ -264,17 +270,20 @@ void Renderer::InitTargets()
 	mglBindTexture(MGL_TEXTURE_2D, 0);
 
 	// Shadow map
-	mglGenTextures(1, &mShadowTarget);
-	mglBindTexture(MGL_TEXTURE_2D_ARRAY, mShadowTarget);
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_WRAP_S, MGL_CLAMP_TO_EDGE);
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_WRAP_T, MGL_CLAMP_TO_EDGE);
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_DEPTH_TEXTURE_MODE, MGL_INTENSITY); 	
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_COMPARE_FUNC, MGL_LEQUAL);
-	mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_COMPARE_MODE, MGL_COMPARE_R_TO_TEXTURE);
-	mglTexImage3D(MGL_TEXTURE_2D_ARRAY, 0, MGL_DEPTH_COMPONENT, mMapSize, mMapSize, 4, 0, MGL_DEPTH_COMPONENT, MGL_UNSIGNED_BYTE, 0);
-	mglBindTexture(MGL_TEXTURE_2D_ARRAY, 0);
+	if (mEnableShadows)
+	{
+		mglGenTextures(1, &mShadowTarget);
+		mglBindTexture(MGL_TEXTURE_2D_ARRAY, mShadowTarget);
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_WRAP_S, MGL_CLAMP_TO_EDGE);
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_WRAP_T, MGL_CLAMP_TO_EDGE);
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_DEPTH_TEXTURE_MODE, MGL_INTENSITY); 	
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_COMPARE_FUNC, MGL_LEQUAL);
+		mglTexParameteri(MGL_TEXTURE_2D_ARRAY, MGL_TEXTURE_COMPARE_MODE, MGL_COMPARE_R_TO_TEXTURE);
+		mglTexImage3D(MGL_TEXTURE_2D_ARRAY, 0, MGL_DEPTH_COMPONENT, mMapSize, mMapSize, 4, 0, MGL_DEPTH_COMPONENT, MGL_UNSIGNED_BYTE, 0);
+		mglBindTexture(MGL_TEXTURE_2D_ARRAY, 0);
+	}
 	
 	// Depth renderbuffer
 	mglGenRenderbuffers(1, &mDepthTarget);
@@ -320,10 +329,10 @@ void Renderer::InitPrograms()
 	mSkyboxProgram->Compile(Program::VERTEX, dir + "skybox.vs.glsl");
 	mSkyboxProgram->Compile(Program::FRAGMENT, dir + "skybox.fs.glsl");
 	mSkyboxProgram->Link();
-
+	
 	mDirlightProgram = new Program("dirlight");
 	mDirlightProgram->Compile(Program::VERTEX, dir + "dirlight.vs.glsl");
-	mDirlightProgram->Compile(Program::FRAGMENT, dir + "dirlight.fs.glsl");
+	mDirlightProgram->Compile(Program::FRAGMENT, dir + (mEnableShadows ? "dirlight_shadow.fs.glsl" : "dirlight.fs.glsl"));
 	mDirlightProgram->Link();
 
 	mSpotlightProgram = new Program("spotlight");
@@ -341,20 +350,31 @@ void Renderer::InitPrograms()
 	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.fs.glsl");
 	mVolumeProgram->Link();
 		
-	mFogProgram = new Program("fog");
-	mFogProgram->Compile(Program::VERTEX, dir + "fog.vs.glsl");
-	mFogProgram->Compile(Program::FRAGMENT, dir + "fog.fs.glsl");
-	mFogProgram->Link();
-	
-	mDOFProgram = new Program("dof");
-	mDOFProgram->Compile(Program::VERTEX, dir + "dof.vs.glsl");
-	mDOFProgram->Compile(Program::FRAGMENT, dir + "dof.fs.glsl");
-	mDOFProgram->Link();
+	if (mEnableFog)
+	{
+		mFogProgram = new Program("fog");
+		mFogProgram->Compile(Program::VERTEX, dir + "fog.vs.glsl");
+		mFogProgram->Compile(Program::FRAGMENT, dir + "fog.fs.glsl");
+		mFogProgram->Link();
+	}
+
+	if (mEnableDOF)
+	{
+		mDOFProgram = new Program("dof");
+		mDOFProgram->Compile(Program::VERTEX, dir + "dof.vs.glsl");
+		mDOFProgram->Compile(Program::FRAGMENT, dir + "dof.fs.glsl");
+		mDOFProgram->Link();
+	}
 
 	mBlurProgram = new Program("blur");
 	mBlurProgram->Compile(Program::VERTEX, dir + "blur.vs.glsl");
 	mBlurProgram->Compile(Program::FRAGMENT, dir + "blur.fs.glsl");
 	mBlurProgram->Link();
+
+	mWidgetProgram = new Program("widget");
+	mWidgetProgram->Compile(Program::VERTEX, dir + "widget.vs.glsl");
+	mWidgetProgram->Compile(Program::FRAGMENT, dir + "widget.fs.glsl");
+	mWidgetProgram->Link();
 }
 
 // ------------------------------------------------------------------------------------------------	
@@ -375,12 +395,17 @@ void Renderer::InitBuffers()
 	mglBindBuffer(MGL_ARRAY_BUFFER, mQuadVBO);
 	mglBufferData(MGL_ARRAY_BUFFER, sizeof(STATIC_QUAD), STATIC_QUAD, MGL_STATIC_DRAW);
 
+	// Instance model matrices
 	mInstances = new glm::mat4[INSTANCE_BATCH];
-
 	mglGenBuffers(1, &mInstanceVBO);
 	mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);
 	mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
 
+	// Widgets
+	mWidgets = new Vertex[WIDGET_BATCH * 6];
+	mglGenBuffers(1, &mWidgetVBO);
+	mglBindBuffer(MGL_ARRAY_BUFFER, mWidgetVBO);
+	mglBufferData(MGL_ARRAY_BUFFER, WIDGET_BATCH * sizeof(Vertex) * 6, mWidgets, MGL_DYNAMIC_DRAW);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -446,6 +471,7 @@ void Renderer::DestroyPrograms()
 	if (mFogProgram)		{ delete mFogProgram;		 mFogProgram		= NULL; }
 	if (mDOFProgram)		{ delete mDOFProgram;		 mDOFProgram		= NULL; }
 	if (mBlurProgram)		{ delete mBlurProgram;		 mBlurProgram		= NULL; }
+	if (mWidgetProgram)		{ delete mWidgetProgram;	 mWidgetProgram		= NULL; }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -453,11 +479,13 @@ void Renderer::DestroyBuffers()
 {
 	mglBindBuffer(MGL_ARRAY_BUFFER, 0);
 
-	if (mLightVBO != NULL)		{ mglDeleteBuffers(1, &mLightVBO);		mLightVBO = NULL;	 }
-	if (mSkyboxVBO != NULL)		{ mglDeleteBuffers(1, &mSkyboxVBO);		mLightVBO = NULL;	 }
-	if (mQuadVBO != NULL)		{ mglDeleteBuffers(1, &mQuadVBO);		mLightVBO = NULL;	 }
-	if (mInstanceVBO != NULL)	{ mglDeleteBuffers(1, &mInstanceVBO);	mInstanceVBO = NULL; }
-	if (mInstances != NULL)		{ delete[] mInstances;					mInstances = NULL;	 }
+	if (mLightVBO != NULL)	  { mglDeleteBuffers(1, &mLightVBO);		mLightVBO = NULL;	 }
+	if (mSkyboxVBO != NULL)	  { mglDeleteBuffers(1, &mSkyboxVBO);		mLightVBO = NULL;	 }
+	if (mQuadVBO != NULL)	  { mglDeleteBuffers(1, &mQuadVBO);		mLightVBO = NULL;	 }
+	if (mInstanceVBO != NULL) { mglDeleteBuffers(1, &mInstanceVBO);	mInstanceVBO = NULL; }
+	if (mInstances != NULL)	  { delete[] mInstances;					mInstances = NULL;	 }
+	if (mWidgetVBO != NULL)	  { mglDeleteBuffers(1, &mWidgetVBO);		mWidgetVBO = NULL;	 }
+	if (mWidgets != NULL)	  { delete[] mWidgets;					mWidgets = NULL;	 }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -529,7 +557,7 @@ void Renderer::RenderObjects()
 	mglDepthMask(MGL_TRUE);
 	mglDepthFunc(MGL_LEQUAL);
 	mglClear(MGL_DEPTH_BUFFER_BIT);
-	
+		
 	mObjectProgram->Use();
 	mObjectProgram->Uniform("uProj", mFront->Camera.ProjMatrix);
 	mObjectProgram->Uniform("uView", mFront->Camera.ViewMatrix);
@@ -560,16 +588,16 @@ void Renderer::RenderObjects()
 		Model *model = mFront->Objects[0].Model;	
 
 		size_t instanceCount = 0;
-		for (size_t j = 0; j < count && instanceCount < INSTANCE_BATCH;)
+		for (size_t i = 0; i < count && instanceCount < INSTANCE_BATCH;)
 		{
-			if (mFront->Objects[j].Model->GetID() != model->GetID())
+			if (mFront->Objects[i].Model->GetID() != model->GetID())
 			{
-				++j;
+				++i;
 				continue;
 			}
 
-			mInstances[instanceCount++] = mFront->Objects[j].ModelMatrix;
-			std::swap(mFront->Objects[j], mFront->Objects[--count]);
+			mInstances[instanceCount++] = mFront->Objects[i].ModelMatrix;
+			std::swap(mFront->Objects[i], mFront->Objects[--count]);
 		}	
 		
 		if (model && model->GetState() == Resource::LOADED && model->mVBO)
@@ -601,9 +629,7 @@ void Renderer::RenderObjects()
 	mglDisableClientState(MGL_TEXTURE_COORD_ARRAY);
 	mglDisableClientState(MGL_NORMAL_ARRAY);
 	mglDisableClientState(MGL_VERTEX_ARRAY);
-
-	mglBindVertexArray(0);
-		
+	
 	mglDisable(MGL_DEPTH_TEST);
 	mglDisable(MGL_CULL_FACE);
 }
@@ -723,48 +749,51 @@ void Renderer::RenderDirlights()
 			mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mShadowFBO);	
 			mglViewport(0, 0, mMapSize, mMapSize);
 			
-			if (light->CastsShadows)
+			if (mEnableShadows)
 			{
-				mglEnable(MGL_CULL_FACE);
-				mglEnable(MGL_POLYGON_OFFSET_FILL);
-
-				mglDepthMask(MGL_TRUE);
-				mglDepthFunc(MGL_LEQUAL);
-				mglCullFace(MGL_BACK);	
-				mglPolygonOffset(1.0f, 4.0f);
-
-				mVolumeProgram->Use();
-				for (size_t i = 0; i < 4; ++i)
+				if (light->CastsShadows)
 				{
-					mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
-					mglClear(MGL_DEPTH_BUFFER_BIT);
-				
-					shadowMVP[i] = DEPTH_BIAS * light->Shadow[i].MVP;
-					shadowZ[i] = light->Shadow[i].NearZ;
-				
-					for (size_t j = 0; j < light->Shadow[i].Count; ++j)
+					mglEnable(MGL_CULL_FACE);
+					mglEnable(MGL_POLYGON_OFFSET_FILL);
+
+					mglDepthMask(MGL_TRUE);
+					mglDepthFunc(MGL_LEQUAL);
+					mglCullFace(MGL_BACK);	
+					mglPolygonOffset(1.0f, 4.0f);
+
+					mVolumeProgram->Use();
+					for (size_t i = 0; i < 4; ++i)
 					{
-						ObjectRenderData* obj = &mFront->ShadowCasters[light->Shadow[i].Index + j];		
-						if (obj->Model && obj->Model->GetState() == Resource::LOADED && obj->Model->mVBO)
+						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
+						mglClear(MGL_DEPTH_BUFFER_BIT);
+				
+						shadowMVP[i] = DEPTH_BIAS * light->Shadow[i].MVP;
+						shadowZ[i] = light->Shadow[i].NearZ;
+				
+						for (size_t j = 0; j < light->Shadow[i].Count; ++j)
 						{
-							mVolumeProgram->Uniform("uMVP", light->Shadow[i].MVP * obj->ModelMatrix);
-							mglBindBuffer(MGL_ARRAY_BUFFER, obj->Model->mVBO);
-							mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), 0);
-							mglDrawArrays(MGL_TRIANGLES, 0, obj->Model->mVertexCount);
+							ObjectRenderData* obj = &mFront->ShadowCasters[light->Shadow[i].Index + j];		
+							if (obj->Model && obj->Model->GetState() == Resource::LOADED && obj->Model->mVBO)
+							{
+								mVolumeProgram->Uniform("uMVP", light->Shadow[i].MVP * obj->ModelMatrix);
+								mglBindBuffer(MGL_ARRAY_BUFFER, obj->Model->mVBO);
+								mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), 0);
+								mglDrawArrays(MGL_TRIANGLES, 0, obj->Model->mVertexCount);
+							}
 						}
 					}
-				}
 
-				mglDisable(MGL_POLYGON_OFFSET_FILL);
-				mglDisable(MGL_CULL_FACE);			
-			}
-			else
-			{				
-				mglDepthMask(MGL_TRUE);
-				for (size_t i = 0; i < 4; ++i)
-				{
-					mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
-					mglClear(MGL_DEPTH_BUFFER_BIT);
+					mglDisable(MGL_POLYGON_OFFSET_FILL);
+					mglDisable(MGL_CULL_FACE);			
+				}
+				else
+				{				
+					mglDepthMask(MGL_TRUE);
+					for (size_t i = 0; i < 4; ++i)
+					{
+						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
+						mglClear(MGL_DEPTH_BUFFER_BIT);
+					}
 				}
 			}
 
@@ -776,18 +805,22 @@ void Renderer::RenderDirlights()
 			mDirlightProgram->Uniform("uGDiffuse",	MGL_TEXTURE_2D, 0, mGeomDiffuseTarget);
 			mDirlightProgram->Uniform("uGNormal",	MGL_TEXTURE_2D, 1, mGeomNormalTarget);
 			mDirlightProgram->Uniform("uGPosition",	MGL_TEXTURE_2D, 2, mGeomPositionTarget);
-			mDirlightProgram->Uniform("uShadow",    MGL_TEXTURE_2D_ARRAY, 4, mShadowTarget);
-			mDirlightProgram->Uniform("uShadowMVP0", shadowMVP[0]);
-			mDirlightProgram->Uniform("uShadowMVP1", shadowMVP[1]);
-			mDirlightProgram->Uniform("uShadowMVP2", shadowMVP[2]);
-			mDirlightProgram->Uniform("uShadowMVP3", shadowMVP[3]);	
-			mDirlightProgram->Uniform("uShadowZ", shadowZ);
 			mDirlightProgram->Uniform("uEyePosition", mFront->Camera.Position);
 			mDirlightProgram->Uniform("lDiffuse", light->Diffuse);
 			mDirlightProgram->Uniform("lSpecular", light->Specular);
 			mDirlightProgram->Uniform("lAmbient", light->Ambient);
 			mDirlightProgram->Uniform("lDirection", light->Direction);
-			
+						
+			if (mEnableShadows)
+			{
+				mDirlightProgram->Uniform("uShadow",    MGL_TEXTURE_2D_ARRAY, 4, mShadowTarget);
+				mDirlightProgram->Uniform("uShadowMVP0", shadowMVP[0]);
+				mDirlightProgram->Uniform("uShadowMVP1", shadowMVP[1]);
+				mDirlightProgram->Uniform("uShadowMVP2", shadowMVP[2]);
+				mDirlightProgram->Uniform("uShadowMVP3", shadowMVP[3]);	
+				mDirlightProgram->Uniform("uShadowZ", shadowZ);
+			}
+
 			mglDisable(MGL_CULL_FACE);
 			mglEnable(MGL_BLEND);
 
@@ -817,14 +850,24 @@ void Renderer::RenderPostFX()
 	mglBindBuffer(MGL_ARRAY_BUFFER, mQuadVBO);
 	mglVertexPointer(2, MGL_FLOAT, 2 * sizeof(float), 0);
 
-	RenderFog();
-	RenderDOF();
+	mFXCount = 0;
+	if (mEnableFog) { RenderFog(); }
+	if (mEnableDOF) { RenderDOF(); }
 
 	mglDisableClientState(MGL_VERTEX_ARRAY);
 
 	// Copy the color target to the fbo
-	mglBindFramebuffer(MGL_READ_FRAMEBUFFER, mPostFXFBO);
-	mglReadBuffer(MGL_COLOR_ATTACHMENT + 0);
+	if (mFXCount > 0)
+	{
+		mglBindFramebuffer(MGL_READ_FRAMEBUFFER, mPostFXFBO);
+		mglReadBuffer(MGL_COLOR_ATTACHMENT + 0);
+	}
+	else
+	{
+		mglBindFramebuffer(MGL_READ_FRAMEBUFFER, mGeometryFBO);
+		mglReadBuffer(MGL_COLOR_ATTACHMENT + 3);
+	}
+
 	mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, 0);	
 	mglBlitFramebuffer(0, 0, mWidth, mHeight, 0, 0, mWidth, mHeight, MGL_COLOR_BUFFER_BIT, MGL_NEAREST);
 }
@@ -848,6 +891,7 @@ void Renderer::RenderFog()
 
 	mglDrawArrays(MGL_TRIANGLES, 0, 6);	
 	std::swap(mColor0Target, mColor1Target);
+	mFXCount++;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -865,6 +909,181 @@ void Renderer::RenderDOF()
 		
 	mglDrawArrays(MGL_TRIANGLES, 0, 6);		
 	std::swap(mColor0Target, mColor1Target);
+	mFXCount++;
+}
+
+// ------------------------------------------------------------------------------------------------
+void Renderer::RenderWidgets()
+{
+	size_t count;
+
+	mWidgetProgram->Use();
+	mWidgetProgram->Uniform("uProj", glm::ortho(0.0f, (float)mWidth, (float)mHeight, 0.0f, -1.0f, 1000.0f));
+	mWidgetProgram->Uniform("uColor", glm::vec3(1.0f));
+
+	mglEnable(MGL_DEPTH_TEST);
+	mglEnable(MGL_BLEND);
+
+	mglDepthMask(MGL_TRUE);
+	mglDepthFunc(MGL_LEQUAL);
+	mglClear(MGL_DEPTH_BUFFER_BIT);
+
+	mglBlendFunc(MGL_SRC_ALPHA, MGL_ONE_MINUS_SRC_ALPHA);
+		
+	mglEnableClientState(MGL_VERTEX_ARRAY);
+	mglEnableClientState(MGL_TEXTURE_COORD_ARRAY);
+	
+	// Render 2D widgets (simple textures)
+	count = mFront->Widgets.size();
+	while (count)
+	{
+		WidgetRenderData *front = &mFront->Widgets[0];
+		
+		size_t j = 0;
+		for (size_t i = 0; i < WIDGET_BATCH && i < count;)
+		{
+			WidgetRenderData *widget;
+			
+			widget = &mFront->Widgets[i];
+			if (widget->Texture != front->Texture)
+			{
+				++i;
+				continue;
+			}
+
+			mWidgets[j * 6 + 0].x = widget->Position.x;
+			mWidgets[j * 6 + 0].y = widget->Position.y;
+			mWidgets[j * 6 + 0].z = widget->Z;
+			mWidgets[j * 6 + 0].s = 0.0f;
+			mWidgets[j * 6 + 0].t = 0.0f;
+			mWidgets[j * 6 + 1].x = widget->Position.x;
+			mWidgets[j * 6 + 1].y = widget->Position.y + widget->Size.y;
+			mWidgets[j * 6 + 1].z = widget->Z;
+			mWidgets[j * 6 + 1].s = 0.0f;
+			mWidgets[j * 6 + 1].t = 1.0f;
+			mWidgets[j * 6 + 2].x = widget->Position.x + widget->Size.x;
+			mWidgets[j * 6 + 2].y = widget->Position.y + widget->Size.y;
+			mWidgets[j * 6 + 2].z = widget->Z;
+			mWidgets[j * 6 + 2].s = 1.0f;
+			mWidgets[j * 6 + 2].t = 1.0f;
+			
+			mWidgets[j * 6 + 3].x = widget->Position.x;
+			mWidgets[j * 6 + 3].y = widget->Position.y;
+			mWidgets[j * 6 + 3].z = widget->Z;
+			mWidgets[j * 6 + 3].s = 0.0f;
+			mWidgets[j * 6 + 3].t = 0.0f;
+			mWidgets[j * 6 + 4].x = widget->Position.x + widget->Size.x;
+			mWidgets[j * 6 + 4].y = widget->Position.y + widget->Size.y;
+			mWidgets[j * 6 + 4].z = widget->Z;
+			mWidgets[j * 6 + 4].s = 1.0f;
+			mWidgets[j * 6 + 4].t = 1.0f;
+			mWidgets[j * 6 + 5].x = widget->Position.x + widget->Size.x;
+			mWidgets[j * 6 + 5].y = widget->Position.y;
+			mWidgets[j * 6 + 5].z = widget->Z;
+			mWidgets[j * 6 + 5].s = 1.0f;
+			mWidgets[j * 6 + 5].t = 0.0f;
+		
+			++j;
+			std::swap(mFront->Widgets[i], mFront->Widgets[--count]);
+		}
+
+		if (j > 0 && front->Texture != NULL && front->Texture->IsReady())
+		{
+			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->Texture->mTexture);
+
+			mglBindBuffer(MGL_ARRAY_BUFFER, mWidgetVBO);
+			mglBufferData(MGL_ARRAY_BUFFER, WIDGET_BATCH * 6 * sizeof(Vertex), mWidgets, MGL_DYNAMIC_DRAW);
+			mglVertexPointer(3, MGL_FLOAT, sizeof(Vertex), (void*)0);
+			mglTexCoordPointer(2, MGL_FLOAT, sizeof(Vertex), (void*)12);
+
+			mglDrawArrays(MGL_TRIANGLES, 0, j * 6);
+		}
+	}
+
+	// Render 2D text
+	count = mFront->Text.size();
+	while (count)
+	{
+		TextRenderData *front = &mFront->Text[0];
+
+		size_t j = 0;
+		for (size_t i = 0; i < WIDGET_BATCH && i < count;)
+		{
+			TextRenderData *text;
+			
+			text = &mFront->Text[i];
+			if (text->Font != mFront->Text[0].Font || j + text->Text.size() > WIDGET_BATCH)
+			{
+				++i;
+				continue;
+			}
+
+			float offset = 0.0f;
+			for (size_t k = 0; k < text->Text.size(); ++k)
+			{
+				Font::Glyph& glyph = text->Font->GetGlyph(text->Text[k]);
+								
+				mWidgets[j * 6 + 0].x = text->Position.x + glyph.Offset.x + offset;
+				mWidgets[j * 6 + 0].y = text->Position.y + glyph.Offset.y;
+				mWidgets[j * 6 + 0].z = text->Z;
+				mWidgets[j * 6 + 0].s = glyph.MapOffset.x;
+				mWidgets[j * 6 + 0].t = glyph.MapOffset.y;
+
+				mWidgets[j * 6 + 1].x = text->Position.x + glyph.Offset.x + offset;
+				mWidgets[j * 6 + 1].y = text->Position.y + glyph.Offset.y + glyph.Size.y;
+				mWidgets[j * 6 + 1].z = text->Z;
+				mWidgets[j * 6 + 1].s = glyph.MapOffset.x;
+				mWidgets[j * 6 + 1].t = glyph.MapOffset.y + glyph.MapSize.y;
+
+				mWidgets[j * 6 + 2].x = text->Position.x + glyph.Offset.x + glyph.Size.x + offset;
+				mWidgets[j * 6 + 2].y = text->Position.y + glyph.Offset.y + glyph.Size.y;
+				mWidgets[j * 6 + 2].z = text->Z;
+				mWidgets[j * 6 + 2].s = glyph.MapOffset.x + glyph.MapSize.x;
+				mWidgets[j * 6 + 2].t = glyph.MapOffset.y + glyph.MapSize.y;
+							
+				mWidgets[j * 6 + 3].x = text->Position.x + glyph.Offset.x + offset;
+				mWidgets[j * 6 + 3].y = text->Position.y + glyph.Offset.y;
+				mWidgets[j * 6 + 3].z = text->Z;
+				mWidgets[j * 6 + 3].s = glyph.MapOffset.x;
+				mWidgets[j * 6 + 3].t = glyph.MapOffset.y;
+
+				mWidgets[j * 6 + 4].x = text->Position.x + glyph.Offset.x + glyph.Size.x + offset;
+				mWidgets[j * 6 + 4].y = text->Position.y + glyph.Offset.y + glyph.Size.y;
+				mWidgets[j * 6 + 4].z = text->Z;
+				mWidgets[j * 6 + 4].s = glyph.MapOffset.x + glyph.MapSize.x;
+				mWidgets[j * 6 + 4].t = glyph.MapOffset.y + glyph.MapSize.y;
+
+				mWidgets[j * 6 + 5].x = text->Position.x + glyph.Offset.x + glyph.Size.x + offset;
+				mWidgets[j * 6 + 5].y = text->Position.y + glyph.Offset.y;
+				mWidgets[j * 6 + 5].z = text->Z;
+				mWidgets[j * 6 + 5].s = glyph.MapOffset.x + glyph.MapSize.x;
+				mWidgets[j * 6 + 5].t = glyph.MapOffset.y;
+
+				offset += glyph.Advance;
+				++j;
+			}
+
+			std::swap(mFront->Widgets[i], mFront->Widgets[--count]);
+		}
+
+		if (j > 0 && front->Font != NULL && front->Font->IsReady())
+		{
+			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->Font->mTexture);
+
+			mglBindBuffer(MGL_ARRAY_BUFFER, mWidgetVBO);
+			mglBufferData(MGL_ARRAY_BUFFER, WIDGET_BATCH * 6 * sizeof(Vertex), mWidgets, MGL_DYNAMIC_DRAW);
+			mglVertexPointer(3, MGL_FLOAT, sizeof(Vertex), (void*)0);
+			mglTexCoordPointer(2, MGL_FLOAT, sizeof(Vertex), (void*)12);
+
+			mglDrawArrays(MGL_TRIANGLES, 0, j * 6);
+		}
+	}
+	
+	mglDisableClientState(MGL_TEXTURE_COORD_ARRAY);
+	mglDisableClientState(MGL_VERTEX_ARRAY);
+
+	mglDisable(MGL_BLEND);
+	mglDisable(MGL_DEPTH_TEST);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -895,6 +1114,7 @@ int Renderer::Worker()
 				RenderSpotlights();
 				RenderDirlights();
 				RenderPostFX();
+				RenderWidgets();
 			}
 
 			::SwapBuffers(mEngine->GetDC());

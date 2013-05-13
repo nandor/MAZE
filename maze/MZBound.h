@@ -14,6 +14,7 @@ namespace MAZE
 	class BoundingBox;
 	class BoundingSphere;
 	class ViewFrustum;
+	class Ray;
 	
 	/**
 		Result of intersection queries
@@ -35,6 +36,53 @@ namespace MAZE
 		virtual Intersection Intersect(const BoundingBox& target) const = 0;
 		virtual Intersection Intersect(const BoundingSphere& target) const = 0;
 		virtual Intersection Intersect(const ViewFrustum& target) const = 0;
+		virtual Intersection Intersect(const Ray& target) const = 0;
+
+	};
+
+	/**
+		Ray: origin and direction
+	*/
+	class Ray : public Shape
+	{
+	public:
+
+		Ray()
+			: mOrigin(0.0f, 0.0f, 0.0f, 1.0f),
+			  mDirection(1.0f, 0.0f, 0.0f, 0.0f)
+		{
+		}
+
+		Ray(const glm::vec3& origin, const glm::vec3& direction)
+			: mOrigin(origin, 1.0f),
+			  mDirection(glm::normalize(direction), 0.0f)
+		{
+		}
+
+		glm::vec3 GetOrigin() const
+		{
+			return glm::vec3(mOrigin);
+		}
+
+		glm::vec3 GetDirection() const
+		{
+			return glm::vec3(mDirection);
+		}
+
+		float Distance(const BoundingBox& box) const;
+
+		Intersection Intersect(const BoundingBox& target) const;
+		Intersection Intersect(const BoundingSphere& target) const;
+		Intersection Intersect(const ViewFrustum& target) const;
+		Intersection Intersect(const Ray& target) const;
+
+	private:
+
+		/// Origin point of the ray
+		glm::vec4 mOrigin;
+
+		/// Direction of the ray
+		glm::vec4 mDirection;
 
 	};
 
@@ -44,7 +92,7 @@ namespace MAZE
 	class BoundingBox : public Shape
 	{
 	public:
-
+		
 		enum
 		{
 			NEAR_BOTTOM_LEFT	= 0,
@@ -99,6 +147,7 @@ namespace MAZE
 		Intersection Intersect(const BoundingBox& target) const;
 		Intersection Intersect(const BoundingSphere& target) const;
 		Intersection Intersect(const ViewFrustum& target) const;
+		Intersection Intersect(const Ray& target) const;
 		
 	private:
 
@@ -120,8 +169,9 @@ namespace MAZE
 
 		/// List of corner points
 		mutable glm::vec3 mCorners[8];
-
+	
 		friend class ViewFrustum;
+		friend class Ray;
 	};
 
 	/**
@@ -154,6 +204,7 @@ namespace MAZE
 		Intersection Intersect(const BoundingBox& target) const;
 		Intersection Intersect(const BoundingSphere& target) const;
 		Intersection Intersect(const ViewFrustum& target) const;
+		Intersection Intersect(const Ray& target) const;
 
 	private:
 		
@@ -242,6 +293,7 @@ namespace MAZE
 		Intersection Intersect(const BoundingBox& target) const;
 		Intersection Intersect(const BoundingSphere& target) const;
 		Intersection Intersect(const ViewFrustum& target) const;
+		Intersection Intersect(const Ray& target) const;
 				
 	private:
 

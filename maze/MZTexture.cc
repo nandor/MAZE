@@ -293,10 +293,6 @@ void Texture::Image::Unload()
 		delete[] Data;
 		Data = NULL;
 	}
-
-	Width = 0;
-	Height = 0;
-	Type = MGL_RGBA;
 }
 
 // ------------------------------------------------------------------------------------------------

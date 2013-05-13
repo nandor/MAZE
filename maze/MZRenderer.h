@@ -23,6 +23,23 @@ namespace MAZE
 	*/
 	class Renderer : public Thread
 	{	
+	private:
+
+		/**
+			Vertex used when rendering widgets
+		*/
+		struct Vertex
+		{
+			// Position
+			float x, y;
+
+			// Layer
+			float z;
+
+			// Texture
+			float s, t;
+		};
+
 	public:
 
 		/**
@@ -79,6 +96,7 @@ namespace MAZE
 		void RenderDirlights();
 		void RenderFog();
 		void RenderDOF();
+		void RenderWidgets();
 
 		void InitTargets();
 		void InitPrograms();
@@ -99,6 +117,7 @@ namespace MAZE
 
 		// Number of instances in a batch
 		static const size_t INSTANCE_BATCH = 1024;
+		static const size_t WIDGET_BATCH = 4096;
 
 		// List of shader programs
 		Program *mObjectProgram;
@@ -110,6 +129,7 @@ namespace MAZE
 		Program *mFogProgram;
 		Program *mDOFProgram;
 		Program *mBlurProgram;
+		Program *mWidgetProgram;
 
 		// List of render targets
 		MGLuint mGeomDiffuseTarget;
@@ -130,14 +150,17 @@ namespace MAZE
 		MGLuint mLightVBO;
 		MGLuint mSkyboxVBO;
 		MGLuint mQuadVBO;
-		
-		// Instancing
+		MGLuint mWidgetVBO;
+		Vertex *mWidgets;
 		MGLuint mInstanceVBO;
 		glm::mat4 *mInstances;
 
 		// Configuration
 		int mWidth;
 		int mHeight;
+		bool mEnableShadows;
+		bool mEnableDOF;
+		bool mEnableFog;
 		MGLuint mMapSize;
 						
 		// Buffers & system
@@ -147,6 +170,7 @@ namespace MAZE
 		Mutex mBufferMutex;
 		HGLRC mContext;
 		LARGE_INTEGER mFreq;
+		size_t mFXCount;
 		float mTime;
 	};	
 };

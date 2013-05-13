@@ -2,12 +2,13 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-uniform mat4 uProj;
+uniform sampler2D uTexture;
+uniform vec3 uColor;
 
 varying vec2 vTexCoord;
 
 void main()
 {
-    vTexCoord = gl_MultiTexCoord0.st;
-    gl_Position = uProj * gl_Vertex;
+    vec4 texColor = texture2D(uTexture, vTexCoord);
+    gl_FragColor = vec4(uColor * texColor.rgb, texColor.a);
 }

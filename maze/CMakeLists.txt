@@ -64,7 +64,7 @@ set (HEADERS MZAtomic.h
 			 MZThread.h
 			 MZWorld.h)
 
-set (LIBS libjpeg opengl32 lua52)
+set (LIBS libjpeg opengl32 lua52 freetype)
 set (LIBS_RELASE libpng15_static zlibstatic)
 set (LIBS_DEBUG	libpng15_staticd zlibstaticd)
 

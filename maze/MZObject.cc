@@ -11,8 +11,8 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-Object::Object()
-	: Entity(Entity::OBJECT)
+Object::Object(Engine *engine)
+	: Entity(engine, Entity::OBJECT)
 {
 }
 

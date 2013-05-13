@@ -10,4 +10,3 @@ find_package(OpenGL)
 
 # Recurse into project dirs
 add_subdirectory(maze)
-add_subdirectory(tools/survey)

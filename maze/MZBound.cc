@@ -7,6 +7,98 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
+Intersection Ray::Intersect(const BoundingBox& target) const
+{
+	glm::vec4 planes[] =
+	{
+		glm::vec4( 0.0f,  1.0f,  0.0f, -target.mMax.y),
+		glm::vec4( 0.0f, -1.0f,  0.0f,  target.mMin.y),
+		glm::vec4( 1.0f,  0.0f,  0.0f, -target.mMax.x),
+		glm::vec4(-1.0f,  0.0f,  0.0f,  target.mMin.x),
+		glm::vec4( 0.0f,  0.0f,  1.0f, -target.mMax.z),
+		glm::vec4( 0.0f,  0.0f, -1.0f,  target.mMin.z)
+	};
+
+	size_t count = 0;
+	for (size_t i = 0; i < 6; ++i)
+	{
+		float t, div;
+		glm::vec3 point;
+		
+		div = glm::dot(planes[i], mDirection);
+		if (div != 0.0f)
+		{
+			t  = -glm::dot(planes[i], mOrigin) / div;
+			point = glm::vec3(mOrigin + t * mDirection);
+
+			if (target.mMin.x <= point.x && point.x <= target.mMax.x &&
+				target.mMin.y <= point.y && point.y <= target.mMax.y &&
+				target.mMin.z <= point.z && point.z <= target.mMax.z)
+			{
+				count++;
+			}
+		}
+	}
+
+	return count > 0 ? INSIDE : OUTSIDE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Intersection Ray::Intersect(const BoundingSphere& target) const
+{
+	return OUTSIDE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Intersection Ray::Intersect(const ViewFrustum& target) const
+{
+	return OUTSIDE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Intersection Ray::Intersect(const Ray& target) const
+{
+	return OUTSIDE;
+}
+
+// ------------------------------------------------------------------------------------------------
+float Ray::Distance(const BoundingBox& target) const
+{
+	glm::vec4 planes[] =
+	{
+		glm::vec4( 0.0f,  1.0f,  0.0f, -target.mMax.y),
+		glm::vec4( 0.0f, -1.0f,  0.0f,  target.mMin.y),
+		glm::vec4( 1.0f,  0.0f,  0.0f, -target.mMax.x),
+		glm::vec4(-1.0f,  0.0f,  0.0f,  target.mMin.x),
+		glm::vec4( 0.0f,  0.0f,  1.0f, -target.mMax.z),
+		glm::vec4( 0.0f,  0.0f, -1.0f,  target.mMin.z)
+	};
+
+	float dist = std::numeric_limits<float>::max();
+	for (size_t i = 0; i < 6; ++i)
+	{
+		float t, div;
+		glm::vec3 point;
+		
+		div = glm::dot(planes[i], mDirection);
+		if (div != 0.0f)
+		{
+			t  = -glm::dot(planes[i], mOrigin) / div;
+			point = glm::vec3(mOrigin + t * mDirection);
+
+			if (target.mMin.x <= point.x && point.x <= target.mMax.x &&
+				target.mMin.y <= point.y && point.y <= target.mMax.y &&
+				target.mMin.z <= point.z && point.z <= target.mMax.z)
+			{
+				dist = std::min(dist, t);
+			}
+		}
+	}
+
+	return dist;
+}
+
+// ------------------------------------------------------------------------------------------------
 BoundingBox::BoundingBox()
 {
 	mMin = glm::vec3(0.0f);
@@ -148,15 +240,21 @@ Intersection BoundingBox::Intersect(const BoundingBox& f) const
 }
 
 // ------------------------------------------------------------------------------------------------
-Intersection BoundingBox::Intersect(const BoundingSphere& f) const
+Intersection BoundingBox::Intersect(const BoundingSphere& target) const
 {
-	return INSIDE;
+	return OUTSIDE;
 }
 
 // ------------------------------------------------------------------------------------------------
-Intersection BoundingBox::Intersect(const ViewFrustum& f) const
+Intersection BoundingBox::Intersect(const ViewFrustum& target) const
 {
-	return INSIDE;
+	return target.Intersect(*this);
+}
+
+// ------------------------------------------------------------------------------------------------
+Intersection BoundingBox::Intersect(const Ray& target) const
+{
+	return target.Intersect(*this);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -379,7 +477,7 @@ ViewFrustum ViewFrustum::GetLightVolume(const glm::vec3& lightDir)
 // ------------------------------------------------------------------------------------------------
 Intersection ViewFrustum::Intersect(const ViewFrustum& f) const
 {
-	return INSIDE;
+	return OUTSIDE;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -434,7 +532,13 @@ Intersection ViewFrustum::Intersect(const BoundingBox& f) const
 // ------------------------------------------------------------------------------------------------
 Intersection ViewFrustum::Intersect(const BoundingSphere& f) const
 {
-	return INSIDE;
+	return OUTSIDE;
+}
+
+// ------------------------------------------------------------------------------------------------
+Intersection ViewFrustum::Intersect(const Ray& target) const
+{
+	return OUTSIDE;
 }
 
 // ------------------------------------------------------------------------------------------------

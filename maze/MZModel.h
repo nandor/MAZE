@@ -53,16 +53,6 @@ namespace MAZE
 		*/
 		void Unload();
 		
-		/**
-			The renderer builds the VAOs
-		*/
-		void Build();
-
-		/**
-			The renderer destroys the VAOs
-		*/
-		void Destroy();
-		
 	public:
 
 		/**

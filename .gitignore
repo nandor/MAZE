@@ -2,5 +2,6 @@ build/*
 docs/*
 engine.log
 maze.rar
+.idea/*
 *.pyc
 __pycache__/*

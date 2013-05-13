@@ -11,8 +11,6 @@
 
 namespace MAZE
 {
-	class LightRenderData;
-
 	/**
 		Base class for lights
 	*/
@@ -36,8 +34,8 @@ namespace MAZE
 			Creates a new light
 			@param type Type of the light
 		*/
-		Light() 
-			: Entity(LIGHT), 
+		Light(Engine *engine) 
+			: Entity(engine, LIGHT), 
 			  mType(Light::POINT),
 			  mDiffuse(1.0f, 1.0f, 1.0f),
 			  mSpecular(1.0f, 1.0f, 1.0f),

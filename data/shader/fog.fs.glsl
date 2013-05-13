@@ -32,7 +32,7 @@ void main()
     vec3 color = texture2D(uGColor, vTexCoord).xyz;  
     vec3 dir = position - uPosition;  
     
-    float time = uTime / 700.0;
+    float time = uTime / 2500.0;
     float off = vTexCoord.x + atan(uViewDir.z, uViewDir.x);
     float height = sin(off * 20.0 + time) * cos(off * 40.0 - time);
     

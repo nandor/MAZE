@@ -2,9 +2,12 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <Windows.h>
+uniform mat4 uProj;
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
+varying vec2 vTexCoord;
+
+void main()
 {
-    return 0;
+    vTexCoord = gl_MultiTexCoord0.st;
+    gl_Position = uProj * gl_Vertex;
 }

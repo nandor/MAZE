@@ -26,7 +26,7 @@ namespace MAZE
 		/**
 			Creates a new object
 		*/
-		Object();
+		Object(Engine *engine);
 		
 		/**
 			Destroys the object

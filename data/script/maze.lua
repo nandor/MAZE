@@ -24,7 +24,7 @@ function on_world_init()
         end
     end
     
-    for i = 0, 100 do
+    for i = 0, 300 do
         local pillar = scene.create("object")
         
         pillar.model = "pillar"
@@ -47,12 +47,13 @@ function on_world_init()
     rock = scene.create("object")
     rock.model = "pillar"
     rock.position = vec3(20.0, 0.0, 20.0)
-    rock.box = box(vec3(-1.0, 0.0, -1.0), vec3(2.0, 4.0, 2.0))
+    rock.box = box(vec3(-1.0, 0.0, -1.0), vec3(2.0, 3.1, 2.0))
     rock.useable  = true
     rock.collider = true
-    rock.use_text = "Pick up this huge thing!"
+    rock.shadow_caster = true
+    rock.use_text = "Press F to pick me up"
     rock.on_use = function ()
-    
+        rock:delete()
     end
 end
 

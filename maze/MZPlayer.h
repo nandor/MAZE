@@ -19,13 +19,13 @@ namespace MAZE
 		/**
 			Initializes the player
 		*/
-		Player();
+		Player(Engine* engine);
 
 		/**
 			Destroys the player
 		*/
 		~Player();
-
+		
 		/**
 			Checks if the object is jumping
 		*/
@@ -71,7 +71,7 @@ namespace MAZE
 		*/
 		Camera* GetCamera()
 		{
-			return mCamera;
+			return mCamera.get();
 		}
 
 		/**
@@ -112,8 +112,14 @@ namespace MAZE
 		/// Gravitational acceleration
 		static const float GRAVITY;
 		
+		/// Crosshair texture
+		Resource::Ptr<Texture> mCrosshair;
+
+		/// UI font
+		Resource::Ptr<Font> mFont;
+
 		/// FPS camera
-		Camera *mCamera;
+		std::auto_ptr<Camera> mCamera;
 			
 		/// Velocity
 		glm::vec3 mVelocity;

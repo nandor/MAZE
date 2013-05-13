@@ -142,6 +142,14 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 			}
 		}
 	}
+	else if (ext == "ttf")
+	{
+		std::vector<std::string> tokens;
+
+		Split(id, '.', tokens);
+		
+		Add(new Font(this, tokens[0], atoi(tokens[1].c_str()), fn));
+	}
 	else if (ext == "mzo")
 	{
 		Add(new Model(this, id, fn));

@@ -96,9 +96,8 @@ namespace MAZE
 
 			id = ++mEntityCount;
 
-			entity = new T();
+			entity = new T(mEngine);
 			entity->fScene = this;
-			entity->fEngine = mEngine;
 			entity->fHandle = id;
 
 			mEntities.insert(std::make_pair(id, entity));
@@ -128,9 +127,8 @@ namespace MAZE
 
 			id = ++mEntityCount;
 
-			entity = new T();
+			entity = new T(mEngine);
 			entity->fScene = this;
-			entity->fEngine = mEngine;
 			entity->fHandle = id;
 			entity->fName = name;
 
@@ -179,7 +177,7 @@ namespace MAZE
 		/**
 			Get an entity which might be used by the player
 		*/
-		Entity* QueryUseable(Entity *who);
+		Entity* QueryUseable(Entity *who, const Ray& ray);
 
 		/**
 			Updates every entity from the scene

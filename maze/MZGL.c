@@ -89,6 +89,7 @@ mglGenTexturesProc							mglGenTextures;
 mglBindTextureProc							mglBindTexture;
 mglTexParameterfProc						mglTexParameterf;
 mglTexParameteriProc						mglTexParameteri;
+mglTexSubImage2DProc						mglTexSubImage2D;
 mglTexImage2DProc							mglTexImage2D;
 mglTexImage3DProc							mglTexImage3D;
 mglDeleteTexturesProc						mglDeleteTextures;
@@ -205,6 +206,7 @@ int mglInit()
 	mglTexParameterf		= glTexParameterf;
 	mglTexParameteri		= glTexParameteri;
 	mglTexImage2D			= glTexImage2D;
+	mglTexSubImage2D		= glTexSubImage2D;
 	mglGenTextures			= glGenTextures;
 	mglBindTexture			= glBindTexture;
 	mglDeleteTextures		= glDeleteTextures;

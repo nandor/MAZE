@@ -157,7 +157,25 @@ namespace MAZE
 			Binds the texture to the OpenGL context
 		*/
 		void Bind();
-						
+
+		/**
+			Returns the width of the texture
+		*/
+		unsigned Width()
+		{
+			assert(mImages.size() > 0);
+			return mImages[0].Width;
+		}
+		
+		/**
+			Returns the height of the texture
+		*/
+		unsigned Height()
+		{
+			assert(mImages.size() > 0);
+			return mImages[0].Height;
+		}	
+
 	private:
 		
 		/// Type of the texture

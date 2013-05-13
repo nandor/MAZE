@@ -51,6 +51,7 @@ typedef ptrdiff_t		MGLsizeiptr;
 #define MGL_TRUE								0x0001
 #define MGL_ONE									0x0001
 #define MGL_TRIANGLES							0x0004
+#define MGL_QUADS								0x0007
 #define MGL_NEVER								0x0200
 #define MGL_LESS								0x0201
 #define MGL_EQUAL								0x0202
@@ -60,6 +61,7 @@ typedef ptrdiff_t		MGLsizeiptr;
 #define MGL_GEQUAL								0x0206
 #define MGL_ALWAYS								0x0207
 #define MGL_SRC_ALPHA							0x0302
+#define MGL_ONE_MINUS_SRC_ALPHA					0x0303
 #define MGL_FRONT								0x0404
 #define MGL_BACK								0x0405
 #define MGL_CW									0x0900
@@ -118,6 +120,10 @@ typedef ptrdiff_t		MGLsizeiptr;
 #define MGL_FUNC_ADD							0x8006
 #define MGL_POLYGON_OFFSET_FILL					0x8037
 #define MGL_INTENSITY							0x8049
+#define MGL_INTENSITY4							0x804A
+#define MGL_INTENSITY8							0x804B
+#define MGL_INTENSITY12							0x804C
+#define MGL_INTENSITY16							0x804D
 #define MGL_TEXTURE_PRIORITY					0x8066
 #define MGL_TEXTURE_RESIDENT					0x8067
 #define MGL_VERTEX_ARRAY						0x8074
@@ -280,6 +286,7 @@ typedef void (APIENTRY *mglGenTexturesProc) (MGLsizei, MGLuint*);
 typedef void (APIENTRY *mglBindTextureProc) (MGLenum, MGLuint);
 typedef void (APIENTRY *mglTexParameterfProc) (MGLenum, MGLenum, MGLfloat);
 typedef void (APIENTRY *mglTexParameteriProc) (MGLenum, MGLenum, MGLint);
+typedef void (APIENTRY *mglTexSubImage2DProc) (MGLenum, MGLint, MGLint, MGLint, MGLsizei, MGLsizei, MGLenum, MGLenum, const MGLvoid*);
 typedef void (APIENTRY *mglTexImage2DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
 typedef void (APIENTRY *mglTexImage3DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
 typedef void (APIENTRY *mglGenerateMipmapProc) (MGLenum);
@@ -388,6 +395,7 @@ extern mglGenTexturesProc						mglGenTextures;
 extern mglBindTextureProc						mglBindTexture;
 extern mglTexParameterfProc						mglTexParameterf; 
 extern mglTexParameteriProc						mglTexParameteri;
+extern mglTexSubImage2DProc						mglTexSubImage2D;
 extern mglTexImage2DProc						mglTexImage2D;
 extern mglTexImage3DProc						mglTexImage3D;
 extern mglActiveTextureProc						mglActiveTexture;

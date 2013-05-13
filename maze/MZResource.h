@@ -64,8 +64,8 @@ namespace MAZE
 			/// glsl program
 			PROGRAM,
 			
-			/// Custom resource
-			CUSTOM
+			/// truetype font
+			FONT
 		};
 
 		/// Resource handle
@@ -97,7 +97,9 @@ namespace MAZE
 			explicit Ptr(T *res = NULL) : mResource(res)
 			{
 				if (mResource)
+				{
 					mResource->IncRefCount();
+				}
 			}
 
 			/**
@@ -109,7 +111,9 @@ namespace MAZE
 			Ptr(const Ptr& ptr) : mResource(ptr.mResource)
 			{
 				if (mResource)
+				{
 					mResource->IncRefCount();
+				}
 			}
 
 			/**
@@ -119,7 +123,9 @@ namespace MAZE
 			~Ptr()
 			{
 				if (mResource)
+				{
 					mResource->DecRefCount();
+				}
 			}
 
 			/**

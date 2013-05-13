@@ -404,26 +404,33 @@ void Scene::QueryPickables(Entity *who)
 }
 
 // ------------------------------------------------------------------------------------------------
-Entity* Scene::QueryUseable(Entity *who)
+Entity* Scene::QueryUseable(Entity *who, const Ray& ray)
 {
 	std::vector<Entity*> objects;	
 	SceneNode* node = mRoot;
 	Entity* entity = NULL;
-	float angle = PI / 2.0f;
+	float minDist = std::numeric_limits<float>::max();
 
 	while (node)
 	{
 		std::vector<Entity*>::iterator it;
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
-			if ((*it)->IsPickable() &&
-				(*it)->IsActive() &&
-				(*it)->GetBoundingBox().Intersect(who->GetBoundingBox()))
+			if ((*it)->IsActive() &&
+				(*it)->IsUseable() &&
+				(*it)->GetBoundingBox().Intersect(ray))
 			{
+				float dist = ray.Distance((*it)->GetBoundingBox());
+
+				if (dist < minDist && 0.0f <= dist && dist <= 3.5f)
+				{
+					minDist = dist;
+					entity = (*it);
+				}
 			}
 		}
 
-		node = node->Next(who->GetBoundingBox());
+		node = node->Next(ray);
 	}
 
 	return entity;

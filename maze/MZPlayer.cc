@@ -4,6 +4,7 @@
 
 #include "MZScene.h"
 #include "MZEngine.h"
+#include "MZRsmngr.h"
 #include "MZPlayer.h"
 using namespace MAZE;
 
@@ -13,8 +14,9 @@ const float Player::JUMP_SPEED = 0.017f;
 const float Player::GRAVITY = 0.00005f;
 
 // ------------------------------------------------------------------------------------------------
-Player::Player()
-	: Entity(PLAYER),
+Player::Player(Engine *engine)
+	: Entity(engine, PLAYER),
+	  mCamera(new Camera()),
 	  mVelocity(0.0f, 0.0f, 0.0f),
 	  mAccel(0.0f, -GRAVITY, 0.0f),
 	  mIsJumping(false),
@@ -25,15 +27,16 @@ Player::Player()
 	  mSize(1.0f, 2.0f, 1.0f),
 	  mUseable(NULL)
 {
-	mCamera = new Camera();
 	mPosition = glm::vec3(0.0f, 2.0f, 0.0f);
 	mRenderable = false;
+
+	mCrosshair = fEngine->GetResourceManager()->Get<Texture> ("cross");
+	mFont = fEngine->GetResourceManager()->Get<Font> ("hud");
 }
 
 // ------------------------------------------------------------------------------------------------
 Player::~Player()
 {
-	if (mCamera) { delete mCamera; mCamera = NULL; }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -143,17 +146,29 @@ void Player::Update(float time, float dt)
 	mCamera->SetDirection(lookDir);
 	mCamera->SetAspect((float)width / (float)height);
 	
-	mBoxWorld.SetSize(1.0f, 1.5f, 1.0f);
-	mBoxWorld.SetPosition(mPosition - glm::vec3(0.5f, 1.5f, 0.5f));
-	
+	mBoxWorld.SetSize(0.9f, 2.0f, 0.9f);
+	mBoxWorld.SetPosition(mPosition - glm::vec3(0.45f, 1.5f, 0.45f));
+
 	// Interavt with the environment
 	fScene->QueryPickables(this);
-	mUseable = fScene->QueryUseable(this);
+	mUseable = fScene->QueryUseable(this, Ray(mPosition, lookDir));
+
+	if (mUseable && fEngine->IsKeyDown(Engine::KEY_F))
+	{
+		mUseable->OnUse(this);
+		if (mUseable->IsDeleted())
+		{
+			mUseable = NULL;
+		}
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
 void Player::Render(RenderBuffer *buffer, RenderMode mode)
 {
+	int width = fEngine->GetSetup().WindowWidth;
+	int height = fEngine->GetSetup().WindowHeight;
+
 	LightRenderData* light = buffer->AddLight();
 
 	light->Type	= Light::POINT;
@@ -162,6 +177,23 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 	light->Position	= glm::vec4(mPosition, 20.0f);	
 	light->ModelMatrix = glm::translate(mPosition);
 	light->ModelMatrix *= glm::scale(glm::vec3(20.0f * 2.15));
+
+	WidgetRenderData* cross = buffer->AddWidget();
+	cross->Texture = mCrosshair;
+	cross->Size = glm::vec2(mCrosshair->Width(), mCrosshair->Height());
+	cross->Position = glm::floor((glm::vec2(width, height) - cross->Size) / 2.0f);
+	cross->Z = 0;
+
+	if (mUseable)
+	{
+		TextRenderData* text;
+		
+		text = buffer->AddText();
+		text->Position = glm::floor(glm::vec2(width / 2.0f + 100.0f, height / 2.0f + 100.0f));
+		text->Z = 0;
+		text->Font = mFont;
+		text->Text = mUseable->GetUseText();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -48,6 +48,18 @@ namespace MAZE
 
 			/// Texture filtering
 			int TextureFilter;
+
+			/// Shadow mapping
+			bool EnableShadows;
+
+			/// Depth of field
+			bool EnableDOF;
+
+			/// Fog
+			bool EnableFog;
+
+			/// View distance
+			float ViewDistance;
 		};
 
 		/**
@@ -63,6 +75,7 @@ namespace MAZE
 			KEY_S		= 'S',
 			KEY_D		= 'D',
 			KEY_W		= 'W',
+			KEY_F		= 'F',
 			KEY_ESC		= VK_ESCAPE,
 			KEY_SPACE	= VK_SPACE
 		};

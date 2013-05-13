@@ -122,6 +122,10 @@ void Engine::LoadConfig(const std::string& cfg)
 	mSetup.ResourceDir   = config["rsmngr"]["dir"].AsString("./data");
 	mSetup.Anisotropy    = config["gfx"]["anisotropy"].AsFloat(0.0f);
 	mSetup.TextureFilter = config["gfx"]["texture"].AsInt(0);
+	mSetup.ViewDistance  = config["gfx"]["viewDistance"].AsFloat(50.0f);
+	mSetup.EnableShadows = config["gfx"]["shadows"].AsBool(false);
+	mSetup.EnableDOF	 = config["gfx"]["dof"].AsBool(false);
+	mSetup.EnableFog	 = config["gfx"]["fog"].AsBool(false);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -216,6 +220,7 @@ void Engine::InitWindow()
 	pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
 	pfd.iPixelType = PFD_TYPE_RGBA;
 	pfd.cColorBits = 32;
+	pfd.cDepthBits = 16;
 	pfd.iLayerType = PFD_MAIN_PLANE;
 
 	if (!(pixelFormat = ChoosePixelFormat(mDC, &pfd))) 
