@@ -303,7 +303,6 @@ namespace MAZE
 		void SetRotation(float x, float y, float z)
 		{
 			mRotation = glm::vec3(x, y, z);
-			fDirty = true;
 		}
 		
 		/**
@@ -312,7 +311,6 @@ namespace MAZE
 		void SetRotation(const glm::vec3& v)
 		{
 			mRotation = v;
-			fDirty = true;
 		}
 		
 		/**
@@ -321,7 +319,6 @@ namespace MAZE
 		void SetScale(float x, float y, float z)
 		{
 			mScale = glm::vec3(x, y, z);
-			fDirty = true;
 		}
 
 		/**
@@ -330,7 +327,6 @@ namespace MAZE
 		void SetScale(const glm::vec3& v)
 		{
 			mScale = v;
-			fDirty = true;
 		}
 
 		/**

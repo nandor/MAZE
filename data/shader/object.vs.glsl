@@ -31,7 +31,7 @@ void main()
     mat4 aModel = mat4(aModel0, aModel1, aModel2, aModel3);
     
     vVertex = vec3(aModel * gl_Vertex);
-    vNormal = vec3(matrixInverse(mat3(aModel)) * gl_Normal);
+    vNormal = mat3(aModel) * gl_Normal;
     vUV = uTexture * gl_MultiTexCoord0.st;
 
     gl_Position = uProj * uView * vec4(vVertex, 1.0);

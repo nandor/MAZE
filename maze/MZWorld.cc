@@ -48,7 +48,7 @@ void World::InitScene()
 	mScene = new Scene(mEngine, mSize);
 	
 	mPlayer = mScene->Create<Player> ("player");
-	mPlayer->SetPosition(glm::vec3(10.0f, 3.0f, 10.0f));
+	mPlayer->SetPosition(glm::vec3(2.5f, 1.6f, 2.5f));
 
 	mMoon = mScene->Create<Light>("moon");
 	mMoon->SetType(Light::DIRECTIONAL);

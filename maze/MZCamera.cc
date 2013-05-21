@@ -15,7 +15,7 @@ Camera::Camera()
 	  mDirection(glm::vec3(0.0, 0.0, -1.0)),
 	  mUp(glm::vec3(0.0, 1.0, 0.0)),
 	  mNearPlane(0.3f),
-	  mFarPlane(50.0f),
+	  mFarPlane(30.0f),
 	  mFocus(15.0f),
 	  mFOV(45.0f),
 	  mAspect(800.0f / 600.0f),

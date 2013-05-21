@@ -147,6 +147,9 @@ namespace MAZE
 
 		/// Closest object which is useable
 		Entity *mUseable;
+
+		/// True if we've just used an object
+		bool mUsed;
 	};
 };
 

@@ -126,6 +126,7 @@ namespace MAZE
 		Program *mSpotlightProgram;
 		Program *mPointlightProgram;
 		Program *mVolumeProgram;
+		Program *mShadowProgram;
 		Program *mFogProgram;
 		Program *mDOFProgram;
 		Program *mBlurProgram;

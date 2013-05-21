@@ -25,7 +25,8 @@ Player::Player(Engine *engine)
 	  mIsMoving(true),
 	  mMoveSpeed(0.007f),
 	  mSize(1.0f, 2.0f, 1.0f),
-	  mUseable(NULL)
+	  mUseable(NULL),
+	  mUsed(true)
 {
 	mPosition = glm::vec3(0.0f, 2.0f, 0.0f);
 	mRenderable = false;
@@ -153,13 +154,20 @@ void Player::Update(float time, float dt)
 	fScene->QueryPickables(this);
 	mUseable = fScene->QueryUseable(this, Ray(mPosition, lookDir));
 
-	if (mUseable && fEngine->IsKeyDown(Engine::KEY_F))
+	if (mUseable && !mUsed && fEngine->IsKeyDown(Engine::KEY_F))
 	{
 		mUseable->OnUse(this);
 		if (mUseable->IsDeleted())
 		{
 			mUseable = NULL;
 		}
+
+		mUsed = true;
+	}
+
+	if (!fEngine->IsKeyDown(Engine::KEY_F))
+	{
+		mUsed = false;
 	}
 }
 
@@ -194,6 +202,15 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 		text->Font = mFont;
 		text->Text = mUseable->GetUseText();
 	}
+
+	
+	TextRenderData* vt;
+		
+	vt = buffer->AddText();
+	vt->Position = glm::vec2(0.0f);
+	vt->Z = 0;
+	vt->Font = mFont;
+	vt->Text = "MAZE v0.0.1a";
 }
 
 // ------------------------------------------------------------------------------------------------

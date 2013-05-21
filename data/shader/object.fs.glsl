@@ -29,18 +29,11 @@ void main()
     
     // Compute the normal
     vec3 normal = bump.xyz * 2.0 - 1.0;
-    vec3 view = normalize(vVertex - uPosition);
     
-    vec3 dpx = dFdx(view), dpy = dFdy(view);
-    vec2 dtx = dFdx(vUV), dty = dFdy(vUV);
-   
-    mat3 m = matrixInverse(mat3(dpx, dpy, cross(dpx, dpy)));
-    vec3 t = m * vec3(dtx.x, dty.x, 0.0);
-    vec3 b = m * vec3(dtx.y, dty.y, 0.0);
-    
-    float len = max(length(t), length(b));
-    t /= len;
-    b /= len;
+    vec3 dpx = dFdx(vVertex), dpy = dFdy(vVertex);
+    vec2 dtx = dFdx(vUV), dty = dFdy(vUV);       
+    vec3 t = normalize(dpx * dty.t - dpy * dtx.s);
+    vec3 b = normalize(dpy * dty.t - dpx * dtx.s);
     
     normal = (normalize(mat3(t, b, vNormal) * normal) + 1.0) * 0.5;
     

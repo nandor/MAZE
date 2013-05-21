@@ -108,12 +108,6 @@ const static float STATIC_QUAD[] =
 	 1.0f,  1.0f
 };
 
-// ------------------------------------------------------------------------------------------------	
-const static float STATIC_MESH[] =
-{
-	0.0f, 0.0f, 0.0f
-};
-
 // ------------------------------------------------------------------------------------------------
 static const glm::mat4 DEPTH_BIAS(
 	0.5, 0.0, 0.0, 0.0,
@@ -164,9 +158,11 @@ Renderer::Renderer(Engine* engine)
 	  mSpotlightProgram(NULL),
 	  mPointlightProgram(NULL),
 	  mVolumeProgram(NULL),
+	  mShadowProgram(NULL),
 	  mFogProgram(NULL),
 	  mDOFProgram(NULL),
 	  mBlurProgram(NULL),
+	  mWidgetProgram(NULL),
 	  mGeomDiffuseTarget(NULL),
 	  mGeomNormalTarget(NULL),
 	  mGeomPositionTarget(NULL),
@@ -349,6 +345,11 @@ void Renderer::InitPrograms()
 	mVolumeProgram->Compile(Program::VERTEX, dir + "volume.vs.glsl");
 	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.fs.glsl");
 	mVolumeProgram->Link();
+	
+	mShadowProgram = new Program("shadow");
+	mShadowProgram->Compile(Program::VERTEX, dir + "shadow.vs.glsl");
+	mShadowProgram->Compile(Program::FRAGMENT, dir + "shadow.fs.glsl");
+	mShadowProgram->Link();
 		
 	if (mEnableFog)
 	{
@@ -468,6 +469,7 @@ void Renderer::DestroyPrograms()
 	if (mSpotlightProgram)	{ delete mSpotlightProgram;	 mSpotlightProgram	= NULL; }
 	if (mPointlightProgram) { delete mPointlightProgram; mPointlightProgram = NULL; }
 	if (mVolumeProgram)		{ delete mVolumeProgram;	 mVolumeProgram		= NULL; }
+	if (mShadowProgram)		{ delete mShadowProgram;	 mShadowProgram		= NULL; }
 	if (mFogProgram)		{ delete mFogProgram;		 mFogProgram		= NULL; }
 	if (mDOFProgram)		{ delete mDOFProgram;		 mDOFProgram		= NULL; }
 	if (mBlurProgram)		{ delete mBlurProgram;		 mBlurProgram		= NULL; }
@@ -571,6 +573,7 @@ void Renderer::RenderObjects()
 	mglEnableClientState(MGL_VERTEX_ARRAY);
 	mglEnableClientState(MGL_NORMAL_ARRAY);
 	mglEnableClientState(MGL_TEXTURE_COORD_ARRAY);
+
 	mglEnableVertexAttribArray(index0);
 	mglEnableVertexAttribArray(index1);
 	mglEnableVertexAttribArray(index2);
@@ -626,6 +629,12 @@ void Renderer::RenderObjects()
 	mglDisableVertexAttribArray(index2);
 	mglDisableVertexAttribArray(index1);
 	mglDisableVertexAttribArray(index0);
+
+	mglVertexAttribDivisor(index0, 0);				
+	mglVertexAttribDivisor(index1, 0);				
+	mglVertexAttribDivisor(index2, 0);								
+	mglVertexAttribDivisor(index3, 0);
+
 	mglDisableClientState(MGL_TEXTURE_COORD_ARRAY);
 	mglDisableClientState(MGL_NORMAL_ARRAY);
 	mglDisableClientState(MGL_VERTEX_ARRAY);
@@ -736,13 +745,18 @@ void Renderer::RenderDirlights()
 {
 	glm::mat4 shadowMVP[4];
 	glm::vec4 shadowZ;
-	
+
+	MGLuint index0 = mShadowProgram->Attribute("aModel0");
+	MGLuint index1 = mShadowProgram->Attribute("aModel1");
+	MGLuint index2 = mShadowProgram->Attribute("aModel2");
+	MGLuint index3 = mShadowProgram->Attribute("aModel3");
+					
 	mglEnable(MGL_DEPTH_TEST);
 	mglEnableClientState(MGL_VERTEX_ARRAY);
 
-	for (size_t i = 0; i < mFront->Lights.size(); ++i)
+	for (size_t j = 0; j < mFront->Lights.size(); ++j)
 	{
-		LightRenderData* light = &mFront->Lights[i];
+		LightRenderData* light = &mFront->Lights[j];
 				
 		if (light->Type == Light::DIRECTIONAL)
 		{
@@ -759,9 +773,18 @@ void Renderer::RenderDirlights()
 					mglDepthMask(MGL_TRUE);
 					mglDepthFunc(MGL_LEQUAL);
 					mglCullFace(MGL_BACK);	
-					mglPolygonOffset(1.0f, 4.0f);
+					mglPolygonOffset(1.0f, 2.0f);
 
-					mVolumeProgram->Use();
+					mglVertexAttribDivisor(index0, 1);				
+					mglVertexAttribDivisor(index1, 1);				
+					mglVertexAttribDivisor(index2, 1);								
+					mglVertexAttribDivisor(index3, 1);
+					mglEnableVertexAttribArray(index0);
+					mglEnableVertexAttribArray(index1);
+					mglEnableVertexAttribArray(index2);
+					mglEnableVertexAttribArray(index3);
+
+					mShadowProgram->Use();
 					for (size_t i = 0; i < 4; ++i)
 					{
 						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
@@ -769,19 +792,51 @@ void Renderer::RenderDirlights()
 				
 						shadowMVP[i] = DEPTH_BIAS * light->Shadow[i].MVP;
 						shadowZ[i] = light->Shadow[i].NearZ;
-				
-						for (size_t j = 0; j < light->Shadow[i].Count; ++j)
+						mShadowProgram->Uniform("uVP", light->Shadow[i].MVP);
+
+						size_t count = light->Shadow[i].Count, beg = light->Shadow[i].Index;	
+						while (count)
 						{
-							ObjectRenderData* obj = &mFront->ShadowCasters[light->Shadow[i].Index + j];		
-							if (obj->Model && obj->Model->GetState() == Resource::LOADED && obj->Model->mVBO)
+							Model *model = mFront->ShadowCasters[beg].Model;	
+
+							size_t instanceCount = 0;
+							for (size_t j = 0; j < count && instanceCount < INSTANCE_BATCH;)
 							{
-								mVolumeProgram->Uniform("uMVP", light->Shadow[i].MVP * obj->ModelMatrix);
-								mglBindBuffer(MGL_ARRAY_BUFFER, obj->Model->mVBO);
-								mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), 0);
-								mglDrawArrays(MGL_TRIANGLES, 0, obj->Model->mVertexCount);
+								if (mFront->ShadowCasters[beg + j].Model->GetID() != model->GetID())
+								{
+									++j;
+									continue;
+								}
+
+								mInstances[instanceCount++] = mFront->ShadowCasters[beg + j].ModelMatrix;
+								std::swap(mFront->ShadowCasters[beg + j], mFront->ShadowCasters[beg + (--count)]);
+							}	
+		
+							if (model && model->GetState() == Resource::LOADED && model->mVBO)
+							{			
+								mglBindBuffer(MGL_ARRAY_BUFFER, model->mVBO);
+								mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
+
+								mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);				
+								mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
+								mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)0);
+								mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)16);
+								mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)32);
+								mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)48);
+
+								mglDrawArraysInstanced(MGL_TRIANGLES, 0, model->mVertexCount, instanceCount);
 							}
 						}
 					}
+
+					mglDisableVertexAttribArray(index3);
+					mglDisableVertexAttribArray(index2);
+					mglDisableVertexAttribArray(index1);
+					mglDisableVertexAttribArray(index0);
+					mglVertexAttribDivisor(index0, 0);				
+					mglVertexAttribDivisor(index1, 0);				
+					mglVertexAttribDivisor(index2, 0);								
+					mglVertexAttribDivisor(index3, 0);
 
 					mglDisable(MGL_POLYGON_OFFSET_FILL);
 					mglDisable(MGL_CULL_FACE);			

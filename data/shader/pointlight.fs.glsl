@@ -40,7 +40,7 @@ void main()
     float spec = max(dot(reflect(-lightDir, geomNormal), viewDir), 0.0);
     
     color += geomDiffuse.xyz * lDiffuse * att;
-    color += lSpecular * pow(spec, geomDiffuse.w * 255.0) * angle * att;
+    color += lSpecular * pow(spec, geomDiffuse.w * 50.0) * angle * att;
     
     gl_FragData[0] = vec4(color, 1.0);
 }

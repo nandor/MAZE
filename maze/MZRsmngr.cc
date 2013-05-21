@@ -219,7 +219,7 @@ int ResourceManager::Worker()
 					continue;
 				}
 
-				if (job->mState = Resource::UNLOADING_QUEUED)
+				if (job->mState == Resource::UNLOADING_QUEUED)
 				{
 					job->mState = Resource::UNLOADING;
 					job->Unload();
