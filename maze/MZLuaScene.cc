@@ -139,6 +139,33 @@ static int entity__getter(lua_State *L)
 		lua_pushstring(L, (*object)->GetName().c_str());
 		return 1;
 	}
+	else if (!strcmp(field, "position"))
+	{
+		void *pos;
+
+		pos = mzlCreateObject(L, sizeof(glm::vec3), "vec3");
+		new (pos) glm::vec3((*object)->GetPosition());
+
+		return 1;
+	}
+	else if (!strcmp(field, "rotation"))
+	{
+		void *rot;
+
+		rot = mzlCreateObject(L, sizeof(glm::vec3), "vec3");
+		new (rot) glm::vec3((*object)->GetRotation());
+
+		return 1;
+	}
+	else if (!strcmp(field, "scale"))
+	{
+		void *scale;
+
+		scale = mzlCreateObject(L, sizeof(glm::vec3), "vec3");
+		new (scale) glm::vec3((*object)->GetScale());
+
+		return 1;
+	}
 	else if (!strcmp(field, "box"))
 	{
 		void *box;

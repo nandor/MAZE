@@ -202,15 +202,6 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 		text->Font = mFont;
 		text->Text = mUseable->GetUseText();
 	}
-
-	
-	TextRenderData* vt;
-		
-	vt = buffer->AddText();
-	vt->Position = glm::vec2(0.0f);
-	vt->Z = 0;
-	vt->Font = mFont;
-	vt->Text = "MAZE v0.0.1a";
 }
 
 // ------------------------------------------------------------------------------------------------

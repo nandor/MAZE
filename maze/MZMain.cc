@@ -10,7 +10,7 @@ using namespace MAZE;
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 { 
 	Engine *engine = NULL;
-
+	
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
 	try 

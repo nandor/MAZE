@@ -52,7 +52,15 @@ namespace MAZE
 			Unloads the model
 		*/
 		void Unload();
-		
+
+		/**
+			Checks if the model has a collision mesh
+		*/
+		bool HasCollisionMesh()
+		{
+			return mCollision.size() > 0;
+		}
+
 	public:
 
 		/**

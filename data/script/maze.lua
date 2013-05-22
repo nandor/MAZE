@@ -2,48 +2,104 @@
 -- Licensing information can be found in the LICENSE file
 -- (C) 2013 The MAZE project. All rights reserved.
 
-local coin_count = 0
+------------------------------------------------------------------
+function spawn_pillar(x, y)
+    local pillar = scene.create("object")        
+    pillar.model = "pillar"
+    pillar.position = vec3(x * 5, 0, y * 5)
+    pillar.box = box(vec3(-1.0, 0.0, -1.0), vec3(2.0, 4.0, 2.0))  
+    pillar.shadow_caster = true        
+    pillar.collider = true  
+end
 
+-------------------------------------------------------------------------------
+function spawn_wall(x, y, o)
+    local wall = scene.create("object")
+    wall.model = "wall"
+    wall.shadow_caster = true
+    wall.collider = true
+
+    if o then
+        wall.position = vec3(x * 5, 0.0, y * 5 + 2.5)
+        wall.rotation = vec3(0.0, 90.0, 0.0)
+        wall.box = box(vec3(-0.5, 0.0, -2.5), vec3(1.0, 4.0, 5.0))
+    else
+        wall.position = vec3(x * 5 + 2.5, 0.0, y * 5)
+        wall.rotation = vec3(0.0, 0.0, 0.0)
+        wall.box = box(vec3(-2.5, 0.0, -0.5), vec3(5.0, 4.0, 1.0))
+    end
+end
+
+-------------------------------------------------------------------------------
+function spawn_door(x, y, o)
+    local door = scene.create("object")
+    door.model = "gate"
+    door.useable  = true
+    door.collider = true
+    door.shadow_caster = true
+    door.use_text = "Press F to open"
+    
+    local door_open = false
+    
+    if o then
+        door.position = vec3(x * 5, 0.0, y * 5 + 1.5)
+        door.rotation = vec3(0.0, 90.0, 0.0)
+        door.box = box(vec3(0.0, 0.0, 0.0), vec3(0.2, 3.0, 2.0))
+    else
+        door.position = vec3(x * 5 + 3.5, 0.0, y * 5)
+        door.rotation = vec3(0.0, 0.0, 0.0)
+        door.box = box(vec3(-2.0, 0.0, 0.0), vec3(2.0, 3.0, 0.2))
+    end
+    
+    door.on_use = function ()
+        door:delete()
+    end    
+    
+    local wall = scene.create("object")
+    wall.model = "wall_gate"
+    wall.shadow_caster = true
+    wall.collider = false
+
+    if o then
+        wall.position = vec3(x * 5, 0.0, y * 5 + 2.5)
+        wall.rotation = vec3(0.0, 90.0, 0.0)
+        wall.box = box(vec3(-0.5, 0.0, -2.5), vec3(1.0, 4.0, 5.0))
+    else
+        wall.position = vec3(x * 5 + 2.5, 0.0, y * 5)
+        wall.rotation = vec3(0.0, 0.0, 0.0)
+        wall.box = box(vec3(-2.5, 0.0, -0.5), vec3(5.0, 4.0, 1.0))
+    end
+end
+
+-------------------------------------------------------------------------------
 function on_world_init()    
 
     -- Place pillars on corners
     for x = 0, 20 do
         for y = 0, 20 do
-            local pillar = scene.create("object")        
-            pillar.model = "pillar"
-            pillar.position = vec3(x * 5, 0, y * 5)
-            pillar.box = box(vec3(-0.5, 0.0, -0.5), vec3(1.0, 4.0, 1.0))  
-            pillar.shadow_caster = true        
-            pillar.collider = true    
+            spawn_pillar(x, y)  
         end
     end
     
     -- Place walls
     for x = 0, 20 do
-        for y = 0, 20 do 
-        
-            local id = math.floor(math.random() * 100) % 3
+        for y = 0, 20 do         
+            local id = math.floor(math.random() * 100) % 5
             
             if (x == 0 or x == 20 or id == 0) and y < 20 then
-                local wall = scene.create("object")
-                wall.model = "wall"
-                wall.shadow_caster = true
-                wall.collider = true
-
-                wall.position = vec3(x * 5, 0.0, y * 5 + 2.5)
-                wall.rotation = vec3(0.0, 90.0, 0.0)
-                wall.box = box(vec3(-0.5, 0.0, -2.5), vec3(1.0, 4.0, 5.0))
+                spawn_wall(x, y, true)
+            end
+                        
+            if (y == 0 or y == 20 or id == 0) and x < 20 then
+                spawn_wall(x, y, false)
             end
             
-            if (y == 0 or y == 20 or id == 0) and x < 20 then
-                local wall = scene.create("object")
-                wall.model = "wall"
-                wall.shadow_caster = true
-                wall.collider = true
-
-                wall.position = vec3(x * 5 + 2.5, 0.0, y * 5)
-                wall.rotation = vec3(0.0, 0.0, 0.0)
-                wall.box = box(vec3(-2.5, 0.0, -0.5), vec3(5.0, 4.0, 1.0))
+            if (x ~= 0 and x ~= 20 and id == 1) and y < 20 then 
+                spawn_door(x, y, true)
+            end
+            
+            if (y ~= 0 and y ~= 20 and id == 1) and x < 20 then 
+                spawn_door(x, y, false)
             end
         end
     end
@@ -64,7 +120,6 @@ function on_world_init()
                 coin.pickable = true     
                 
                 coin.on_pick = function (ent)
-                    coin_count = coin_count + 1
                     coin:delete()
                 end
                 
@@ -72,29 +127,6 @@ function on_world_init()
                    coin.rotation = vec3(0.0, t / 15.0 + (x * 20 + y), 0.0)
                 end
             end
-        end
-    end
-    
-    door = scene.create("object")
-    door.model = "gate"
-    door.position = vec3(10.0, 0.0, 10.0)
-    door.box = box(vec3(-2.0, 0.0, 0.0), vec3(2.0, 2.0, 0.2))
-    door.useable  = true
-    door.collider = true
-    door.shadow_caster = true
-    door.use_text = "Press F to open"
-    
-    door_open = false
-    
-    door.on_use = function ()
-        if door_open then
-            door.rotation = vec3(0.0, 0.0, 0.0)
-            door.box = box(vec3(-2.0, 0.0, 0.0), vec3(2.0, 2.0, 0.2))
-            door_open = false
-        else
-            door.rotation = vec3(0.0, 90.0, 0.0)
-            door.box = box(vec3(0.0, 0.0, 0.0), vec3(0.2, 2.0, 2.0))
-            door_open = true
         end
     end
 end

@@ -182,7 +182,7 @@ namespace MAZE
 		/**
 			Returns the position of the object
 		*/
-		glm::vec3 GetPosition()
+		glm::vec3 GetPosition() const
 		{
 			return mPosition;
 		}	
@@ -190,7 +190,7 @@ namespace MAZE
 		/**
 			Returns the rotation of the object
 		*/
-		glm::vec3 GetRotation()
+		glm::vec3 GetRotation() const
 		{
 			return mRotation;
 		}	
@@ -198,7 +198,7 @@ namespace MAZE
 		/**
 			Returns the scaleing of the object
 		*/
-		glm::vec3 GetScale()
+		glm::vec3 GetScale() const
 		{
 			return mScale;
 		}	
