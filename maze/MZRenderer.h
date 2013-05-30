@@ -31,10 +31,7 @@ namespace MAZE
 		struct Vertex
 		{
 			// Position
-			float x, y;
-
-			// Layer
-			float z;
+			float x, y, z;
 
 			// Texture
 			float s, t;
@@ -117,7 +114,7 @@ namespace MAZE
 
 		// Number of instances in a batch
 		static const size_t INSTANCE_BATCH = 1024;
-		static const size_t WIDGET_BATCH = 4096;
+		static const size_t WIDGET_BATCH = 1024;
 
 		// List of shader programs
 		Program *mObjectProgram;
@@ -129,7 +126,6 @@ namespace MAZE
 		Program *mShadowProgram;
 		Program *mFogProgram;
 		Program *mDOFProgram;
-		Program *mBlurProgram;
 		Program *mWidgetProgram;
 
 		// List of render targets
@@ -140,21 +136,21 @@ namespace MAZE
 		MGLuint mColor1Target;
 		MGLuint mShadowTarget;
 		MGLuint mDepthTarget;
-		MGLuint mRandomTexture;
 				
 		// List of FBOs
 		MGLuint mGeometryFBO;
 		MGLuint mShadowFBO;
 		MGLuint mPostFXFBO;
+		size_t mFXCount;
 		
 		// Static VBOs
 		MGLuint mLightVBO;
 		MGLuint mSkyboxVBO;
 		MGLuint mQuadVBO;
 		MGLuint mWidgetVBO;
-		Vertex *mWidgets;
 		MGLuint mInstanceVBO;
 		glm::mat4 *mInstances;
+		Vertex *mWidgets;
 
 		// Configuration
 		int mWidth;
@@ -164,14 +160,17 @@ namespace MAZE
 		bool mEnableFog;
 		MGLuint mMapSize;
 						
-		// Buffers & system
+		// System
 		Engine *mEngine;
+		HGLRC mContext;
+
+		// Renderbuffer
 		RenderBuffer mBuffers[2];
 		RenderBuffer *mFront;
 		Mutex mBufferMutex;
-		HGLRC mContext;
+
+		// Timer
 		LARGE_INTEGER mFreq;
-		size_t mFXCount;
 		float mTime;
 	};	
 };

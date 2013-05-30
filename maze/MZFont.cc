@@ -20,6 +20,7 @@ Font::Font(ResourceManager *rsmngr, const std::string& id, size_t height, const 
 // ------------------------------------------------------------------------------------------------
 Font::~Font()
 {
+	if (mTexture) { mglDeleteTextures(1, &mTexture); mTexture = 0; }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -98,10 +99,12 @@ void Font::Load()
 	mglTexImage2D(MGL_TEXTURE_2D, 0, MGL_INTENSITY, texWidth, texHeight, 0, MGL_LUMINANCE, MGL_UNSIGNED_BYTE, data);
 	
 	free(data);
+	FT_Done_Face(face);
 	FT_Done_FreeType(library);
 }
 		
 // ------------------------------------------------------------------------------------------------
 void Font::Unload()
 {
+	if (mTexture) { mglDeleteTextures(1, &mTexture); mTexture = 0; }
 }

@@ -7,6 +7,7 @@ using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 RenderBuffer::RenderBuffer()
+	: SkyTexture(NULL)
 {
 }
 

@@ -6,10 +6,12 @@
 #define OBJECT_H
 #pragma once
 
+#include <al/al.h>
 #include "MZMath.h"
 #include "MZModel.h"
 #include "MZEntity.h"
 #include "MZCallback.h"
+#include "MZSoundSource.h"
 
 namespace MAZE
 {
@@ -32,6 +34,46 @@ namespace MAZE
 			Destroys the object
 		*/
 		~Object();
+		
+		/**
+			Checks if the obj has a collision mesh
+		*/
+		bool HasCollisionMesh() const;
+
+		/**
+			Plays a sound
+		*/
+		void PlaySound(const std::string& sound);
+		
+		/**
+			Called when the object is picked
+		*/
+		void OnPick(Entity *who);
+		
+		/**
+			Called when the object is used
+		*/
+		void OnUse(Entity *who);
+
+		/**
+			Updates the entity
+		*/
+		void Update(float time, float dt);
+
+		/**
+			Places the entity in the renderbuffer
+		*/
+		void Render(RenderBuffer* buffer, RenderMode mode);
+
+	public:
+
+		/**
+			Returns a reference to the model
+		*/
+		Resource::Ptr<Model> GetModel() const
+		{
+			return mModel;
+		}
 
 		/**
 			Sets the model of the object
@@ -64,43 +106,6 @@ namespace MAZE
 		{			
 			mUseCall = call;
 		}
-		
-		/**
-			Returns the model used by the object
-		*/
-		Resource::Ptr<Model> GetModel() const
-		{
-			return mModel;
-		}
-		
-		/**
-			Called when the object is picked
-		*/
-		void OnPick(Entity *who)
-		{
-			mPickCall.Call(who);
-		}
-		
-		/**
-			Called when the object is used
-		*/
-		void OnUse(Entity *who)
-		{
-			mUseCall.Call(who);
-		}
-
-		/**
-			Updates the entity
-		*/
-		void Update(float time, float dt)
-		{
-			mUpdateCall.Call(time, dt);
-		}
-
-		/**
-			Places the entity in the renderbuffer
-		*/
-		void Render(RenderBuffer* buffer, RenderMode mode);
 
 	private:
 
@@ -108,7 +113,7 @@ namespace MAZE
 			Updates the object
 		*/
 		void UpdateInternals();
-
+		
 	private:
 
 		/// Model used by this entity
@@ -122,7 +127,9 @@ namespace MAZE
 
 		/// Callback on use of the object
 		Callback mUseCall;
-
+		
+		/// List of sound sources
+		std::vector<SoundSource> mSounds;
 	};
 };
 

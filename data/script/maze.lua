@@ -44,30 +44,44 @@ function spawn_door(x, y, o)
     if o then
         door.position = vec3(x * 5, 0.0, y * 5 + 1.5)
         door.rotation = vec3(0.0, 90.0, 0.0)
-        door.box = box(vec3(0.0, 0.0, 0.0), vec3(0.2, 3.0, 2.0))
+        door.box = box(vec3(-0.2, 0.0, 0.0), vec3(0.4, 2.3, 2.0))
     else
         door.position = vec3(x * 5 + 3.5, 0.0, y * 5)
         door.rotation = vec3(0.0, 0.0, 0.0)
-        door.box = box(vec3(-2.0, 0.0, 0.0), vec3(2.0, 3.0, 0.2))
+        door.box = box(vec3(-2.0, 0.0, -0.2), vec3(2.0, 2.3, 0.4))
     end
     
     door.on_use = function ()
-        door:delete()
+        door.useable = false
+        door.collider = false
+        
+        door:play_sound("gate")
+        
+        if o then
+            door.position = vec3(x * 5, 0.0, y * 5 + 1.5)
+            door.rotation = vec3(0.0, 0.0, 0.0)
+            door.box = box(vec3(-2.0, 0.0, -0.2), vec3(2.0, 2.0, 0.4))
+        else
+            door.position = vec3(x * 5 + 3.5, 0.0, y * 5)
+            door.rotation = vec3(0.0, 90.0, 0.0)
+            door.box = box(vec3(-0.2, 0.0, 0.0), vec3(0.4, 2.0, 2.0))
+        end
+        
     end    
     
     local wall = scene.create("object")
     wall.model = "wall_gate"
     wall.shadow_caster = true
-    wall.collider = false
+    wall.collider = true
 
     if o then
         wall.position = vec3(x * 5, 0.0, y * 5 + 2.5)
         wall.rotation = vec3(0.0, 90.0, 0.0)
-        wall.box = box(vec3(-0.5, 0.0, -2.5), vec3(1.0, 4.0, 5.0))
+        wall.box = box(vec3(-1.0, 0.0, -2.5), vec3(2.0, 4.0, 5.0))
     else
         wall.position = vec3(x * 5 + 2.5, 0.0, y * 5)
         wall.rotation = vec3(0.0, 0.0, 0.0)
-        wall.box = box(vec3(-2.5, 0.0, -0.5), vec3(5.0, 4.0, 1.0))
+        wall.box = box(vec3(-2.5, 0.0, -1.0), vec3(5.0, 4.0, 2.0))
     end
 end
 

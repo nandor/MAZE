@@ -7,14 +7,16 @@
 #pragma once
 
 #include <string>
+#include <al/al.h>
+#include <al/alc.h>
 #include <glm/glm.hpp>
 #include "MZPlatform.h"
 
 namespace MAZE 
 {
+	class World;
 	class Renderer;
 	class ResourceManager;
-	class World;
 
 	/**
 		Main class which handles the windowing and user input
@@ -136,7 +138,7 @@ namespace MAZE
 		{
 			return mSetup;
 		}
-
+		
 		/**
 			Returns the resource manager
 		*/
@@ -189,19 +191,30 @@ namespace MAZE
 		*/
 		void InitWindow();
 
+		/**
+			Initializes the sound system
+		*/
+		void InitSound();
+
 	private:
 
 		/// Rendering subsytem
-		Renderer* mRenderer;
+		Renderer *mRenderer;
 
 		/// Resource manager
-		ResourceManager* mRsmngr;
-
+		ResourceManager *mRsmngr;
+		
 		/// Game world
-		World* mWorld;
+		World *mWorld;
 
 		/// Configuration data
 		Setup mSetup;
+
+		/// OpenAL device
+		ALCdevice *mDevice;
+
+		/// OpenAL context
+		ALCcontext *mContext;
 
 		/// Loop state
 		bool mRunning;

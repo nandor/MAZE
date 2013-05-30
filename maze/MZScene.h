@@ -6,15 +6,15 @@
 #define OCTREE_H
 #pragma once
 
-#include <list>
 #include <hash_map>
+#include <forward_list>
 #include "MZAtomic.h"
-#include "MZLight.h"
-#include "MZBound.h"
+#include "MZBoundingBox.h"
 
 namespace MAZE
 {
 	class Entity;
+	class Engine;
 	class RenderBuffer;
 	
 	/**
@@ -43,12 +43,39 @@ namespace MAZE
 			Returns the next node in the traversal
 			@param clip Clipping volume
 		*/
-		SceneNode* Next(const Shape& clip);
+		template <typename T>
+		SceneNode* Next(const T& v)
+		{
+			for (size_t i = 0; i < 8; ++i)
+			{
+				if (Child[i] && !v.Outside(Child[i]->Box))
+				{
+					return Child[i];
+				}
+			}
+		
+			SceneNode *node = this, *parent;
+			while (node->Parent != NULL)
+			{
+				parent = node->Parent;
+				for (size_t i = node->Index + 1; i < 8; ++i)
+				{
+					if (parent->Child[i] && !v.Outside(parent->Child[i]->Box))
+					{
+						return parent->Child[i];
+					}
+				}
+
+				node = parent;
+			}
+	
+			return NULL;
+		}
 			
 	public:
 		
 		/// List of entities attached to the node
-		std::vector<Entity*> Items;
+		std::forward_list<Entity*> Items;
 
 		/// Bounding box of the node
 		BoundingBox Box;
@@ -157,12 +184,12 @@ namespace MAZE
 		/**
 			Retrieves all visible entities
 		*/
-		void QueryRenderables(const ViewFrustum& volume, RenderBuffer* buffer);
+		void QueryRenderables(const Frustum& volume, RenderBuffer* buffer);
 
 		/**
 			Retrieves all shadows casters from a volume
 		*/
-		void QueryShadowCasters(const ViewFrustum& volume, RenderBuffer* buffer);
+		void QueryShadowCasters(const Frustum& volume, RenderBuffer* buffer);
 		
 		/**
 			Retrieves maximum move distance
@@ -200,9 +227,6 @@ namespace MAZE
 
 		/// Max depth of the tree
 		const static size_t MAX_DEPTH = 16;
-
-		/// Looseness factor
-		const static float NODE_SCALE;
 
 		/// Parent engine
 		Engine *mEngine;

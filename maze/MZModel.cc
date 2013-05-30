@@ -182,13 +182,5 @@ void Model::CreatePlane(ResourceManager* rsmngr,
 	model->mVertices[4].UV		 = glm::vec2(2.0f * w / cellSize.x, 2.0f * h / cellSize.y);
 	model->mVertices[5].UV		 = glm::vec2(2.0f * w / cellSize.x, 0.0f				 );
 	
-	model->mCollision.resize(6);
-	model->mCollision[0] = glm::vec3(-w, 0.0f, -h);
-	model->mCollision[1] = glm::vec3(-w, 0.0f,  h);	
-	model->mCollision[2] = glm::vec3( w, 0.0f,  h);
-	model->mCollision[3] = glm::vec3(-w, 0.0f, -h);
-	model->mCollision[4] = glm::vec3( w, 0.0f,  h);
-	model->mCollision[5] = glm::vec3( w, 0.0f, -h);
-
 	rsmngr->Add(model);
 }

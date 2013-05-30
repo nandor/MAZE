@@ -9,8 +9,9 @@ set (SOURCES MZCamera.cc
              MZConfig.cc
              MZEngine.cc
 			 MZException.cc
-			 MZBound.cc
+			 MZBoundingBox.cc
 			 MZFont.cc
+			 MZFrustum.cc
 			 MZGL.c
 			 MZLight.cc
 			 MZLog.cc
@@ -23,11 +24,15 @@ set (SOURCES MZCamera.cc
 			 MZObject.cc
 			 MZPlayer.cc
 			 MZProgram.cc
+			 MZRay.cc
 			 MZRenderer.cc
 			 MZRenderBuffer.cc
 			 MZResource.cc
 			 MZRsmngr.cc
 			 MZScene.cc
+			 MZSphere.cc
+             MZSound.cc
+			 MZSoundSource.cc
 			 MZTexture.cc
 			 MZThread.cc
 			 MZWorld.cc)
@@ -39,8 +44,9 @@ set (HEADERS MZAtomic.h
 			 MZEngine.h
 			 MZEntity.h
 			 MZException.h
-			 MZBound.h
+			 MZBoundingBox.h
 			 MZFont.h
+			 MZFrustum.h
 			 MZGL.h
 			 MZLight.h
 			 MZLog.h
@@ -53,22 +59,36 @@ set (HEADERS MZAtomic.h
 			 MZPlayer.h
 			 MZPlatform.h
 			 MZProgram.h
+			 MZRay.h
 			 MZRenderer.h
 			 MZRenderBuffer.h
 			 MZResource.h
 			 MZRsmngr.h
 			 MZScene.h
 			 MZSingleton.h
+			 MZSphere.h
 			 MZString.h
+             MZSound.h
+			 MZSoundSource.h
 			 MZTexture.h
 			 MZThread.h
 			 MZWorld.h)
 
-set (LIBS libjpeg opengl32 lua52 freetype)
-set (LIBS_RELASE libpng15_static zlibstatic)
-set (LIBS_DEBUG	libpng15_staticd zlibstaticd)
+set (LIBS	jpeg 
+			opengl32
+			openal32 
+			lua52 
+			freetype 
+			libogg_static 
+			libvorbis_static 
+			libvorbisfile_static)
 
+set (LIBS_RELASE libpng15 zlib)
+set (LIBS_DEBUG	libpng15d zlibd)
+
+			
 add_executable(maze WIN32 ${SOURCES} ${HEADERS})
 target_link_libraries(maze ${LIBS})
 target_link_libraries(maze debug ${LIBS_DEBUG})
 target_link_libraries(maze optimized ${LIBS_RELASE})
+

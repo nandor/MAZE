@@ -1,15 +1,15 @@
 // This file is part of the MAZE project
 // Licensing information can be found in the LICENSE file
-// (C) 2012 The MAZE project. All rights reserved.
+// (C) 2013 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
 #include "MZException.h"
-#include "MZCamera.h"
 #include "MZRenderer.h"
+#include "MZConfig.h"
+#include "MZCamera.h"
 #include "MZRsmngr.h"
 #include "MZEngine.h"
 #include "MZWorld.h"
-#include "MZConfig.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -34,6 +34,8 @@ Engine::Engine()
 	: mRenderer(NULL),
 	  mRsmngr(NULL),
 	  mWorld(NULL),
+	  mDevice(NULL),
+	  mContext(NULL),
 	  mRunning(false),
 	  mLastFrameTime(0.0f),
 	  mMouse(0, 0),
@@ -57,14 +59,29 @@ Engine::~Engine()
 	{
 		mRenderer->Stop();
 		delete mRenderer;
+		mRenderer = NULL;
 	}
 	
 	if (mRsmngr)
 	{
 		mRsmngr->Stop();
 		delete mRsmngr;
+		mRsmngr = NULL;
 	}
-	
+		
+	if (mContext)
+	{
+		alcMakeContextCurrent(NULL);
+		alcDestroyContext(mContext);
+		mContext = NULL;
+	}
+
+	if (mDevice)
+	{
+		alcCloseDevice(mDevice);
+		mDevice = NULL;
+	}
+
 	if (mDC && !ReleaseDC(mWindow, mDC))
 	{
 		throw WindowsException("Engine::~Engine: ReleaseDC failed");
@@ -93,13 +110,13 @@ Engine::~Engine()
 // ------------------------------------------------------------------------------------------------
 void Engine::Init()
 {
-	// Create the window
 	InitWindow();	
+	InitSound();
 
 	// Initialise the renderer
 	mRenderer = new Renderer(this);
 	mRenderer->Init();
-				
+					
 	// Initialise the  resource manager
 	mRsmngr = new ResourceManager(this);
 	mRsmngr->Init();
@@ -235,6 +252,22 @@ void Engine::InitWindow()
 }
 
 // ------------------------------------------------------------------------------------------------
+void Engine::InitSound()
+{
+	if ((mDevice = alcOpenDevice(NULL)) == NULL)
+	{
+		throw Exception("Cannot create OpenAL device");
+	}
+
+	if ((mContext = alcCreateContext(mDevice, NULL)) == NULL)
+	{
+		throw Exception("Cannot create OpenAL context");
+	}
+
+	alcMakeContextCurrent(mContext);
+}
+
+// ------------------------------------------------------------------------------------------------
 void Engine::Quit()
 {
 	::PostMessage(mWindow, WM_CLOSE, NULL, NULL);
@@ -253,7 +286,7 @@ void Engine::MainLoop()
 	::SetForegroundWindow(mWindow);
 	::SetCursorPos(mSetup.WindowWidth >> 1, mSetup.WindowHeight >> 1);
 	::ShowCursor(FALSE);
-
+	
 	mRsmngr->Start();
 	mRenderer->Start();
 	
@@ -289,6 +322,13 @@ void Engine::MainLoop()
 				case WM_KEYUP:
 				{
 					mKeyState[msg.wParam] = false;
+
+					if (msg.wParam == VK_ESCAPE)
+					{
+						mRunning = 0;
+						return;
+					}
+					
 					break;
 				}
 			}
@@ -305,8 +345,7 @@ void Engine::MainLoop()
 		// Update the scene
 		mWorld->Update(mLastFrameTime, mTimeDelta);		
 		mWorld->Render(mRenderer->GetBuffer());
-		
-		// Prevent CPU from burning
+
 		mLastFrameTime = frameBeg;
 		mRenderer->SwapBuffers();
 	}

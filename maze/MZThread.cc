@@ -36,7 +36,7 @@ Thread::~Thread()
 				::ResumeThread(mHandle);
 			}
 
-			::WaitForSingleObject(mHandle, INFINITE);
+			::WaitForSingleObject(mHandle, 100);
 		}
 
 		::CloseHandle(mHandle);

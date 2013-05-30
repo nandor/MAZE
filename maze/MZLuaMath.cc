@@ -5,7 +5,7 @@
 #include <sstream>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-#include "MZBound.h"
+#include "MZBoundingBox.h"
 #include "MZLuaMath.h"
 using namespace MAZE;
 
@@ -256,7 +256,7 @@ static int boxintersect(lua_State *L)
 	BoundingBox *a = (BoundingBox*)mzlGetObject(L,  1, "box");
 	BoundingBox *b = (BoundingBox*)mzlGetObject(L,  2, "box");
 
-	lua_pushnumber(L, a->Intersect(*b));
+	lua_pushnumber(L, !a->Outside(*b));
 	return 1;
 }
 

@@ -5,7 +5,6 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 #include "MZPlatform.h"
-#include "MZBound.h"
 #include "MZCamera.h"
 using namespace MAZE;
 
@@ -15,7 +14,7 @@ Camera::Camera()
 	  mDirection(glm::vec3(0.0, 0.0, -1.0)),
 	  mUp(glm::vec3(0.0, 1.0, 0.0)),
 	  mNearPlane(0.3f),
-	  mFarPlane(30.0f),
+	  mFarPlane(25.0f),
 	  mFocus(15.0f),
 	  mFOV(45.0f),
 	  mAspect(800.0f / 600.0f),
@@ -42,7 +41,7 @@ void Camera::Render(RenderBuffer* buf)
 }
 
 // ------------------------------------------------------------------------------------------------
-ViewFrustum& Camera::GetVolume()
+Frustum& Camera::GetVolume()
 {
 	if (mDirty)
 	{

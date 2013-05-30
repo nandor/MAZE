@@ -7,8 +7,10 @@
 #pragma once
 
 #include "MZMath.h"
+#include "MZSound.h"
 #include "MZEntity.h"
 #include "MZCamera.h"
+#include "MZSoundSource.h"
 
 namespace MAZE
 {
@@ -95,8 +97,10 @@ namespace MAZE
 		void Update(float time, float dt);
 
 	private:
-
-		void UpdateInternals();
+		
+		void UpdateInternals()
+		{
+		}
 		
 	private:
 		
@@ -117,6 +121,12 @@ namespace MAZE
 
 		/// UI font
 		Resource::Ptr<Font> mFont;
+
+		/// Torch model
+		Resource::Ptr<Model> mTorch;
+
+		/// Walk sound
+		SoundSource mWalk;
 
 		/// FPS camera
 		std::auto_ptr<Camera> mCamera;
@@ -150,6 +160,12 @@ namespace MAZE
 
 		/// True if we've just used an object
 		bool mUsed;
+
+		/// True if we've just jumped
+		bool mJumped;
+
+		/// Movement oscillation timer
+		float mMoveTime;
 	};
 };
 

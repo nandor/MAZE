@@ -20,16 +20,27 @@ using namespace MAZE;
 World::World(Engine* engine)
 	: mEngine(engine),
 	  mScene(NULL),
+	  mPlayer(NULL),
+	  mMoon(NULL),
 	  mScript(NULL),
-	  mPlayer(NULL)
+	  mSkyTexture(NULL)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 World::~World()
 {
-	if (mScene != NULL)  { delete mScene;  mScene = NULL; }
-	if (mScript != NULL) { lua_close(mScript); mScript = NULL; }
+	if (mScene != NULL)  
+	{ 
+		delete mScene;  
+		mScene = NULL; 
+	}
+	
+	if (mScript != NULL) 
+	{ 
+		lua_close(mScript); 
+		mScript = NULL; 
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -44,12 +55,14 @@ void World::InitScene()
 {
 	mSkyTexture = mEngine->GetResourceManager()->Get<Texture> ("sky");
 	
-	mSize = glm::vec3(100.0f, 100.0f, 100.0f);
-	mScene = new Scene(mEngine, mSize);
+	/// Scene manager
+	mScene = new Scene(mEngine, glm::vec3(500.0f));
 	
+	/// Player
 	mPlayer = mScene->Create<Player> ("player");
 	mPlayer->SetPosition(glm::vec3(2.5f, 1.6f, 2.5f));
 
+	/// Initialize the moonlight
 	mMoon = mScene->Create<Light>("moon");
 	mMoon->SetType(Light::DIRECTIONAL);
 	mMoon->SetDiffuse(glm::vec3(0.1f, 0.1f, 0.6f));
@@ -57,8 +70,9 @@ void World::InitScene()
 	mMoon->SetAmbient(glm::vec3(0.05f, 0.05f, 0.05f));
 	mMoon->SetDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
 	mMoon->SetShadowCaster(true);
-	Model::CreatePlane(mEngine->GetResourceManager(), "floor", "floor_diffuse", "floor_bump", glm::vec2(100.0f), glm::vec2(1.5f));
 
+	/// Ground plane
+	Model::CreatePlane(mEngine->GetResourceManager(), "floor", "floor_diffuse", "floor_bump", glm::vec2(100.0f), glm::vec2(1.5f));
 	Object* floor = mScene->Create<Object>();
 	floor->SetModel(mEngine->GetResourceManager()->Get<Model> ("floor"));
 	floor->SetPosition(glm::vec3(50.0f, 0.0f, 50.0f));
@@ -110,11 +124,7 @@ void World::InitScript()
 // ------------------------------------------------------------------------------------------------
 void World::Update(float time, float dt)
 {
-	if (mEngine->IsKeyDown(Engine::KEY_ESC))
-	{
-		mEngine->Quit();
-	}
-	
+	// Update every entity in the scene
 	mScene->Update(time, dt);
 		
 	// Call the lua update method
@@ -131,7 +141,6 @@ void World::Update(float time, float dt)
 void World::Render(RenderBuffer* buffer)
 {
 	// Global data
-	buffer->WorldSize = mSize;
 	buffer->Fog.Color = glm::vec3(0.4f, 0.4f, 0.7f);
 	buffer->Fog.Density = 0.04f;
 	buffer->Fog.Height = 7.0f;

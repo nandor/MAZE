@@ -10,7 +10,7 @@
 #include "MZTexture.h"
 #include "MZFont.h"
 #include "MZModel.h"
-#include "MZBound.h"
+#include "MZFrustum.h"
 
 namespace MAZE
 {
@@ -73,6 +73,9 @@ namespace MAZE
 
 		/// True if the light casts shadows
 		bool CastsShadows;
+
+		/// Number of shadow levels
+		int ShadowLevels;
 		
 		/// List of shadow maps
 		struct
@@ -239,18 +242,12 @@ namespace MAZE
 
 		/// List of UI text widgets
 		std::vector<TextRenderData> Text;
-
-        /// Size of the world
-        glm::vec3 WorldSize;
-		        
+				        
         /// Texture of the skybox
         Resource::Ptr<Texture> SkyTexture;
-
-        /// Ready state
-        bool Ready;
-
+		
 		/// View volume
-		ViewFrustum ViewVolume;
+		Frustum ViewVolume;
     };         
 };
 

@@ -161,7 +161,6 @@ Renderer::Renderer(Engine* engine)
 	  mShadowProgram(NULL),
 	  mFogProgram(NULL),
 	  mDOFProgram(NULL),
-	  mBlurProgram(NULL),
 	  mWidgetProgram(NULL),
 	  mGeomDiffuseTarget(NULL),
 	  mGeomNormalTarget(NULL),
@@ -170,7 +169,6 @@ Renderer::Renderer(Engine* engine)
 	  mColor1Target(NULL),
 	  mShadowTarget(NULL),
 	  mDepthTarget(NULL),
-	  mRandomTexture(NULL),
 	  mLightVBO(NULL),
 	  mSkyboxVBO(NULL),
 	  mQuadVBO(NULL),
@@ -180,18 +178,15 @@ Renderer::Renderer(Engine* engine)
 	  mInstances(NULL),
 	  mMapSize(1024),
 	  mEngine(engine),
-	  mContext(NULL)
+	  mContext(NULL),
+	  mFront(&mBuffers[0])
 {	
 	Engine::Setup& setup = mEngine->GetSetup();
-	mWidth = setup.WindowWidth;
-	mHeight = setup.WindowHeight;
+	mWidth		   = setup.WindowWidth;
+	mHeight		   = setup.WindowHeight;
 	mEnableShadows = setup.EnableShadows;
-	mEnableFog = setup.EnableFog;
-	mEnableDOF = setup.EnableDOF;
-
-	mBuffers[0].Ready = false;
-	mBuffers[1].Ready = false;
-	mFront = &mBuffers[0];
+	mEnableFog	   = setup.EnableFog;
+	mEnableDOF	   = setup.EnableDOF;
 
 	::QueryPerformanceFrequency(&mFreq);
 }
@@ -235,36 +230,9 @@ void Renderer::InitTargets()
 	mGeomDiffuseTarget	= CreateTarget(MGL_RGBA,	mWidth, mHeight);
 	mGeomNormalTarget	= CreateTarget(MGL_RGBA,	mWidth, mHeight);
 	mGeomPositionTarget = CreateTarget(MGL_RGBA32F,	mWidth, mHeight);
-	mColor0Target		= CreateTarget(MGL_RGBA16F, mWidth, mHeight);
-	mColor1Target		= CreateTarget(MGL_RGBA16F, mWidth, mHeight);
-
-	// Random texture
-	std::vector<float> data;
-	data.resize(64 * 64 * 3);
-	for (int rand = 1234, i = 0; i < (int)data.size() / 3; i++)
-	{
-		float x = ((float)rand / 32749.0f);
-		rand = rand * (32719 + 3) % 32749;
-
-		float y = ((float)rand / 32749.0f);
-		rand = rand * (32719 + 3) % 32749;
-
-		float z = ((float)rand / 32749.0f);
-		rand = rand * (32719 + 3) % 32749;
-
-		float length = sqrt(x * x + y * y + z );
-		data[i * 3 + 0] = x / length;
-		data[i * 3 + 1] = y / length;
-		data[i * 3 + 2] = z / length;
-	}
-
-	mglGenTextures(1, &mRandomTexture);
-	mglBindTexture(MGL_TEXTURE_2D, mRandomTexture);
-	mglTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MAG_FILTER, MGL_LINEAR);
-	mglTexParameteri(MGL_TEXTURE_2D, MGL_TEXTURE_MIN_FILTER, MGL_LINEAR);
-	mglTexImage2D(MGL_TEXTURE_2D, 0, MGL_RGB, 64, 64, 0, MGL_RGB, MGL_FLOAT, &data[0]);
-	mglBindTexture(MGL_TEXTURE_2D, 0);
-
+	mColor0Target		= CreateTarget(MGL_RGBA,	mWidth, mHeight);
+	mColor1Target		= CreateTarget(MGL_RGBA,	mWidth, mHeight);
+	
 	// Shadow map
 	if (mEnableShadows)
 	{
@@ -346,11 +314,19 @@ void Renderer::InitPrograms()
 	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.fs.glsl");
 	mVolumeProgram->Link();
 	
-	mShadowProgram = new Program("shadow");
-	mShadowProgram->Compile(Program::VERTEX, dir + "shadow.vs.glsl");
-	mShadowProgram->Compile(Program::FRAGMENT, dir + "shadow.fs.glsl");
-	mShadowProgram->Link();
-		
+	mWidgetProgram = new Program("widget");
+	mWidgetProgram->Compile(Program::VERTEX, dir + "widget.vs.glsl");
+	mWidgetProgram->Compile(Program::FRAGMENT, dir + "widget.fs.glsl");
+	mWidgetProgram->Link();
+
+	if (mEnableShadows)
+	{
+		mShadowProgram = new Program("shadow");
+		mShadowProgram->Compile(Program::VERTEX, dir + "shadow.vs.glsl");
+		mShadowProgram->Compile(Program::FRAGMENT, dir + "shadow.fs.glsl");
+		mShadowProgram->Link();
+	}
+
 	if (mEnableFog)
 	{
 		mFogProgram = new Program("fog");
@@ -366,16 +342,6 @@ void Renderer::InitPrograms()
 		mDOFProgram->Compile(Program::FRAGMENT, dir + "dof.fs.glsl");
 		mDOFProgram->Link();
 	}
-
-	mBlurProgram = new Program("blur");
-	mBlurProgram->Compile(Program::VERTEX, dir + "blur.vs.glsl");
-	mBlurProgram->Compile(Program::FRAGMENT, dir + "blur.fs.glsl");
-	mBlurProgram->Link();
-
-	mWidgetProgram = new Program("widget");
-	mWidgetProgram->Compile(Program::VERTEX, dir + "widget.vs.glsl");
-	mWidgetProgram->Compile(Program::FRAGMENT, dir + "widget.fs.glsl");
-	mWidgetProgram->Link();
 }
 
 // ------------------------------------------------------------------------------------------------	
@@ -457,7 +423,6 @@ void Renderer::DestroyTargets()
 	if (mColor1Target)		 { mglDeleteTextures(1, &mColor1Target);       mColor1Target = 0;		}
 	if (mShadowTarget)		 { mglDeleteTextures(1, &mShadowTarget);	   mShadowTarget = 0;		}
 	if (mDepthTarget)		 { mglDeleteTextures(1, &mDepthTarget);		   mDepthTarget = 0;		}
-	if (mRandomTexture)		 { mglDeleteTextures(1, &mRandomTexture);	   mRandomTexture = 0;		}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -472,7 +437,6 @@ void Renderer::DestroyPrograms()
 	if (mShadowProgram)		{ delete mShadowProgram;	 mShadowProgram		= NULL; }
 	if (mFogProgram)		{ delete mFogProgram;		 mFogProgram		= NULL; }
 	if (mDOFProgram)		{ delete mDOFProgram;		 mDOFProgram		= NULL; }
-	if (mBlurProgram)		{ delete mBlurProgram;		 mBlurProgram		= NULL; }
 	if (mWidgetProgram)		{ delete mWidgetProgram;	 mWidgetProgram		= NULL; }
 }
 
@@ -501,11 +465,8 @@ void Renderer::SwapBuffers()
 {
 	Mutex::ScopedLock Lock(mBufferMutex);
 
-	mFront->Ready = false;
 	mFront->Clear();
-
 	mFront = (mFront == &mBuffers[0]) ? &mBuffers[1] : &mBuffers[0];
-	mFront->Ready = true;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -531,7 +492,7 @@ void Renderer::RenderSkybox()
 	mSkyboxProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.SkyMatrix);
 
 	mglActiveTexture(MGL_TEXTURE + 0);
-	mglBindTexture(MGL_TEXTURE_CUBE_MAP, mFront->SkyTexture->mTexture);
+	mglBindTexture(MGL_TEXTURE_CUBE_MAP, mFront->SkyTexture ? mFront->SkyTexture->mTexture : 0);
 	mSkyboxProgram->Uniform("uTexture", 0);
 	mSkyboxProgram->Uniform("uFarPlane", mFront->Camera.FarPlane);
 	mSkyboxProgram->Uniform("uPosition", mFront->Camera.Position);
@@ -785,7 +746,7 @@ void Renderer::RenderDirlights()
 					mglEnableVertexAttribArray(index3);
 
 					mShadowProgram->Use();
-					for (size_t i = 0; i < 4; ++i)
+					for (int i = 0; i < light->ShadowLevels; ++i)
 					{
 						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
 						mglClear(MGL_DEPTH_BUFFER_BIT);
@@ -868,6 +829,7 @@ void Renderer::RenderDirlights()
 						
 			if (mEnableShadows)
 			{
+				mDirlightProgram->Uniform("uLevels", light->ShadowLevels);
 				mDirlightProgram->Uniform("uShadow",    MGL_TEXTURE_2D_ARRAY, 4, mShadowTarget);
 				mDirlightProgram->Uniform("uShadowMVP0", shadowMVP[0]);
 				mDirlightProgram->Uniform("uShadowMVP1", shadowMVP[1]);
@@ -1153,11 +1115,6 @@ int Renderer::Worker()
 		
 		while (IsRunning()) 
 		{	
-			if (!mFront->Ready)
-			{
-				continue;
-			}
-
 			{
 				Mutex::ScopedLock lock(mBufferMutex);
 

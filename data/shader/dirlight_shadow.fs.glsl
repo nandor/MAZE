@@ -18,6 +18,7 @@ uniform mat4 uShadowMVP1;
 uniform mat4 uShadowMVP2;
 uniform mat4 uShadowMVP3;
 uniform vec4 uShadowZ;
+uniform int uLevels;
 
 // Eye position
 uniform vec3 uPosition;
@@ -36,17 +37,17 @@ float GetShadow(in vec3 position, in float depth)
     float shadow = 0.0;
     vec4 shadowPos;
         
-    if (uShadowZ.w < depth)
+    if (uShadowZ.w < depth && uLevels > 3)
     {   
         shadowLevel = 3.0;
         shadowPos = uShadowMVP3 * vec4(position, 1.0);
     }
-    else if (uShadowZ.z < depth)
+    else if (uShadowZ.z < depth && uLevels > 2)
     {
         shadowLevel = 2.0;
         shadowPos = uShadowMVP2 * vec4(position, 1.0);
     }
-    else if (uShadowZ.y < depth)
+    else if (uShadowZ.y < depth && uLevels > 1)
     {
         shadowLevel = 1.0;
         shadowPos = uShadowMVP1 * vec4(position, 1.0);
@@ -59,16 +60,20 @@ float GetShadow(in vec3 position, in float depth)
     
     shadowPos.w = shadowPos.z;
     shadowPos.z = shadowLevel;
-        
-    for (float x = -1.5; x <= 1.5; x += 1.0) 
-    {
-        for (float y = -1.5; y <= 1.5; y += 1.0)
-        {
-            shadow += shadow2DArray(uShadow, shadowPos + vec4(x / 2000.0, y / 2000.0, 0.0, -0.001)).x;
-        }
-    }
+            
+    shadow += shadow2DArray(uShadow, shadowPos + vec4(-1.5 / 4000.0, -1.0 / 4000.0, 0.0, -0.001)).x;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4( 0.0 / 4000.0, -1.0 / 4000.0, 0.0, -0.001)).x;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4( 1.0 / 4000.0, -1.0 / 4000.0, 0.0, -0.001)).x;
     
-    return shadow / 16.0;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4(-1.0 / 4000.0,  0.0 / 4000.0, 0.0, -0.001)).x;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4( 0.0 / 4000.0,  0.0 / 4000.0, 0.0, -0.001)).x;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4( 1.0 / 4000.0,  0.0 / 4000.0, 0.0, -0.001)).x;
+    
+    shadow += shadow2DArray(uShadow, shadowPos + vec4(-1.0 / 4000.0,  1.0 / 4000.0, 0.0, -0.001)).x;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4( 0.0 / 4000.0,  1.0 / 4000.0, 0.0, -0.001)).x;
+    shadow += shadow2DArray(uShadow, shadowPos + vec4( 1.0 / 4000.0,  1.0 / 4000.0, 0.0, -0.001)).x;
+    
+    return shadow / 9.0;
 }
 
 void main()

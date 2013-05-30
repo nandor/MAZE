@@ -7,13 +7,13 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "MZBound.h"
+#include "MZBoundingBox.h"
 
 namespace MAZE
 {
 	class Scene;
-	class SceneNode;
 	class Engine;
+	class SceneNode;
 	class RenderBuffer;
 
     class Entity
@@ -212,11 +212,27 @@ namespace MAZE
 		}
 
 		/**
+			Returns the model matrix
+		*/
+		glm::mat4 GetModelMat() const
+		{
+			return mModelMat;
+		}
+
+		/**
 			Checks if the entity was queued for deletion
 		*/
 		bool IsDeleted() const
 		{
 			return fDelete;
+		}
+
+		/**
+			Checks if the entity has a collision mesh
+		*/
+		virtual bool HasCollisionMesh() const
+		{
+			return false;
 		}
 
 		/**
@@ -411,6 +427,9 @@ namespace MAZE
 
 		/// Scale of the entity
 		glm::vec3 mScale;
+
+		/// Model matrix
+		glm::mat4 mModelMat;
 
 		/// Type of the entity
 		Type mType;

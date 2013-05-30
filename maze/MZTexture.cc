@@ -102,20 +102,6 @@ void Texture::Image::LoadPNG()
 		throw Exception("Cannot initialise PNG info struct");
 	}
 	
-	if (setjmp(png_jmpbuf(pngPtr)))
-	{
-		png_destroy_read_struct(&pngPtr, &infoPtr, NULL);
-
-		if (rows != NULL)
-		{
-			delete[] rows;
-			rows = NULL;
-		}
-
-		fclose(fin);
-		throw Exception("Cannot load PNG: '" + FileName + "'");
-	}
-
 	// Read the header
 	png_init_io(pngPtr, fin);
 	png_set_sig_bytes(pngPtr, sizeof(pngsig));

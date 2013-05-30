@@ -295,12 +295,22 @@ static int object__tostring(lua_State *L)
 	return 1;
 }
 
+
+// ------------------------------------------------------------------------------------------------
+static int objectplay_sound(lua_State *L)
+{
+	Object **p = (Object**)mzlGetObject(L,  1, "object");
+	(*p)->PlaySound(luaL_checkstring(L, 2));
+	return 0;
+}
+
 // ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg object_m[] =
 {
 	{"__setter", object__setter},
 	{"__getter", object__getter},
 	{"__tostring", object__tostring},
+	{"play_sound", objectplay_sound},
 	{NULL, NULL}
 };
 

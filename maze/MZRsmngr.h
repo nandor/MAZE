@@ -7,6 +7,8 @@
 #pragma once
 
 #include <map>
+#include <al/al.h>
+#include <al/alc.h>
 #include "MZPlatform.h"
 #include "MZException.h"
 #include "MZAtomic.h"
@@ -42,14 +44,6 @@ namespace MAZE
 			@param root Location of the data folder
 		*/
 		void Init();
-
-		/**
-			Assigns a context to the resource manager
-		*/
-		HGLRC GetContext()
-		{
-			return mContext;
-		}
 
 		/**
 			Retrieve a resource
@@ -131,16 +125,16 @@ namespace MAZE
 		Engine* mEngine;
 
 		/// OpenGL context
-		HGLRC mContext;
+		HGLRC mGLContext;
 		
-		/// Resource count
-		Atomic<unsigned> mResourceCount;
-
 		/// Job queue
 		std::queue<Resource*> mJobQueue;
 
 		/// Job queue lock
 		Mutex mJobMutex;
+		
+		/// Atomic resource counter for id generation
+		Atomic<unsigned> mResourceCount;
 
 		/// ID - handle conversion
 		std::map<Resource::Handle, Resource*> mHandleMap;

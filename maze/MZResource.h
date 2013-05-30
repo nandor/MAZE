@@ -60,9 +60,6 @@ namespace MAZE
 			
 			/// png texture
 			TEXTURE,
-
-			/// glsl program
-			PROGRAM,
 			
 			/// truetype font
 			FONT
@@ -162,6 +159,14 @@ namespace MAZE
 			}
 
 			/**
+				Returns a constant pointer
+			*/
+			const T* operator -> () const
+			{
+				return mResource;
+			}
+
+			/**
 				Returns the pointed object. 
 				If you delete it, you are evil.
 			*/
@@ -204,7 +209,7 @@ namespace MAZE
 			Returns the state of the object
 			@return State descriptor
 		*/
-		State GetState()
+		State GetState() const
 		{
 			return mState;
 		}
@@ -212,7 +217,7 @@ namespace MAZE
 		/**
 			Returns the type of the resource
 		*/
-		Type GetType()
+		Type GetType() const
 		{
 			return mType;
 		}
@@ -220,7 +225,7 @@ namespace MAZE
 		/**
 			Returns the handle of the resource
 		*/
-		Handle GetHandle()
+		Handle GetHandle() const
 		{
 			return mHandle;
 		}
@@ -228,7 +233,7 @@ namespace MAZE
 		/**
 			Returns the id of the resource
 		*/
-		std::string GetID()
+		std::string GetID() const
 		{
 			return mID;
 		}
@@ -237,7 +242,7 @@ namespace MAZE
 			Returns the ammount of memory used by the object
 			@return	sizeof(Resource)
 		*/
-		virtual size_t GetSizeInBytes()
+		virtual size_t GetSizeInBytes() const
 		{
 			return sizeof(*this);
 		}
@@ -245,7 +250,7 @@ namespace MAZE
 		/**
 			Checks if the resource is ready
 		*/
-		virtual bool IsReady()
+		virtual bool IsReady() const
 		{
 			return mState == Resource::LOADED;
 		}

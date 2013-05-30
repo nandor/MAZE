@@ -7,6 +7,8 @@
 #include "MZPlatform.h"
 #include "MZObject.h"
 #include "MZScene.h"
+#include "MZRsmngr.h"
+#include "MZEngine.h"
 #include "MZRenderBuffer.h"
 using namespace MAZE;
 
@@ -19,6 +21,24 @@ Object::Object(Engine *engine)
 // ------------------------------------------------------------------------------------------------
 Object::~Object()
 {
+}
+
+// ------------------------------------------------------------------------------------------------
+bool Object::HasCollisionMesh() const
+{
+	return mModel->IsReady() && mModel->HasCollisionMesh();
+}
+
+// ------------------------------------------------------------------------------------------------
+void Object::PlaySound(const std::string& sound)
+{
+	SoundSource *src;
+
+	mSounds.resize(mSounds.size() + 1);
+	src = &(*mSounds.rbegin());
+
+	src->SetSource(fEngine->GetResourceManager()->Get<Sound> (sound));
+	src->Play();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -42,11 +62,7 @@ void Object::Render(RenderBuffer* buffer, RenderMode mode)
 		}
 	}
 	
-	data->ModelMatrix  = glm::translate(mPosition);
-	data->ModelMatrix *= glm::rotate(mRotation.x, glm::vec3(1.0, 0.0, 0.0));
-	data->ModelMatrix *= glm::rotate(mRotation.y, glm::vec3(0.0, 1.0, 0.0));
-	data->ModelMatrix *= glm::rotate(mRotation.z, glm::vec3(0.0, 0.0, 1.0));
-
+	data->ModelMatrix = mModelMat;
 	data->TextureMatrix = glm::mat2(1.0f);
 	data->Position = mPosition;
 	data->Model = mModel;
@@ -54,9 +70,46 @@ void Object::Render(RenderBuffer* buffer, RenderMode mode)
 }
 
 // ------------------------------------------------------------------------------------------------
+void Object::OnPick(Entity *who)
+{
+	mPickCall.Call(who);
+}
+
+// ------------------------------------------------------------------------------------------------
+void Object::OnUse(Entity *who)
+{
+	mUseCall.Call(who);
+}
+
+// ------------------------------------------------------------------------------------------------
+void Object::Update(float time, float dt)
+{
+	mUpdateCall.Call(time, dt);
+	mModelMat = glm::translate(mPosition);
+	mModelMat *= glm::rotate(mRotation.x, glm::vec3(1.0, 0.0, 0.0));
+	mModelMat *= glm::rotate(mRotation.y, glm::vec3(0.0, 1.0, 0.0));
+	mModelMat *= glm::rotate(mRotation.z, glm::vec3(0.0, 0.0, 1.0));
+	mModelMat *= glm::scale(mScale);
+
+	for (size_t i = 0; i < mSounds.size();)
+	{
+		mSounds[i].Update();
+		mSounds[i].SetPosition(mPosition);
+
+		if (mSounds[i].Finished())
+		{
+			std::swap(mSounds[i], mSounds[mSounds.size() - 1]);
+		}
+		else
+		{
+			++i;
+		}
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
 void Object::UpdateInternals()
 {
-	mBoxWorld.SetPosition(mPosition + mBoxModel.GetPosition());
-	mBoxWorld.SetSize(mBoxModel.GetSize());
+	mBoxWorld = mBoxModel.Move(mPosition);	
 }
 	

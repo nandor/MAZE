@@ -23,7 +23,7 @@ namespace MAZE
 	const float EPS = 0.001f;
 
 	/**
-		Fast inverse sqrt
+		Fast inverse sqrt - from quake 3
 	*/
 	inline float FastInvSqrt(float number)
 	{
@@ -51,35 +51,45 @@ namespace MAZE
 	}
 
 	/**
-		Intersection of 3 planes
-	*/
-	inline glm::vec3 Intersect(glm::vec4 a, glm::vec4 b, glm::vec4 c)
-	{
-		glm::vec3 c1(a.x, b.x, c.x), c2(a.y, b.y, c.y), c3(a.z, b.z, c.z);
-
-		glm::mat3 A = glm::mat3(c1, c2, c3);
-		glm::vec3 cc = glm::vec3(-a.w, -b.w, -c.w);
-
-		float det = glm::determinant(A);
-		if (abs(det) <= EPS)
-		{
-			return glm::vec3(0.0f, 0.0f, 0.0f);
-		}
-
-		float x = glm::determinant(glm::mat3(cc, c2, c3)) / det;
-		float y = glm::determinant(glm::mat3(c1, cc, c3)) / det;
-		float z = glm::determinant(glm::mat3(c1, c2, cc)) / det;
-
-		return glm::vec3(x, y, z);
-	}
-
-	/**
 		Liniarize depth values
+		@param z Depth clamped to [0, 1]
+		@param n Near plane
+		@param f Far plane
 	*/
 	inline float LinearDepth(float z, float n, float f)
 	{
 		return (2.0f * n)  / (f + n - z * (f - n));
 	}
+
+	/**
+		Intersection of 3 planes
+		@param a Equation of the first plane
+		@param b Equation of the second plane
+		@param c Equation of the third plane
+	*/
+	glm::vec3 Intersect(const glm::vec4& a, 
+						const glm::vec4& b, 
+						const glm::vec4& c);
+
+	/**
+		Check if two points are on the same side of a line
+		@param p1 First endpoint of the line
+		@param p2 Second endpoint of the line
+		@param a First point
+		@param b Second point
+	*/
+	bool SameSide(const glm::vec3& p1, 
+				  const glm::vec3& p2, 
+				  const glm::vec3& a, 
+				  const glm::vec3& b);
+
+	/**
+		Check if a point is inside a triangle
+	*/
+	bool Inside(const glm::vec3& a, 
+				const glm::vec3& b, 
+				const glm::vec3& c, 
+				const glm::vec3& p);
 };
 
 #endif

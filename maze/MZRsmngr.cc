@@ -5,28 +5,28 @@
 #include "MZPlatform.h"
 #include "MZException.h"
 #include "MZString.h"
-#include "MZResource.h"
+#include "MZEngine.h"
 #include "MZRenderer.h"
 #include "MZRsmngr.h"
-#include "MZEngine.h"
+#include "MZLog.h"
+#include "MZResource.h"
 #include "MZTexture.h"
 #include "MZModel.h"
-#include "MZLog.h"
+#include "MZSound.h"
+#include "MZFont.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 ResourceManager::ResourceManager(Engine* engine)
-	: mEngine(engine)
+	: mEngine(engine),
+	  mGLContext(NULL)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 ResourceManager::~ResourceManager()
 {
-	if (!mContext)
-		return;
-	
-	wglMakeCurrent(mEngine->GetDC(), mContext);
+	mGLContext ? wglMakeCurrent(mEngine->GetDC(), mGLContext) : 0;
 
 	// Unload all resources
 	for (ResourceHandleIter it = mHandleMap.begin(); it != mHandleMap.end(); ++it)
@@ -40,21 +40,14 @@ ResourceManager::~ResourceManager()
 	}
 
 	wglMakeCurrent(NULL, NULL);
-	if (!wglDeleteContext(mContext))
-	{
-		throw Exception("Cannot delete OpenGL context");
-	}
+	wglDeleteContext(mGLContext);
 }
 
 // ------------------------------------------------------------------------------------------------
 void ResourceManager::Init()
 {
-	if (!(mContext = wglCreateContext(mEngine->GetDC())))
-	{
-		throw MGLException("Cannot create resource manager context");
-	}
-
-	wglShareLists(mEngine->GetRenderer()->GetContext(), mContext);
+	mGLContext = wglCreateContext(mEngine->GetDC());
+	wglShareLists(mEngine->GetRenderer()->GetContext(), mGLContext);
 	DiscoverFolder(mEngine->GetSetup().ResourceDir);
 }
 
@@ -154,6 +147,10 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 	{
 		Add(new Model(this, id, fn));
 	}
+	else if (ext == "ogg")
+	{
+		Add(new Sound(this, id, fn));
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -190,7 +187,7 @@ int ResourceManager::Worker()
 {
 	try
 	{
-		wglMakeCurrent(mEngine->GetDC(), mContext);
+		wglMakeCurrent(mEngine->GetDC(), mGLContext);
 
 		while (IsRunning())
 		{
@@ -233,12 +230,15 @@ int ResourceManager::Worker()
 			}
 		}
 		
+		alcMakeContextCurrent(NULL);
 		wglMakeCurrent(NULL, NULL);
 		return 0;
 	}
 	catch (std::exception& e)
 	{
+		alcMakeContextCurrent(NULL);
 		wglMakeCurrent(NULL, NULL);
+
 		Log::Inst() << "Unhandled exception: " << e.what();
 		mEngine->Quit();
 		return -1;

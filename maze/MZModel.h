@@ -56,9 +56,17 @@ namespace MAZE
 		/**
 			Checks if the model has a collision mesh
 		*/
-		bool HasCollisionMesh()
+		bool HasCollisionMesh() const
 		{
 			return mCollision.size() > 0;
+		}
+
+		/**
+			Returns the collision mesh
+		*/
+		std::vector<glm::vec3> GetCollisionMesh() const
+		{
+			return mCollision;
 		}
 
 	public:

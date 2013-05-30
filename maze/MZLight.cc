@@ -10,7 +10,7 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-const float Light::CASCADE_SPLIT[5] = {0.0f, 0.06f, 0.15f, 0.4f, 1.0f};  
+const float Light::CASCADE_SPLIT[5] = {0.0f, 0.05f, 0.15f, 0.6f, 1.0f};  
 
 // ------------------------------------------------------------------------------------------------
 void Light::Render(RenderBuffer* buffer, RenderMode mode)
@@ -81,15 +81,17 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 			{
 				float n = buffer->ViewVolume.GetNearPlane();
 				float f = buffer->ViewVolume.GetFarPlane();
+
+				data->ShadowLevels = 4;
 				for (size_t j = 0; j < 4; ++j)
 				{
-					ViewFrustum lightvol;
+					Frustum lightvol;
 
 					float begin = n + (f - n) * CASCADE_SPLIT[j];
 					float end = n + (f - n) * CASCADE_SPLIT[j + 1];
 			
 					lightvol = buffer->ViewVolume.Slice(begin, end).GetLightVolume(mDirection);
-					data->Shadow[j].MVP = lightvol.GetProjection() * lightvol.GetView();
+					data->Shadow[j].MVP = lightvol.GetProjMat() * lightvol.GetViewMat();
 					data->Shadow[j].NearZ = begin;	
 
 					data->Shadow[j].Index = buffer->ShadowCasters.size();			
@@ -111,21 +113,18 @@ void Light::UpdateInternals()
 		case Light::POINT:
 		{		
 			glm::vec3 halfSize = glm::vec3(mRadius * 2.0f);
-			mBoxWorld.SetPosition(mPosition - halfSize);
-			mBoxWorld.SetSize(halfSize * 2.0f);
+			mBoxWorld = BoundingBox(mPosition - halfSize, halfSize * 2.0f);
 			break;
 		}
 		case Light::SPOT:
 		{
 			glm::vec3 halfSize = glm::vec3(mRadius * 2.0f);
-			mBoxWorld.SetPosition(mPosition - halfSize);
-			mBoxWorld.SetSize(halfSize * 2.0f);
+			mBoxWorld = BoundingBox(mPosition - halfSize, halfSize * 2.0f);
 			break;
 		}
 		case Light::DIRECTIONAL:
 		{
-			mBoxWorld.SetPosition(glm::vec3(-1e10f));
-			mBoxWorld.SetSize(glm::vec3(2e10f));
+			mBoxWorld = BoundingBox(glm::vec3(-1e10f), glm::vec3(2e10f));
 			break;
 		}
 	}

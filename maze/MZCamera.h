@@ -8,7 +8,7 @@
 
 #include "MZPlatform.h"
 #include "MZRenderer.h"
-#include "MZBound.h"
+#include "MZFrustum.h"
 
 namespace MAZE
 {
@@ -93,9 +93,41 @@ namespace MAZE
 		}
 
 		/**
+			Returns the near clipping plane
+		*/
+		float GetNearPlane()
+		{
+			return mNearPlane;
+		}
+
+		/**
+			Returns the far clipping plane
+		*/
+		float GetFarPlane()
+		{
+			return mFarPlane;
+		}
+
+		/**
+			Returns the fov
+		*/
+		float GetFOV()
+		{
+			return mFOV;
+		}
+
+		/**	
+			Returns the aspect ratio
+		*/
+		float GetAspect()
+		{
+			return mAspect;
+		}
+		
+		/**
 			Retrieves the view volume
 		*/
-		ViewFrustum& GetVolume();
+		Frustum& GetVolume();
 
 		/**
 			Prepares render data
@@ -132,7 +164,7 @@ namespace MAZE
 		float mFOV;
 
 		/// View frustum
-		ViewFrustum mFrustum;
+		Frustum mFrustum;
 
 		/// World needs to access prepare
 		friend class World;

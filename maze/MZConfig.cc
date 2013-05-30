@@ -14,13 +14,31 @@ class MAZE::ConfigWriter
 public:
 
 	ConfigWriter(const Config& src, const std::string& fn)
+		: mSource(src),
+		  mFileName(fn),
+		  mStream(fn)
 	{
 	}
 
 	void Write()
 	{
+		if (!mStream.is_open())
+		{
+			throw Exception("Cannot open file: '" + mFileName + "'");
+		}
 
 	}
+
+private:
+
+	/// Source object
+	const Config& mSource;
+
+	/// Output file name
+	std::string mFileName;
+
+	/// Output stream
+	std::ofstream mStream;
 };
    
 // ------------------------------------------------------------------------------------------------ 
@@ -148,7 +166,7 @@ public:
 				float exp = 0.1f;
 				mFloat = 0.0f;
 
-				while ('0' <= NextChar() && mChar <= '0')
+				while ('0' <= NextChar() && mChar <= '9')
 				{
 					mFloat += exp * (mChar - '0');
 					exp /= 10.0f;
@@ -200,6 +218,11 @@ public:
 
 	void Read()
 	{
+		if (!mStream.is_open())
+		{
+			throw Exception("Cannot open file: '" + mFileName + "'");
+		}
+
 		NextChar();
 		switch (NextToken())
 		{

@@ -64,18 +64,15 @@ namespace MAZE
 		
 		/// Scene manager
 		Scene *mScene;
-		
-		/// Lua VM
-		lua_State *mScript;
 
 		/// Player
 		Player *mPlayer;
-
-		/// Size of the world
-		glm::vec3 mSize;
-
+		
 		/// Light provided by the moon
 		Light *mMoon;
+
+		/// Lua VM
+		lua_State *mScript;		
 		
 		/// Skybox cube map
 		Resource::Ptr<Texture> mSkyTexture;
