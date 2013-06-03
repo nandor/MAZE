@@ -124,7 +124,24 @@ static const MGLenum BUFFERS[] =
 	MGL_COLOR_ATTACHMENT + 2,
 	MGL_COLOR_ATTACHMENT + 3
 };
-	
+
+// ------------------------------------------------------------------------------------------------
+int DEBUG_ATTRIBS[] =
+{
+	MWGL_CONTEXT_MAJOR_VERSION, 4,
+	MWGL_CONTEXT_MINOR_VERSION, 3,
+	MWGL_CONTEXT_FLAGS, MWGL_CONTEXT_FORWARD_COMPATIBLE_BIT | MWGL_CONTEXT_DEBUG_BIT,        
+	MWGL_CONTEXT_PROFILE_MASK, MWGL_CONTEXT_COMPATIBILITY_PROFILE_BIT,
+	NULL
+};
+
+static void CALLBACK DebugCallback(unsigned int source, unsigned int type, unsigned int id, 
+								   unsigned int severity,  int length, const char* message, 
+								   void* userParam)
+{
+	Log::Inst() << message;
+}
+
 // ------------------------------------------------------------------------------------------------
 MGLuint CreateTarget(MGLenum format, size_t width, size_t height)
 {
@@ -209,9 +226,12 @@ void Renderer::Init()
 	}
 		
 	// Initialize extensions
-	mglInit();
+	if (!mglInit())
+	{
+		throw MGLException("[Renderer] Cannot initialize extensions");
+	}
+	
 	mglEnable(MGL_TEXTURE_CUBE_MAP_SEAMLESS);
-
 	Log::Inst() << "[Renderer] GL vendor:     " << (const char*)mglGetString(MGL_VENDOR);
 	Log::Inst() << "[Renderer] GL version:    " << (const char*)mglGetString(MGL_VERSION);
 

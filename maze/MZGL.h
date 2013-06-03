@@ -449,6 +449,7 @@ extern mglEndQueryProc							mglEndQuery;
 extern mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
 extern mglDeleteQueriesProc						mglDeleteQueries;
 extern mglGenQueriesProc						mglGenQueries;
+
 /**
 	@brief 
 		Initializes OpenGL extensions

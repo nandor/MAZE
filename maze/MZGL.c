@@ -14,6 +14,13 @@
 		return 0;\
 	}
 	
+#define GET_ADDR_ARB(func)\
+	m ## func = (m ## func ## Proc)wglGetProcAddress(#func "ARB");\
+	if (m ## func == NULL)\
+	{\
+		return 0;\
+	}
+
 /**
 	Struct containing state information
 */
