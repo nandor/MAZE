@@ -3,16 +3,21 @@
 // (C) 2012 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
-#include "MZLog.h"
-#include "MZEngine.h"
 using namespace MAZE;
 
+#ifdef _MSC_VER
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
-{ 
-	Engine *engine = NULL;
-	
+{
+#	ifdef _DEBUG
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#	endif
+#else
+int main(int argc, char **argv)
+{
+#endif
 
+	Engine *engine = NULL;
+		
 	try 
 	{
 		new Log("engine.log");

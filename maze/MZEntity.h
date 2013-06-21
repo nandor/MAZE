@@ -6,9 +6,6 @@
 #define ENTITY_H
 #pragma once
 
-#include <glm/glm.hpp>
-#include "MZBoundingBox.h"
-
 namespace MAZE
 {
 	class Scene;
@@ -16,7 +13,7 @@ namespace MAZE
 	class SceneNode;
 	class RenderBuffer;
 
-    class Entity
+    class Entity : public Aligned
 	{
 	public:
 

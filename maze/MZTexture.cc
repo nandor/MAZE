@@ -2,16 +2,11 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <fstream>
-#include <jpeglib.h>
-#include <png.h>
-
 #include "MZPlatform.h"
-#include "MZEngine.h"
-#include "MZRenderer.h"
-#include "MZRsmngr.h"
-#include "MZTexture.h"
 using namespace MAZE;
+
+// ------------------------------------------------------------------------------------------------
+const Resource::Type Texture::TYPE = Resource::TEXTURE;
 
 // ------------------------------------------------------------------------------------------------
 const MGLuint CUBE_FACES[] =
@@ -291,8 +286,7 @@ void Texture::Image::Upload(MGLenum target, size_t level)
 Texture::Texture(ResourceManager* rsmngr, const std::string& id, TextureType type)
 	: Resource(rsmngr, TEXTURE, id),
 	  mType(type),
-	  mImages(NULL),
-	  mTexture(NULL),
+	  mTexture(0),
 	  mMipmaps(false)
 {
 	mFilter = (Filter)2;

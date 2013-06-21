@@ -6,8 +6,6 @@
 #define MZRAY_H
 #pragma once
 
-#include <glm/glm.hpp>
-
 namespace MAZE
 {
     class Sphere;
@@ -19,63 +17,42 @@ namespace MAZE
     public:
     
         Ray() 
-            : mOrigin(0.0f), 
-              mDirection(0.0f, 1.0f, 0.0f)
         {
+			mDirection = _mm_setr_ps(0.0f, 1.0f, 0.0f, 0.0f);
+			mOrigin    = _mm_setr_ps(0.0f, 0.0f, 0.0f, 1.0f);
         }
         
         Ray(const glm::vec3& o, const glm::vec3& d)
-            : mOrigin(o),
-              mDirection(d)
         {
+			mDirection = _mm_setr_ps(d.x, d.y, d.z, 0.0f);
+			mOrigin    = _mm_setr_ps(o.x, o.y, o.z, 1.0f);
         }
             
-        bool Inside(const Ray& ray) const;
-        bool Inside(const Sphere& sphere) const;
+        bool Inside(const Ray& ray) const NOT_IMPLEMENTED;
+        bool Inside(const Sphere& sphere) const NOT_IMPLEMENTED;
         bool Inside(const BoundingBox& box) const;
-        bool Inside(const Frustum& frustum) const;
+        bool Inside(const Frustum& frustum) const NOT_IMPLEMENTED;
         
-        bool Outside(const Ray& ray) const;
-        bool Outside(const Sphere& sphere) const;
+        bool Outside(const Ray& ray) const NOT_IMPLEMENTED;
+        bool Outside(const Sphere& sphere) const NOT_IMPLEMENTED;
         bool Outside(const BoundingBox& box) const;
-        bool Outside(const Frustum& frustum) const;
+        bool Outside(const Frustum& frustum) const NOT_IMPLEMENTED;
 
-		float Distance(const Ray& ray) const;
-		float Distance(const Sphere& sphere) const;
-		float Distance(const BoundingBox& box) const;
-		float Distance(const Frustum& frustum) const;
+		__m128 Distance(const Ray& ray) const NOT_IMPLEMENTED;
+		__m128 Distance(const Sphere& sphere) const NOT_IMPLEMENTED;
+		__m128 Distance(const BoundingBox& box) const;
+		__m128 Distance(const Frustum& frustum) const NOT_IMPLEMENTED;
+		        
+	private:
+			
+		/// Origin of the ray
+		__m128 mOrigin;
+
+		/// Direction of the ray
+		__m128 mDirection;
 		
-	public:
+	private:
 
-		glm::vec3 GetOrigin()
-		{
-			return mOrigin;
-		}
-
-		glm::vec3 GetDirection()
-		{
-			return mDirection;
-		}
-
-		void SetOrigin(const glm::vec3& origin)
-		{
-			mOrigin = origin;
-		}
-
-		void SetDirection(const glm::vec3& direction)
-		{
-			mDirection = direction;
-		}
-        
-    public:
-    
-        /// Origin point of the ray
-        glm::vec3 mOrigin;
-        
-        /// Direction of the ray
-        glm::vec3 mDirection;
-    
-		/// List of friend classes
 		friend class Sphere;
 		friend class Frustum;
 		friend class BoundingBox;

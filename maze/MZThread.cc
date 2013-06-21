@@ -3,8 +3,6 @@
 // (C) 2012 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZThread.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -79,7 +77,7 @@ void Thread::Stop()
 			::ResumeThread(mHandle);
 		}
 		
-		::WaitForSingleObject(mHandle, INFINITE);
+		::WaitForSingleObject(mHandle, 100);
 		::CloseHandle(mHandle);
 		mHandle = NULL;
 	}

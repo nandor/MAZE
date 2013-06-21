@@ -3,13 +3,6 @@
 // (C) 2013 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZRenderer.h"
-#include "MZConfig.h"
-#include "MZCamera.h"
-#include "MZRsmngr.h"
-#include "MZEngine.h"
-#include "MZWorld.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -33,6 +26,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 Engine::Engine()
 	: mRenderer(NULL),
 	  mRsmngr(NULL),
+	  mNetwork(NULL),
 	  mWorld(NULL),
 	  mDevice(NULL),
 	  mContext(NULL),
@@ -50,9 +44,19 @@ Engine::Engine()
 // ------------------------------------------------------------------------------------------------
 Engine::~Engine()
 {
+	ShowWindow(mWindow, SW_HIDE);
+
 	if (mWorld)
 	{
 		delete mWorld;
+		mWorld = NULL;
+	}
+
+	if (mNetwork)
+	{
+		mNetwork->Stop();
+		delete mNetwork;
+		mNetwork = NULL;
 	}
 
 	if (mRenderer)
@@ -113,10 +117,14 @@ void Engine::Init()
 	InitWindow();	
 	InitSound();
 
+	// Initialise the network
+	mNetwork = new Network(this);
+	mNetwork->Init();
+
 	// Initialise the renderer
 	mRenderer = new Renderer(this);
 	mRenderer->Init();
-					
+						
 	// Initialise the  resource manager
 	mRsmngr = new ResourceManager(this);
 	mRsmngr->Init();
@@ -143,6 +151,8 @@ void Engine::LoadConfig(const std::string& cfg)
 	mSetup.EnableShadows = config["gfx"]["shadows"].AsBool(false);
 	mSetup.EnableDOF	 = config["gfx"]["dof"].AsBool(false);
 	mSetup.EnableFog	 = config["gfx"]["fog"].AsBool(false);
+	mSetup.Server		 = config["network"]["server"].AsString("127.0.0.1");
+	mSetup.Port			 = config["network"]["port"].AsInt(12345);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -270,7 +280,7 @@ void Engine::InitSound()
 // ------------------------------------------------------------------------------------------------
 void Engine::Quit()
 {
-	::PostMessage(mWindow, WM_CLOSE, NULL, NULL);
+	::PostMessage(mWindow, WM_CLOSE, 0, 0);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -289,6 +299,7 @@ void Engine::MainLoop()
 	
 	mRsmngr->Start();
 	mRenderer->Start();
+	mNetwork->Start();
 	
 	mRunning = true;
 	while (mRunning) 
@@ -302,7 +313,7 @@ void Engine::MainLoop()
 		frameBeg = time.QuadPart * 1000.0f / mFreq.QuadPart;
 
 		// Handle events
-		while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))	
+		if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))	
 		{
 			::TranslateMessage(&msg);		
 			::DispatchMessage(&msg);	

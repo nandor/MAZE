@@ -3,17 +3,6 @@
 // (C) 2012 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZEngine.h"
-#include "MZRsmngr.h"
-#include "MZWorld.h"
-#include "MZModel.h"
-#include "MZLight.h"
-#include "MZCamera.h"
-#include "MZObject.h"
-#include "MZScene.h"
-#include "MZLuaMath.h"
-#include "MZLuaScene.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -56,7 +45,7 @@ void World::InitScene()
 	mSkyTexture = mEngine->GetResourceManager()->Get<Texture> ("sky");
 	
 	/// Scene manager
-	mScene = new Scene(mEngine, glm::vec3(500.0f));
+	mScene = new Scene(mEngine, glm::vec3(100.0f));
 	
 	/// Player
 	mPlayer = mScene->Create<Player> ("player");

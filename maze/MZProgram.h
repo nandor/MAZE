@@ -6,11 +6,6 @@
 #define SHADER_H
 #pragma once
 
-#include "MZPlatform.h"
-#include "MZRsmngr.h"
-#include "MZMath.h"
-#include "MZGL.h"
-
 namespace MAZE
 {
 	class Program

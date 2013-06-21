@@ -2,16 +2,12 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include "MZRay.h"
-#include "MZScene.h"
-#include "MZEngine.h"
-#include "MZRsmngr.h"
-#include "MZPlayer.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 const float Player::ROTATE_SPEED = 1 / 150.0f;
-const float Player::JUMP_SPEED = 0.017f;
+const float Player::JUMP_SPEED = 0.012f;
 const float Player::GRAVITY = 0.00005f;
 
 // ------------------------------------------------------------------------------------------------
@@ -31,7 +27,7 @@ Player::Player(Engine *engine)
 	  mJumped(false),
 	  mMoveTime(0.0f)
 {
-	mBoxModel = BoundingBox(glm::vec3(-0.4f, -1.6f, -0.4f), glm::vec3(0.8f, 2.0f, 0.8f));
+	mBoxModel = BoundingBox(glm::vec3(-0.4f, -1.5f, -0.4f), glm::vec3(0.8f, 1.5f, 0.8f));
 	mPosition = glm::vec3(0.0f, 2.0f, 0.0f);
 	mRenderable = false;
 
@@ -184,8 +180,8 @@ void Player::Update(float time, float dt)
 	glm::vec3 z = glm::normalize(lookDir);
 	glm::vec3 x = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), z));
 
-	float side = int(mMoveTime) % 1000 > 500 ? 1.0f : -1.0f;
-	mWalk.SetPosition(mPosition + x * side + glm::vec3(0.0f, -1.6f, 0.0f));
+	float side = int(mMoveTime) % 1000 > 500 ? 0.4f : -0.4f;
+	mWalk.SetPosition(mPosition + x * side + glm::vec3(0.0f, -1.4f, 0.0f));
 	
 	if (mIsMoving && !mIsJumping)
 	{
@@ -252,13 +248,13 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 
 	// Torch model
 	ObjectRenderData* object = buffer->AddObject();
-	object->Model = mTorch;
+	object->model = mTorch;
 	object->ModelMatrix = torchMtx;
 	object->Position = torchPos;
 	
 	// Crosshair
 	WidgetRenderData* cross = buffer->AddWidget();
-	cross->Texture = mCrosshair;
+	cross->texture = mCrosshair;
 	cross->Size = glm::vec2(mCrosshair->Width(), mCrosshair->Height());
 	cross->Position = glm::floor((glm::vec2(width, height) - cross->Size) / 2.0f);
 	cross->Z = 0;
@@ -268,6 +264,6 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 	text = buffer->AddText();
 	text->Position = glm::floor(glm::vec2(width / 2.0f + 100.0f, height / 2.0f + 100.0f));
 	text->Z = 0;
-	text->Font = mFont;
+	text->font = mFont;
 	text->Text = mUseable ? mUseable->GetUseText() : "";
 }

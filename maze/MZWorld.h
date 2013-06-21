@@ -6,10 +6,6 @@
 #define WORLD_H
 #pragma once
 
-#include "MZPlayer.h"
-#include "MZTexture.h"
-#include "MZLua.h"
-
 namespace MAZE
 {
 	class Engine;

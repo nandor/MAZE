@@ -12,7 +12,7 @@ set (SOURCES MZCamera.cc
 			 MZBoundingBox.cc
 			 MZFont.cc
 			 MZFrustum.cc
-			 MZGL.c
+			 MZGL.cc
 			 MZLight.cc
 			 MZLog.cc
              MZLua.cc
@@ -21,9 +21,11 @@ set (SOURCES MZCamera.cc
 			 MZMain.cc
 			 MZMath.cc
 			 MZModel.cc
+			 MZNetwork.cc
 			 MZObject.cc
 			 MZPlayer.cc
 			 MZProgram.cc
+			 MZPlatform.cc
 			 MZRay.cc
 			 MZRenderer.cc
 			 MZRenderBuffer.cc
@@ -51,10 +53,9 @@ set (HEADERS MZAtomic.h
 			 MZLight.h
 			 MZLog.h
              MZLua.h
-			 MZLuaMath.h
-			 MZLuaScene.h
 			 MZMath.h
 			 MZModel.h
+			 MZNetwork.h
 			 MZObject.h
 			 MZPlayer.h
 			 MZPlatform.h
@@ -70,25 +71,26 @@ set (HEADERS MZAtomic.h
 			 MZString.h
              MZSound.h
 			 MZSoundSource.h
+			 MZSSE.h
 			 MZTexture.h
 			 MZThread.h
 			 MZWorld.h)
 
-set (LIBS	jpeg 
-			opengl32
-			openal32 
-			lua52 
-			freetype 
-			libogg_static 
-			libvorbis_static 
-			libvorbisfile_static)
+set (LIBS jpeg
+		  ogg 
+		  vorbis
+		  zlib
+		  png
+		
+		  Rpcrt4
+		  wsock32
+		  opengl32
+		
+		  openal32 			
+		  lua52 
+		  freetype)
 
-set (LIBS_RELASE libpng15 zlib)
-set (LIBS_DEBUG	libpng15d zlibd)
-
-			
 add_executable(maze WIN32 ${SOURCES} ${HEADERS})
+add_precompiled_header(maze MZPlatform.h)
 target_link_libraries(maze ${LIBS})
-target_link_libraries(maze debug ${LIBS_DEBUG})
-target_link_libraries(maze optimized ${LIBS_RELASE})
 

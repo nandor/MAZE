@@ -6,11 +6,6 @@
 #define LOG_H
 #pragma once
 
-#include <sstream>
-#include <fstream>
-#include "MZSingleton.h"
-#include "MZString.h"
-
 namespace MAZE
 {
 	/**

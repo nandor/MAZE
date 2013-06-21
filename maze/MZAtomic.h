@@ -6,9 +6,6 @@
 #define MZATOMIC_H
 #pragma once
 
-#include "MZPlatform.h"
-#include "MZException.h"
-
 namespace MAZE
 {
 	/**
@@ -43,7 +40,8 @@ namespace MAZE
 		{
 			return mVal;
 		}
-
+		
+#if defined(_MSC_VER)
 		unsigned operator ++ ()
 		{
 			switch (sizeof(T))
@@ -125,6 +123,30 @@ namespace MAZE
 				}
 			}
 		}
+
+#else
+
+		unsigned operator ++ ()
+		{
+			return __sync_fetch_and_add(&mVal, static_cast<T> (1));
+		}
+
+		unsigned operator ++ (int)
+		{
+			return __sync_fetch_and_add(&mVal, static_cast<T> (1)) - 1;
+		}
+		
+		unsigned operator -- ()
+		{
+			return __sync_fetch_and_sub(&mVal, static_cast<T> (1));
+		}
+		
+		unsigned operator -- (int)
+		{
+			return __sync_fetch_and_sub(&mVal, static_cast<T> (1)) + 1;
+		}
+
+#endif
 
 	private:
 

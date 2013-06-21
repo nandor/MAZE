@@ -1,4 +1,6 @@
 build/*
+build-vc++/*
+build-mingw/*
 docs/*
 engine.log
 maze.rar

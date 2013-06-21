@@ -2,16 +2,16 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <ft2build.h>
-#include <freetype/ftglyph.h>
-#include <freetype/freetype.h>
-#include "MZFont.h"
+#include "MZPlatform.h"
 using namespace MAZE;
+
+// ------------------------------------------------------------------------------------------------
+const Resource::Type Font::TYPE = Resource::FONT;
 
 // ------------------------------------------------------------------------------------------------
 Font::Font(ResourceManager *rsmngr, const std::string& id, size_t height, const std::string& fn)
 	: Resource(rsmngr, Resource::FONT, id),
-	  mTexture(NULL),
+	  mTexture(0),
 	  mHeight(height),
 	  mFileName(fn)
 {

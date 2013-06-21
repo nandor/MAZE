@@ -6,12 +6,6 @@
 #define RENDERBUFFER_H
 #pragma once
 
-#include "MZPlatform.h"
-#include "MZTexture.h"
-#include "MZFont.h"
-#include "MZModel.h"
-#include "MZFrustum.h"
-
 namespace MAZE
 {
 	/**
@@ -31,7 +25,7 @@ namespace MAZE
 		glm::vec3 Position;
 
 		/// Reference to the model
-		Resource::Ptr<Model> Model;
+		Resource::Ptr<Model> model;
 
 		/// Depth of the object
 		float Z;
@@ -103,7 +97,7 @@ namespace MAZE
 	public:
 
 		/// Texture of the widget
-		Resource::Ptr<Texture> Texture;
+		Resource::Ptr<Texture> texture;
 		
 		/// Position of the widget
 		glm::vec2 Position;
@@ -123,7 +117,7 @@ namespace MAZE
 	public:
 
 		/// Font used
-		Resource::Ptr<Font> Font;
+		Resource::Ptr<Font> font;
 
 		/// Text
 		std::string Text;
@@ -139,7 +133,7 @@ namespace MAZE
     /**
         Buffer which stores render data
     */
-    class RenderBuffer
+    class RenderBuffer : public Aligned
     {	
     public:
 

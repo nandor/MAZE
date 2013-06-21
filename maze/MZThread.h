@@ -6,12 +6,6 @@
 #define THREAD_H
 #pragma once
 
-#include <cassert>
-#include <vector>
-#include <queue>
-#include "MZPlatform.h"
-#include "MZException.h"
-
 namespace MAZE
 {
 	/**

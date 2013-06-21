@@ -2,381 +2,381 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2013 The MAZE project. All rights reserved.
 
-#include <stack>
-#include <fstream>
-#include "MZConfig.h"
-#include "MZException.h"
+#include "MZPlatform.h"
 using namespace MAZE;
     
 // ------------------------------------------------------------------------------------------------
-class MAZE::ConfigWriter
+namespace MAZE
 {
-public:
-
-	ConfigWriter(const Config& src, const std::string& fn)
-		: mSource(src),
-		  mFileName(fn),
-		  mStream(fn)
+	class ConfigWriter
 	{
-	}
+	public:
 
-	void Write()
-	{
-		if (!mStream.is_open())
+		ConfigWriter(const Config& src, const std::string& fn)
+			: mSource(src),
+			  mFileName(fn),
+			  mStream(fn)
 		{
-			throw Exception("Cannot open file: '" + mFileName + "'");
 		}
 
-	}
+		void Write()
+		{
+			if (!mStream.is_open())
+			{
+				throw Exception("Cannot open file: '" + mFileName + "'");
+			}
 
-private:
+		}
 
-	/// Source object
-	const Config& mSource;
+	private:
 
-	/// Output file name
-	std::string mFileName;
+		/// Source object
+		const Config& mSource;
 
-	/// Output stream
-	std::ofstream mStream;
-};
-   
-// ------------------------------------------------------------------------------------------------ 
-class MAZE::ConfigReader
-{
-public:
+		/// Output file name
+		std::string mFileName;
 
-	/**
-		List of possible tokens
-	*/
-	enum Token
-	{
-		TK_EOF	   = 0,
-		TK_BOOL	   = 1,
-		TK_INT	   = 2,
-		TK_FLOAT   = 3,
-		TK_ID	   = 4,
-		TK_STRING  = 5,
-		TK_OBJ_BEG = '{',
-		TK_OBJ_END = '}',
-		TK_ARR_BEG = '[',
-		TK_ARR_END = ']',
-		TK_COMMA   = ',',
-		TK_COLON   = ':'
+		/// Output stream
+		std::ofstream mStream;
 	};
-
-public:
-
-	ConfigReader(Config& dest, const std::string& fn)
-		: mRoot(dest),
-		  mStream(fn),
-		  mFileName(fn),
-		  mLine(1),
-		  mChar('\0'),
-		  mToken(TK_EOF)
+	   
+	// ------------------------------------------------------------------------------------------------ 
+	class ConfigReader
 	{
-		mRoot = Config(Config::OBJECT);
-	}
+	public:
 
-	char NextChar()
-	{
-		char chr;
-		
-		switch (chr = mStream.get())
-		{	
-			case '\n':
-			{
-				mLine++;
-				return (mChar = '\n');
-			}
-			case EOF:
-			{
-				return (mChar = '\0');
-			}
+		/**
+			List of possible tokens
+		*/
+		enum Token
+		{
+			TK_EOF	   = 0,
+			TK_BOOL	   = 1,
+			TK_INT	   = 2,
+			TK_FLOAT   = 3,
+			TK_ID	   = 4,
+			TK_STRING  = 5,
+			TK_OBJ_BEG = '{',
+			TK_OBJ_END = '}',
+			TK_ARR_BEG = '[',
+			TK_ARR_END = ']',
+			TK_COMMA   = ',',
+			TK_COLON   = ':'
+		};
+
+	public:
+
+		ConfigReader(Config& dest, const std::string& fn)
+			: mRoot(dest),
+			  mStream(fn),
+			  mFileName(fn),
+			  mLine(1),
+			  mChar('\0'),
+			  mToken(TK_EOF)
+		{
+			mRoot = Config(Config::OBJECT);
 		}
 
-		return (mChar = chr);
-	}
-
-	Token NextToken()
-	{
-		// Skip comments
-		while (mChar == '#')
+		char NextChar()
 		{
-			while (NextChar() != '\n');
-			NextChar();
-		}
-
-		// Skip whitespace
-		while (mChar == ' ' || mChar == '\t' || mChar == '\n')
-		{
-			NextChar();
-		}
-
-		// Check for simple characters
-		switch (mChar)
-		{
-			case '{': NextChar(); return (mToken = TK_OBJ_BEG);
-			case '}': NextChar(); return (mToken = TK_OBJ_END);
-			case '[': NextChar(); return (mToken = TK_ARR_BEG);
-			case ']': NextChar(); return (mToken = TK_ARR_END);
-			case ',': NextChar(); return (mToken = TK_COMMA);
-			case ':': NextChar(); return (mToken = TK_COLON);
-			case '\0': NextChar(); return (mToken = TK_EOF);
-		}
-
-		// IDs or keywords
-		if (isalpha(mChar) || mChar == '_')
-		{
-			mString.clear();
-			while (isalnum(mChar) || mChar == '_')
-			{
-				mString.append(1, mChar);
-				NextChar();
-			}
-
-			if (mString == "true")
-			{
-				mBool = true;
-				return (mToken = TK_BOOL);
-			}
-			else if (mString == "false")
-			{
-				mBool = false;
-				return (mToken = TK_BOOL);
-			}
-
-			return (mToken = TK_ID);
-		}
-
-		// Numbers
-		if (('0' <= mChar && mChar <= '9') || mChar == '-')
-		{
-			int sign = (mChar == '-') ? (NextChar(), -1) : 1;
+			char chr;
 			
-			mInt = 0;
-			while ('0' <= mChar && mChar <= '9')
-			{
-				mInt = mInt * 10 + mChar - '0';
-				NextChar();
-			}
-
-			if (mChar == '.')
-			{
-				float exp = 0.1f;
-				mFloat = 0.0f;
-
-				while ('0' <= NextChar() && mChar <= '9')
+			switch (chr = mStream.get())
+			{	
+				case '\n':
 				{
-					mFloat += exp * (mChar - '0');
-					exp /= 10.0f;
+					mLine++;
+					return (mChar = '\n');
 				}
-
-				mFloat += mInt;
-				return (mToken = TK_FLOAT);
+				case EOF:
+				{
+					return (mChar = '\0');
+				}
 			}
 
-			return (mToken = TK_INT);
+			return (mChar = chr);
 		}
 
-		if (mChar == '"')
+		Token NextToken()
 		{
-			mString.clear();
-			
-			while (NextChar() != '"')
+			// Skip comments
+			while (mChar == '#')
 			{
-				if (mChar == '\0') 
-				{ 
-					return (mToken = TK_EOF); 
-				}
+				while (NextChar() != '\n');
+				NextChar();
+			}
 
-				if (mChar != '\\')
+			// Skip whitespace
+			while (mChar == ' ' || mChar == '\t' || mChar == '\n')
+			{
+				NextChar();
+			}
+
+			// Check for simple characters
+			switch (mChar)
+			{
+				case '{': NextChar(); return (mToken = TK_OBJ_BEG);
+				case '}': NextChar(); return (mToken = TK_OBJ_END);
+				case '[': NextChar(); return (mToken = TK_ARR_BEG);
+				case ']': NextChar(); return (mToken = TK_ARR_END);
+				case ',': NextChar(); return (mToken = TK_COMMA);
+				case ':': NextChar(); return (mToken = TK_COLON);
+				case '\0': NextChar(); return (mToken = TK_EOF);
+			}
+
+			// IDs or keywords
+			if (isalpha(mChar) || mChar == '_')
+			{
+				mString.clear();
+				while (isalnum(mChar) || mChar == '_')
 				{
 					mString.append(1, mChar);
-					continue;
+					NextChar();
 				}
 
-				switch (NextChar())
+				if (mString == "true")
 				{
-					case 'n': mString.append(1, '\n'); break;
-					case 'b': mString.append(1, '\b'); break;
-					case 't': mString.append(1, '\t'); break;
-					case 'v': mString.append(1, '\v'); break;
-					case 'a': mString.append(1, '\a'); break;
-					case '"': mString.append(1, '\"'); break;
-					case '\'': mString.append(1, '\''); break;
-					case '\\': mString.append(1, '\\'); break;
+					mBool = true;
+					return (mToken = TK_BOOL);
 				}
+				else if (mString == "false")
+				{
+					mBool = false;
+					return (mToken = TK_BOOL);
+				}
+
+				return (mToken = TK_ID);
+			}
+
+			// Numbers
+			if (('0' <= mChar && mChar <= '9') || mChar == '-')
+			{
+				int sign = (mChar == '-') ? (NextChar(), -1) : 1;
+				
+				mInt = 0;
+				while ('0' <= mChar && mChar <= '9')
+				{
+					mInt = mInt * 10 + mChar - '0';
+					NextChar();
+				}
+
+				if (mChar == '.')
+				{
+					float exp = 0.1f;
+					mFloat = 0.0f;
+
+					while ('0' <= NextChar() && mChar <= '9')
+					{
+						mFloat += exp * (mChar - '0');
+						exp /= 10.0f;
+					}
+
+					mFloat += mInt;
+					return (mToken = TK_FLOAT);
+				}
+
+				return (mToken = TK_INT);
+			}
+
+			if (mChar == '"')
+			{
+				mString.clear();
+				
+				while (NextChar() != '"')
+				{
+					if (mChar == '\0') 
+					{ 
+						return (mToken = TK_EOF); 
+					}
+
+					if (mChar != '\\')
+					{
+						mString.append(1, mChar);
+						continue;
+					}
+
+					switch (NextChar())
+					{
+						case 'n': mString.append(1, '\n'); break;
+						case 'b': mString.append(1, '\b'); break;
+						case 't': mString.append(1, '\t'); break;
+						case 'v': mString.append(1, '\v'); break;
+						case 'a': mString.append(1, '\a'); break;
+						case '"': mString.append(1, '\"'); break;
+						case '\'': mString.append(1, '\''); break;
+						case '\\': mString.append(1, '\\'); break;
+					}
+				}
+
+				NextChar();
+				return (mToken = TK_STRING);
+			}
+			
+			return (mToken = TK_EOF);
+		}
+
+		void Read()
+		{
+			if (!mStream.is_open())
+			{
+				throw Exception("Cannot open file: '" + mFileName + "'");
 			}
 
 			NextChar();
-			return (mToken = TK_STRING);
-		}
-		
-		return (mToken = TK_EOF);
-	}
-
-	void Read()
-	{
-		if (!mStream.is_open())
-		{
-			throw Exception("Cannot open file: '" + mFileName + "'");
-		}
-
-		NextChar();
-		switch (NextToken())
-		{
-			case TK_OBJ_BEG: mRoot = Config(Config::OBJECT); break;
-			case TK_ARR_BEG: mRoot = Config(Config::ARRAY);  break;
-			default:
+			switch (NextToken())
 			{
-				throw Exception("[") << mFileName << ": " << mLine << "] Unexpected token";
-			}
-		}
-		
-		std::stack<Config*> stack;
-		stack.push(&mRoot);
-
-		while (NextToken() != TK_EOF)
-		{
-			Config* target;
-
-			if (stack.top()->IsObject())
-			{
-				Config::ObjectType& map = *stack.top()->mValueObject;
-				Config::ObjectType::iterator iter;
-				std::string id;
-				
-				Check(TK_ID); 
-				id = mString;					
-				NextToken();
-				Check(TK_COLON); NextToken();
-								
-				if ((iter = map.find(id)) != map.end())
-				{
-					throw Exception("[") << mFileName << ": " << mLine << "] Duplicate key: " << mString;
-				}
-
-				target = &map.insert(std::make_pair(id, Config())).first->second;
-			}
-			else
-			{
-				Config::ArrayType& arr = *stack.top()->mValueArray;
-
-				arr.resize(arr.size() + 1);
-				target = &(*arr.rbegin());
-			}
-
-			switch (mToken)
-			{
-				case TK_OBJ_BEG:
-				{
-					target->mType = Config::OBJECT;
-					target->mValueObject = new Config::ObjectType();
-					stack.push(target);
-					continue;
-				}
-				case TK_ARR_BEG:
-				{
-					target->mType = Config::ARRAY;
-					target->mValueArray = new Config::ArrayType();
-					stack.push(target);
-					continue;
-				}
-				case TK_BOOL:
-				{
-					target->mType = Config::BOOL;
-					target->mValueBool = mBool;
-					break;
-				}
-				case TK_INT:
-				{
-					target->mType = Config::INT;
-					target->mValueInt = mInt;
-					break;
-				}
-				case TK_FLOAT:
-				{
-					target->mType = Config::FLOAT;
-					target->mValueFloat = mFloat;
-					break;
-				}
-				case TK_STRING:
-				{
-					target->mType = Config::STRING;
-					target->mValueString = new std::string(mString);
-					break;
-				}
+				case TK_OBJ_BEG: mRoot = Config(Config::OBJECT); break;
+				case TK_ARR_BEG: mRoot = Config(Config::ARRAY);  break;
 				default:
 				{
 					throw Exception("[") << mFileName << ": " << mLine << "] Unexpected token";
 				}
 			}
+			
+			std::stack<Config*> stack;
+			stack.push(&mRoot);
 
-			while (NextToken() == TK_OBJ_END || mToken == TK_ARR_END)
+			while (NextToken() != TK_EOF)
 			{
-				if (stack.empty() ||
-					mToken == TK_ARR_END && stack.top()->mType != Config::ARRAY ||
-					mToken == TK_OBJ_END && stack.top()->mType != Config::OBJECT)
+				Config* target;
+
+				if (stack.top()->IsObject())
 				{
-					throw Exception("[") << mFileName << ": " << mLine << "] Unmatched bracket";
+					Config::ObjectType& map = *stack.top()->mValueObject;
+					Config::ObjectType::iterator iter;
+					std::string id;
+					
+					Check(TK_ID); 
+					id = mString;					
+					NextToken();
+					Check(TK_COLON); NextToken();
+									
+					if ((iter = map.find(id)) != map.end())
+					{
+						throw Exception("[") << mFileName << ": " << mLine << "] Duplicate key: " << mString;
+					}
+
+					target = &map.insert(std::make_pair(id, Config())).first->second;
+				}
+				else
+				{
+					Config::ArrayType& arr = *stack.top()->mValueArray;
+
+					arr.resize(arr.size() + 1);
+					target = &(*arr.rbegin());
 				}
 
-				stack.pop();
+				switch (mToken)
+				{
+					case TK_OBJ_BEG:
+					{
+						target->mType = Config::OBJECT;
+						target->mValueObject = new Config::ObjectType();
+						stack.push(target);
+						continue;
+					}
+					case TK_ARR_BEG:
+					{
+						target->mType = Config::ARRAY;
+						target->mValueArray = new Config::ArrayType();
+						stack.push(target);
+						continue;
+					}
+					case TK_BOOL:
+					{
+						target->mType = Config::BOOL;
+						target->mValueBool = mBool;
+						break;
+					}
+					case TK_INT:
+					{
+						target->mType = Config::INT;
+						target->mValueInt = mInt;
+						break;
+					}
+					case TK_FLOAT:
+					{
+						target->mType = Config::FLOAT;
+						target->mValueFloat = mFloat;
+						break;
+					}
+					case TK_STRING:
+					{
+						target->mType = Config::STRING;
+						target->mValueString = new std::string(mString);
+						break;
+					}
+					default:
+					{
+						throw Exception("[") << mFileName << ": " << mLine << "] Unexpected token";
+					}
+				}
+
+				while (NextToken() == TK_OBJ_END || mToken == TK_ARR_END)
+				{
+					if (stack.empty() ||
+						mToken == TK_ARR_END && stack.top()->mType != Config::ARRAY ||
+						mToken == TK_OBJ_END && stack.top()->mType != Config::OBJECT)
+					{
+						throw Exception("[") << mFileName << ": " << mLine << "] Unmatched bracket";
+					}
+
+					stack.pop();
+				}
+							
+				if (mToken != TK_COMMA && mToken != TK_EOF)
+				{
+					throw Exception("[") << mFileName << ": " << mLine << "] Unexpected token";
+				}
 			}
-						
-			if (mToken != TK_COMMA && mToken != TK_EOF)
+
+			if (stack.size() != 0)
+			{
+				throw Exception("[") << mFileName << ": " << mLine << "] Unexpected eof";
+			}
+		}
+
+		void Check(Token token)
+		{
+			if (mToken != token)
 			{
 				throw Exception("[") << mFileName << ": " << mLine << "] Unexpected token";
 			}
 		}
 
-		if (stack.size() != 0)
-		{
-			throw Exception("[") << mFileName << ": " << mLine << "] Unexpected eof";
-		}
-	}
+	private:
+		
+		/// Root node
+		Config& mRoot;
+		
+		/// Input stream
+		std::ifstream mStream;
 
-	void Check(Token token)
-	{
-		if (mToken != token)
-		{
-			throw Exception("[") << mFileName << ": " << mLine << "] Unexpected token";
-		}
-	}
+		/// Name of the input file
+		std::string mFileName;
 
-private:
-	
-	/// Root node
-	Config& mRoot;
-	
-	/// Input stream
-	std::ifstream mStream;
+		/// Line number
+		int mLine;
 
-	/// Name of the input file
-	std::string mFileName;
+		/// Current character
+		char mChar;
 
-	/// Line number
-	int mLine;
+		/// Current token
+		Token mToken;
+		
+		/// Last boolean read
+		bool mBool;
 
-	/// Current character
-	char mChar;
+		/// Last integer read
+		int mInt;
 
-	/// Current token
-	Token mToken;
-	
-	/// Last boolean read
-	bool mBool;
+		/// Last float read
+		float mFloat;
 
-	/// Last integer read
-	int mInt;
+		/// Last string read
+		std::string mString;
 
-	/// Last float read
-	float mFloat;
-
-	/// Last string read
-	std::string mString;
-
+	};
 };
 
 // ------------------------------------------------------------------------------------------------
@@ -415,7 +415,7 @@ Config::Config(Type type)
 		case FLOAT: mValueFloat = 0.0; break;
 		case STRING: mValueString = new std::string(""); break;
 		case ARRAY: mValueArray = new std::vector<Config>();break;
-		case OBJECT: mValueObject = new std::hash_map<std::string, Config>(); break;
+		case OBJECT: mValueObject = new std::unordered_map<std::string, Config>(); break;
 	}
 }
 

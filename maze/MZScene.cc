@@ -2,20 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <new.h>
-#include <stack>
-#include "MZLog.h"
-#include "MZRay.h"
-#include "MZEngine.h"
-#include "MZLight.h"
-#include "MZScene.h"
-#include "MZObject.h"
-#include "MZEntity.h"
-#include "MZCamera.h"
-#include "MZFrustum.h"
 #include "MZPlatform.h"
-#include "MZBoundingBox.h"
-#include "MZRenderBuffer.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -62,19 +49,12 @@ bool SceneNode::IsEmpty()
 }
 
 // ------------------------------------------------------------------------------------------------
-Scene::Scene(Engine* engine, float width, float height, float depth)
-	: mEngine(engine),
-	  mRoot(new SceneNode(BoundingBox(
-		  0.0f, 0.0f, 0.0f,
-		  width, height, depth
-	  )))
-{
-}
-
-// ------------------------------------------------------------------------------------------------
 Scene::Scene(Engine *engine, const glm::vec3& size)
 	: mEngine(engine),
-	  mRoot(new SceneNode(BoundingBox(glm::vec3(0.0f), size)))
+	  mRoot(new SceneNode(BoundingBox(
+		glm::vec3(-3.0f, 0.0f, -3.0f), 
+		size + glm::vec3(6.0f, 0.0f, 6.0f)
+	)))
 {
 }
 
@@ -86,7 +66,7 @@ Scene::~Scene()
 		delete mRoot;
 	}
 
-	std::hash_map<unsigned, Entity*>::iterator it;
+	std::unordered_map<unsigned, Entity*>::iterator it;
 	for (it = mEntities.begin(); it != mEntities.end(); ++it)
 	{
 		delete it->second;
@@ -119,36 +99,44 @@ void Scene::RemoveEntity(Entity* entity)
 // ------------------------------------------------------------------------------------------------
 void Scene::AddEntity(Entity* entity)
 {
+	__m128 mask[] =
+	{
+		_mm_castsi128_ps(_mm_setr_epi32(0x00000000, 0x00000000, 0x00000000, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0xFFFFFFFF, 0x00000000, 0x00000000, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0x00000000, 0xFFFFFFFF, 0x00000000, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0x00000000, 0x00000000, 0xFFFFFFFF, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0xFFFFFFFF, 0x00000000, 0xFFFFFFFF, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0x00000000, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000)),
+		_mm_castsi128_ps(_mm_setr_epi32(0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000)),
+	};
+
 	SceneNode* target = mRoot;
 	for (size_t lvl = 0, found = true; lvl < MAX_DEPTH && found; ++lvl)
 	{
-		float width  = target->Box.GetSize().x * 0.6f;
-		float height = target->Box.GetSize().y * 0.6f;
-		float depth  = target->Box.GetSize().z * 0.6f;
-		float offX = target->Box.GetSize().x * 0.4f;
-		float offY = target->Box.GetSize().y * 0.4f;
-		float offZ = target->Box.GetSize().z * 0.4f;
-		float x = target->Box.GetMin().x;
-		float y = target->Box.GetMin().y;
-		float z = target->Box.GetMin().z;
+		__m128 size, off, pos;
+
+		pos  = target->Box.GetMin();
+		size = _mm_sub_ps(target->Box.GetMax(), pos);
+		off  = _mm_mul_ps(size, _mm_set_ps1(0.4f));
+		size = _mm_mul_ps(size, _mm_set_ps1(0.6f));
 
 		found = false;
 		for (size_t i = 0; i < 8; ++i)
 		{
 			if (target->Child[i] == NULL)
 			{
-				BoundingBox box(
-					x + ((i & 1) ? offX : 0.0f),
-					y + ((i & 2) ? offY : 0.0f),
-					z + ((i & 4) ? offZ : 0.0f),
-					width,
-					height,
-					depth
-				);
+				__m128 min = _mm_add_ps(pos, _mm_and_ps(mask[i], off));
+				__m128 max = _mm_add_ps(min, size);
 
-				if (box.Inside(entity->GetBoundingBox()))
+				size_t mask = _mm_movemask_ps(_mm_and_ps(
+					_mm_cmple_ps(min, entity->GetBoundingBox().GetMin()),
+					_mm_cmple_ps(entity->GetBoundingBox().GetMax(), max)
+				));
+
+				if ((mask & 7) == 7)
 				{
-					target->Child[i] = new SceneNode(box);
+					target->Child[i] = new SceneNode(BoundingBox(min, size));
 					target->Child[i]->Index = i;
 					target->Child[i]->Parent = target;
 					target = target->Child[i];
@@ -158,7 +146,12 @@ void Scene::AddEntity(Entity* entity)
 			}
 			else
 			{
-				if (target->Child[i]->Box.Inside(entity->GetBoundingBox()))
+				size_t mask = _mm_movemask_ps(_mm_and_ps(
+					_mm_cmple_ps(target->Child[i]->Box.GetMin(), entity->GetBoundingBox().GetMin()),
+					_mm_cmple_ps(entity->GetBoundingBox().GetMax(), target->Child[i]->Box.GetMax())
+				));
+
+				if ((mask & 7) == 7)
 				{
 					target = target->Child[i];
 					found = true;
@@ -175,7 +168,7 @@ void Scene::AddEntity(Entity* entity)
 // ------------------------------------------------------------------------------------------------
 void Scene::Update(float time, float dt)
 {
-	std::hash_map<unsigned, Entity*>::iterator it = mEntities.begin();
+	std::unordered_map<unsigned, Entity*>::iterator it = mEntities.begin();
 	while (it != mEntities.end())
 	{
 		Entity *ent = it->second;
@@ -332,9 +325,10 @@ void Scene::QueryShadowCasters(const Frustum& volume, RenderBuffer* buffer)
 glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 {	
 	BoundingBox entity = who->GetBoundingBox();
-	BoundingBox extended = entity.Extend(dir);
-	BoundingBox temp = entity.Extend(dir);
-	glm::vec3 move = dir;
+	BoundingBox ext = entity.Extend(dir);
+	__m128 move;
+		
+	move = _mm_setr_ps(dir.x, dir.y, dir.z, 0.0f);
 		
 	SceneNode* node = mRoot;
 	while (node)
@@ -342,9 +336,9 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 		std::forward_list<Entity*>::iterator it;
 		for (it = node->Items.begin(); it != node->Items.end(); ++it)
 		{
-			BoundingBox& box = (*it)->GetBoundingBox();
-				
-			if ((*it)->IsCollider() && (*it)->IsActive() && !box.Outside(extended))
+			const BoundingBox& box = (*it)->GetBoundingBox();
+							
+			if ((*it)->IsCollider() && (*it)->IsActive() && !box.Outside(ext))
 			{
 				if ((*it)->GetType() == Entity::OBJECT && (*it)->HasCollisionMesh())
 				{
@@ -353,26 +347,66 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 
 					for (size_t i = 0; i < mesh.size(); i += 3)
 					{
-						glm::vec3 a(mtx * glm::vec4(mesh[i + 0], 1.0f));
-						glm::vec3 b(mtx * glm::vec4(mesh[i + 1], 1.0f));
-						glm::vec3 c(mtx * glm::vec4(mesh[i + 2], 1.0f));
+						__m128 a, b, c, n, l, d;
 
-						glm::vec3 n = glm::normalize(glm::cross(b - a, c - a));
-						float d = -glm::dot(n, a);
+						// Retrieve world space coordinated of the triangle
+						a = _mm_loadu_ps(glm::value_ptr(mtx * glm::vec4(mesh[i + 0], 1.0f)));
+						b = _mm_loadu_ps(glm::value_ptr(mtx * glm::vec4(mesh[i + 1], 1.0f)));
+						c = _mm_loadu_ps(glm::value_ptr(mtx * glm::vec4(mesh[i + 2], 1.0f)));
+
+						// Compute & normalize the normal vector
+						n = Cross(_mm_sub_ps(b, a), _mm_sub_ps(c, a));
+						l = _mm_mul_ps(n, n);
+						l = _mm_hadd_ps(l, l);
+						l = _mm_hadd_ps(l, l);
+						l = _mm_sqrt_ps(l);
+						n = _mm_div_ps(n, l);
+
+						// Compute the D component of the plane: d = dot(n, a)
+						d = _mm_mul_ps(n, a);
+						d = _mm_hadd_ps(d, d);
+						d = _mm_hadd_ps(d, d);						
+						d = Invert(d);
+
+						// n.w = d
+						_mm_store_ss(&n.m128_f32[3], d);
 						
 						for (size_t j = 0; j < 8; ++j)
 						{
-							float d1 = glm::dot(n, entity.GetCorner(j)) + d;
-							float d2 = glm::dot(n, temp.GetCorner(j)) + d;
+							__m128 d1, d2, mask;
 
-							if (d1 >= 0.0f && d2 <= 0.0f)
+							// d1 = dist(plane, c)
+							d1 = _mm_mul_ps(n, entity.GetCorner(j));
+							d1 = _mm_hadd_ps(d1, d1);
+							d1 = _mm_hadd_ps(d1, d1);
+
+							// d2 = dist(plane, c + move)
+							d2 = _mm_mul_ps(n, ext.GetCorner(j));
+							d2 = _mm_hadd_ps(d2, d2);
+							d2 = _mm_hadd_ps(d2, d2);
+							
+							// EPS <= d1 && -EPS <= d2
+							mask = _mm_and_ps(
+								_mm_cmplt_ps(d2, _mm_setzero_ps()), 
+								_mm_cmplt_ps(_mm_setzero_ps(), d1)
+							);
+
+							if (_mm_movemask_ps(mask) == 0xF)
 							{
-								glm::vec3 pt = entity.GetCorner(j) + move - d2 * n;
-
-								if (::Inside(a, b, c, pt))
+								__m128 t;
+								
+								// t = corner + move - d2 * n
+								t = _mm_add_ps(
+									entity.GetCorner(j), 
+									_mm_sub_ps(move, _mm_mul_ps(d2, n))
+								);
+								
+								if (Inside(a, b, c, t))
 								{
-									move += (-d2 + EPS) * n;
-									temp = entity.Extend(move);
+									d2 = _mm_sub_ps(_mm_set_ps1(EPS), d2);
+									d2 = _mm_mul_ps(d2, n);
+									move = _mm_add_ps(move, d2);
+									ext = entity.Extend(move);
 								}
 							}
 						}
@@ -384,15 +418,30 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 					{
 						for (size_t j = 0; j < 8; ++j)
 						{
-							glm::vec4& plane = box.GetPlane(i);
+							__m128 d1, d2, plane, mask;
 
-							float d1 = glm::dot(plane, glm::vec4(entity.GetCorner(j), 1.0f));
-							float d2 = glm::dot(plane, glm::vec4(temp.GetCorner(j), 1.0f));
+							plane = box.GetPlane(i);
 
-							if (d1 >= 0.0f && d2 <= 0.0f)
+							d1 = _mm_mul_ps(plane, entity.GetCorner(j));
+							d1 = _mm_hadd_ps(d1, d1);
+							d1 = _mm_hadd_ps(d1, d1);
+
+							d2 = _mm_mul_ps(plane, ext.GetCorner(j));
+							d2 = _mm_hadd_ps(d2, d2);
+							d2 = _mm_hadd_ps(d2, d2);
+							
+							// EPS <= d1 && -EPS <= d2
+							mask = _mm_and_ps(
+								_mm_cmplt_ps(d2, _mm_setzero_ps()), 
+								_mm_cmplt_ps(_mm_setzero_ps(), d1)
+							);
+							
+							if (_mm_movemask_ps(mask) == 0xF)
 							{
-								move += (-d2 + EPS) * glm::vec3(plane);
-								temp = entity.Extend(move);
+								d2 = _mm_sub_ps(_mm_set_ps1(EPS), d2);
+								d2 = _mm_mul_ps(d2, plane);
+								move = _mm_add_ps(move, d2);
+								ext = entity.Extend(move);
 							}
 						}
 					}
@@ -400,12 +449,13 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 			}
 		}
 
-		node = node->Next(extended);
+		node = node->Next(ext);
 	}
 
-	move = glm::max(move, mRoot->Box.GetMin() - entity.GetMin());
-	move = glm::min(move, mRoot->Box.GetMax() - entity.GetMax());
-	return move;
+	move = _mm_max_ps(move, _mm_sub_ps(mRoot->Box.GetMin(), entity.GetMin()));
+	move = _mm_min_ps(move, _mm_sub_ps(mRoot->Box.GetMax(), entity.GetMax()));
+
+	return glm::vec3(move.m128_f32[0], move.m128_f32[1], move.m128_f32[2]);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -434,11 +484,11 @@ void Scene::QueryPickables(Entity *who)
 // ------------------------------------------------------------------------------------------------
 Entity* Scene::QueryUseable(Entity *who, const Ray& ray)
 {
-	std::vector<Entity*> objects;	
 	SceneNode* node = mRoot;
 	Entity* entity = NULL;
-	float minDist = std::numeric_limits<float>::max();
-
+	__m128 min, dist, cmp;
+	
+	min = _mm_set_ps1(FLT_MAX);
 	while (node)
 	{
 		std::forward_list<Entity*>::iterator it;
@@ -448,11 +498,16 @@ Entity* Scene::QueryUseable(Entity *who, const Ray& ray)
 				(*it)->IsUseable() &&
 				!(*it)->GetBoundingBox().Outside(ray))
 			{
-				float dist = ray.Distance((*it)->GetBoundingBox());
+				dist = ray.Distance((*it)->GetBoundingBox());
 
-				if (dist < minDist && 0.0f <= dist && dist <= 3.5f)
+				cmp = _mm_and_ps(_mm_cmplt_ss(dist, min), _mm_and_ps(
+					_mm_cmple_ss(_mm_set_ss(0.0f), dist),
+					_mm_cmple_ss(dist, _mm_set_ss(2.5f))
+				));
+				
+				if ((_mm_movemask_ps(cmp) & 1) == 1)
 				{
-					minDist = dist;
+					min = dist;
 					entity = (*it);
 				}
 			}

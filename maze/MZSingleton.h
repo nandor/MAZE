@@ -6,9 +6,6 @@
 #define SINGLETON_H
 #pragma once
 
-#include <cassert>
-#include "MZPlatform.h"
-
 namespace MAZE
 {
 	template <class T>

@@ -2,13 +2,11 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <string>
-#include <exception>
-#include "MZGL.h"
-
-#ifndef EXCEPTION_H
-#define EXCEPTION_H
+#ifndef MZEXCEPTION_H
+#define MZEXCEPTION_H
 #pragma once
+
+#define NOT_IMPLEMENTED { throw Exception("Not implemented: ") << __FUNCTION__; }
 
 namespace MAZE 
 {
@@ -16,12 +14,12 @@ namespace MAZE
 	{
 	public:
 
-		Exception() 
+		Exception() throw()
 			: mMessage("")
 		{
 		}
 
-		Exception(const std::string& str)
+		Exception(const std::string& str) throw()
 			: mMessage(str)
 		{
 		}
@@ -50,9 +48,9 @@ namespace MAZE
 	{
 	public:
 
-		WindowsException(const std::string& str);
+		WindowsException(const std::string& str) throw();
 		
-		virtual ~WindowsException()
+		virtual ~WindowsException() throw()
 		{
 		}
 
@@ -70,9 +68,9 @@ namespace MAZE
 	{
 	public:
 
-		MGLException(const std::string& str);
+		MGLException(const std::string& str) throw();
 
-		virtual ~MGLException()
+		virtual ~MGLException() throw()
 		{
 		}
 
@@ -88,4 +86,4 @@ namespace MAZE
 	};
 };
 
-#endif EXCEPTION_H
+#endif

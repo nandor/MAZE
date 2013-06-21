@@ -6,10 +6,6 @@
 #define MZLUA_H
 #pragma once
 
-#include <new>
-#include <string>
-#include <lua.hpp>
-
 namespace MAZE
 {
 	/**
@@ -42,14 +38,24 @@ namespace MAZE
 		Retrieves an object from the stack or throws
 		and error if the given object is invalid
 	*/
-	void* mzlGetObject(lua_State *L, int arg, const std::string& type);
+	void* mzlGetObject(lua_State *L, int arg, const std::string& type, size_t align = 1);
 
 	/**
 		Creates a new object placed in Lua userdata
 		Uses placement new to initialize our object
 		in memory managed by Lua
 	*/
-	void* mzlCreateObject(lua_State *L, size_t sz, const std::string& type);
+	void* mzlCreateObject(lua_State *L, size_t sz, const std::string& type, size_t align = 1);
+	
+	/**
+		Registers math libraries
+	*/
+	void mzlRegisterScene(lua_State* L);
+	
+	/**
+		Registers math libraries
+	*/
+	void mzlRegisterMath(lua_State* L);
 }
 
 #endif

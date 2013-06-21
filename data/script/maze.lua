@@ -2,12 +2,12 @@
 -- Licensing information can be found in the LICENSE file
 -- (C) 2013 The MAZE project. All rights reserved.
 
-------------------------------------------------------------------
+-------------------------------------------------------------------------------
 function spawn_pillar(x, y)
     local pillar = scene.create("object")        
     pillar.model = "pillar"
     pillar.position = vec3(x * 5, 0, y * 5)
-    pillar.box = box(vec3(-1.0, 0.0, -1.0), vec3(2.0, 4.0, 2.0))  
+    pillar.box = box(vec3(-0.75, 0.0, -0.75), vec3(1.5, 4.0, 1.5))  
     pillar.shadow_caster = true        
     pillar.collider = true  
 end
@@ -117,15 +117,17 @@ function on_world_init()
             end
         end
     end
-
+				
     -- Place powerups
+	local count = 0
     for x = 0, 19 do
         for y = 0, 19 do
             
             local id = math.floor(math.random() * 100) % 3
         
             if id == 1 then
-                local coin = scene.create("object")
+                local coin = scene.create("object", "coin" .. count)
+				count = count + 1
                 
                 coin.model = "coin"     
                 coin.position = vec3(x * 5 + 2.5, 1.0, y * 5 + 2.5)

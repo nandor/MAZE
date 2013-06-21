@@ -6,13 +6,6 @@
 #define OBJECT_H
 #pragma once
 
-#include <al/al.h>
-#include "MZMath.h"
-#include "MZModel.h"
-#include "MZEntity.h"
-#include "MZCallback.h"
-#include "MZSoundSource.h"
-
 namespace MAZE
 {
 	/// Data passed to the renderer

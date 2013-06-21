@@ -6,9 +6,6 @@
 #define MODEL_H
 #pragma once
 
-#include "MZMath.h"
-#include "MZTexture.h"
-
 namespace MAZE
 {
 	class Model : public Resource
@@ -16,7 +13,7 @@ namespace MAZE
 	public:
 		
 		/// Template related stuff
-		const static Resource::Type TYPE = Resource::MODEL;
+		const static Resource::Type TYPE;
 		
 		/**
 			Single vertex of the model

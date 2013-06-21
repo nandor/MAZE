@@ -3,8 +3,6 @@
 // (C) 2012 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
-#include "MZResource.h"
-#include "MZRsmngr.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------

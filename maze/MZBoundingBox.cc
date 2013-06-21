@@ -2,65 +2,52 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include "MZRay.h"
-#include "MZFrustum.h"
-#include "MZException.h"
-#include "MZBoundingBox.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
-// ------------------------------------------------------------------------------------------------
-BoundingBox::BoundingBox()
+// ------------------------------------------------------------------------------------------------   
+BoundingBox BoundingBox::Move(const glm::vec3& p)
 {
-	mMin = glm::vec3(0.0f);
-	mMax = glm::vec3(1.0f);
-	mDirty = true;
-}
+	BoundingBox box;
+	
+	box.mMin = _mm_add_ps(mMin, _mm_setr_ps(p.x, p.y, p.z, 0.0f));
+	box.mMax = _mm_add_ps(mMax, _mm_setr_ps(p.x, p.y, p.z, 0.0f));
+	box.mDirty = true;
 
-// ------------------------------------------------------------------------------------------------
-BoundingBox::BoundingBox(const glm::vec3& pos, const glm::vec3& size)
-{
-	mMin = pos;
-	mMax = pos + size;
-	mDirty = true;
-}
-
-// ------------------------------------------------------------------------------------------------
-BoundingBox::BoundingBox(float px, float py, float pz, float w, float h, float d)
-{
-	mMin.x = px;
-	mMin.y = py;
-	mMin.z = pz;
-	mMax.x = px + w;
-	mMax.y = py + h;
-	mMax.z = pz + d;
-	mDirty = true;
+	return box;
 }
 
 // ------------------------------------------------------------------------------------------------   
-BoundingBox BoundingBox::Move(const glm::vec3& pos)
+BoundingBox BoundingBox::Move(const __m128& p)
 {
 	BoundingBox box;
-
-	box.mMin = pos + mMin;
-	box.mMax = pos + mMax;
+	
+	box.mMin = _mm_add_ps(mMin, p);
+	box.mMax = _mm_add_ps(mMax, p);
 	box.mDirty = true;
 
 	return box;
 }
 
 // ------------------------------------------------------------------------------------------------
-BoundingBox BoundingBox::Extend(const glm::vec3& dir)
+BoundingBox BoundingBox::Extend(const glm::vec3& d)
 {
 	BoundingBox box;
 
-	box.mMin.x = mMin.x + (dir.x < 0.0f ? dir.x : 0.0f);
-	box.mMin.y = mMin.y + (dir.y < 0.0f ? dir.y : 0.0f);
-	box.mMin.z = mMin.z + (dir.z < 0.0f ? dir.z : 0.0f);
-	
-	box.mMax.x = mMax.x + (dir.x > 0.0f ? dir.x : 0.0f);
-	box.mMax.y = mMax.y + (dir.y > 0.0f ? dir.y : 0.0f);
-	box.mMax.z = mMax.z + (dir.z > 0.0f ? dir.z : 0.0f);
+	box.mMin = _mm_add_ps(mMin, _mm_min_ps(_mm_setr_ps(d.x, d.y, d.z, 0.0f), _mm_setzero_ps()));
+	box.mMax = _mm_add_ps(mMax, _mm_max_ps(_mm_setr_ps(d.x, d.y, d.z, 0.0f), _mm_setzero_ps()));
+	box.mDirty = true;
 
+	return box;
+}
+
+// ------------------------------------------------------------------------------------------------
+BoundingBox BoundingBox::Extend(const __m128& d)
+{
+	BoundingBox box;
+
+	box.mMin = _mm_add_ps(mMin, _mm_min_ps(d, _mm_setzero_ps()));
+	box.mMax = _mm_add_ps(mMax, _mm_max_ps(d, _mm_setzero_ps()));
 	box.mDirty = true;
 
 	return box;
@@ -69,21 +56,21 @@ BoundingBox BoundingBox::Extend(const glm::vec3& dir)
 // ------------------------------------------------------------------------------------------------
 void BoundingBox::Compute() const
 {	
-	mCorners[0]	= glm::vec3(mMin.x, mMax.y, mMin.z);
-	mCorners[1]	= glm::vec3(mMax.x, mMax.y, mMin.z);
-	mCorners[2]	= glm::vec3(mMin.x, mMin.y, mMin.z);
-	mCorners[3] = glm::vec3(mMax.x, mMin.y, mMin.z);
-	mCorners[4]	= glm::vec3(mMin.x, mMax.y, mMax.z);
-	mCorners[5]	= glm::vec3(mMax.x, mMax.y, mMax.z);
-	mCorners[6]	= glm::vec3(mMin.x, mMin.y, mMax.z);
-	mCorners[7]	= glm::vec3(mMax.x, mMin.y, mMax.z);
-	
-	mPlanes[0] = glm::vec4( 1.0f,  0.0f,  0.0f, -mMax.x);
-	mPlanes[1] = glm::vec4(-1.0f,  0.0f,  0.0f,  mMin.x);
-	mPlanes[2] = glm::vec4( 0.0f,  1.0f,  0.0f, -mMax.y);
-	mPlanes[3] = glm::vec4( 0.0f, -1.0f,  0.0f,  mMin.y);
-	mPlanes[4] = glm::vec4( 0.0f,  0.0f,  1.0f, -mMax.z);
-	mPlanes[5] = glm::vec4( 0.0f,  0.0f, -1.0f,  mMin.z);
+	mPlanes[0] = _mm_setr_ps( 1.0f,  0.0f,  0.0f, -mMax.m128_f32[0]);
+	mPlanes[1] = _mm_setr_ps( 0.0f,  1.0f,  0.0f, -mMax.m128_f32[1]);
+	mPlanes[2] = _mm_setr_ps( 0.0f,  0.0f,  1.0f, -mMax.m128_f32[2]);
+	mPlanes[3] = _mm_setr_ps(-1.0f,  0.0f,  0.0f,  mMin.m128_f32[0]);
+	mPlanes[4] = _mm_setr_ps( 0.0f, -1.0f,  0.0f,  mMin.m128_f32[1]);
+	mPlanes[5] = _mm_setr_ps( 0.0f,  0.0f, -1.0f,  mMin.m128_f32[2]);
+
+	mCorners[0]	= _mm_setr_ps(mMin.m128_f32[0], mMax.m128_f32[1], mMin.m128_f32[2], 1.0f);
+	mCorners[1]	= _mm_setr_ps(mMax.m128_f32[0], mMax.m128_f32[1], mMin.m128_f32[2], 1.0f);
+	mCorners[2]	= _mm_setr_ps(mMin.m128_f32[0], mMin.m128_f32[1], mMin.m128_f32[2], 1.0f);
+	mCorners[3] = _mm_setr_ps(mMax.m128_f32[0], mMin.m128_f32[1], mMin.m128_f32[2], 1.0f);
+	mCorners[4]	= _mm_setr_ps(mMin.m128_f32[0], mMax.m128_f32[1], mMax.m128_f32[2], 1.0f);
+	mCorners[5]	= _mm_setr_ps(mMax.m128_f32[0], mMax.m128_f32[1], mMax.m128_f32[2], 1.0f);
+	mCorners[6]	= _mm_setr_ps(mMin.m128_f32[0], mMin.m128_f32[1], mMax.m128_f32[2], 1.0f);
+	mCorners[7]	= _mm_setr_ps(mMax.m128_f32[0], mMin.m128_f32[1], mMax.m128_f32[2], 1.0f);
 
 	mDirty = false;
 }
@@ -95,31 +82,18 @@ bool BoundingBox::Inside(const Ray& ray) const
 }
 
 // ------------------------------------------------------------------------------------------------
-bool BoundingBox::Inside(const Sphere& ray) const
-{
-    throw std::runtime_error("Not implemented: BoundingBox::Inside(Sphere)");
-}
-
-// ------------------------------------------------------------------------------------------------
-bool BoundingBox::Inside(const glm::vec3& point) const
-{
-	return (mMin.x < point.x && point.x < mMax.x &&
-			mMin.y < point.y && point.y < mMax.y && 
-			mMin.z < point.z && point.z < mMax.z);
-}
-
-// ------------------------------------------------------------------------------------------------
 bool BoundingBox::Inside(const BoundingBox& box) const
 {
-	return (mMin.x < box.mMin.x && box.mMax.x < mMax.x &&
-			mMin.y < box.mMin.y && box.mMax.y < mMax.y && 
-			mMin.z < box.mMin.z && box.mMax.z < mMax.z);
+	__m128 a = _mm_cmplt_ps(mMin, box.mMin);
+	__m128 b = _mm_cmplt_ps(box.mMax, mMax);
+	
+	return (_mm_movemask_ps(_mm_and_ps(a, b)) & 7) == 7;
 }
 
 // ------------------------------------------------------------------------------------------------
-bool BoundingBox::Inside(const Frustum& ray) const
+bool BoundingBox::Inside(const Frustum& frustum) const
 {
-    throw std::runtime_error("Not implemented: BoundingBox::Inside(Frustum)");
+	return frustum.Inside(*this);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -129,25 +103,12 @@ bool BoundingBox::Outside(const Ray& ray) const
 }
 
 // ------------------------------------------------------------------------------------------------
-bool BoundingBox::Outside(const Sphere& ray) const
-{
-    throw std::runtime_error("Not implemented: BoundingBox::Outside(Sphere)");
-}
-
-// ------------------------------------------------------------------------------------------------
-bool BoundingBox::Outside(const glm::vec3& point) const
-{
-	return (point.x < mMin.x || mMax.x < point.x ||
-			point.y < mMin.y || mMax.y < point.y ||
-			point.z < mMin.z || mMax.z < point.z);
-}
-
-// ------------------------------------------------------------------------------------------------
 bool BoundingBox::Outside(const BoundingBox& box) const
 {
-	return (box.mMax.x < mMin.x || mMax.x < box.mMin.x ||
-			box.mMax.y < mMin.y || mMax.y < box.mMin.y ||
-			box.mMax.z < mMin.z || mMax.z < box.mMin.z);
+	__m128 a = _mm_cmplt_ps(box.mMax, mMin);
+	__m128 b = _mm_cmplt_ps(mMax, box.mMin);
+
+	return (_mm_movemask_ps(_mm_or_ps(a, b)) & 7) != 0;
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -162,12 +123,13 @@ bool BoundingBox::Outside(const Frustum& f) const
 
 		for (size_t j = 0; j < 8; ++j)
 		{
-			float dot = f.mPlanes[i].x * mCorners[j].x + 
-						f.mPlanes[i].y * mCorners[j].y +
-						f.mPlanes[i].z * mCorners[j].z +
-						f.mPlanes[i].w;
+			__m128 dot;
+			
+			dot = _mm_mul_ps(f.mPlanes[i], mCorners[j]);
+			dot = _mm_hadd_ps(dot, dot);
+			dot = _mm_hadd_ps(dot, dot);
 
-			if (dot < 0.0f)
+			if ((_mm_movemask_ps(_mm_cmplt_ps(dot, _mm_setzero_ps())) & 7) == 7)
 			{
 				++in;
 			}
@@ -187,26 +149,7 @@ bool BoundingBox::Outside(const Frustum& f) const
 }
 
 // ------------------------------------------------------------------------------------------------
-float BoundingBox::Distance(const Ray& ray) const
+__m128 BoundingBox::Distance(const Ray& ray) const
 {
 	return ray.Distance(*this);
 }
-
-// ------------------------------------------------------------------------------------------------
-float BoundingBox::Distance(const Sphere& ray) const
-{
-    throw std::runtime_error("Not implemented: BoundingBox::Distance(Sphere)");
-}
-
-// ------------------------------------------------------------------------------------------------
-float BoundingBox::Distance(const BoundingBox& ray) const
-{
-    throw std::runtime_error("Not implemented: BoundingBox::Distance(BoundingBox)");
-}
-
-// ------------------------------------------------------------------------------------------------
-float BoundingBox::Distance(const Frustum& ray) const
-{
-    throw std::runtime_error("Not implemented: BoundingBox::Distance(Frustum)");
-}
-

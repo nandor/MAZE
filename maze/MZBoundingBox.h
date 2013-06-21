@@ -6,8 +6,6 @@
 #define MZBOUNDINGBOX_H
 #pragma once
 
-#include <glm/glm.hpp>
-
 namespace MAZE
 {
     class Ray;
@@ -21,114 +19,114 @@ namespace MAZE
     {
     public:
         
-		BoundingBox();
-        BoundingBox(const glm::vec3& pos, const glm::vec3& size);
-        BoundingBox(float px, float py, float pz, float w, float h, float d);
+		BoundingBox()
+		{
+			mMin = _mm_setr_ps(0.0f, 0.0f, 0.0f, 0.0f);
+			mMax = _mm_setr_ps(1.0f, 1.0f, 1.0f, 0.0f);
+			mDirty = true;
+		}
+
+		BoundingBox(const __m128& p, const __m128& s)
+		{
+			mMin = p;
+			mMax = _mm_add_ps(p, s);
+			mDirty = true;
+		}
+
+        BoundingBox(const glm::vec3& p, const glm::vec3& s)
+		{
+			mMin = _mm_setr_ps(p.x, p.y, p.z, 0.0f);
+			mMax = _mm_add_ps(mMin, _mm_setr_ps(s.x, s.y, s.z, 1.0f));
+			mDirty = true;
+		}
+
+        BoundingBox(float x, float y, float z, float w, float h, float d)
+		{
+			mMin = _mm_setr_ps(x, y, z, 0.0f);
+			mMax = _mm_add_ps(mMin, _mm_setr_ps(w, h, d, 0.0f));
+			mDirty = true;
+		}
         
-        BoundingBox Move(const glm::vec3& pos);
-        BoundingBox Extend(const glm::vec3& dir);
+        BoundingBox Move(const glm::vec3& p);
+        BoundingBox Move(const __m128& p);
+        BoundingBox Extend(const glm::vec3& d);
+        BoundingBox Extend(const __m128& d);
                 
         bool Inside(const Ray& ray) const;
-        bool Inside(const Sphere& sphere) const;
-		bool Inside(const glm::vec3& point) const;
-        bool Inside(const BoundingBox& ray) const;
+		bool Inside(const Sphere& sphere) const NOT_IMPLEMENTED;
+        bool Inside(const BoundingBox& box) const;
         bool Inside(const Frustum& frustum) const;
         
         bool Outside(const Ray& ray) const;
-        bool Outside(const Sphere& sphere) const;
-		bool Outside(const glm::vec3& point) const;
-        bool Outside(const BoundingBox& ray) const;
+		bool Outside(const Sphere& sphere) const NOT_IMPLEMENTED;
+        bool Outside(const BoundingBox& box) const;
         bool Outside(const Frustum& frustum) const;
 
-		float Distance(const Ray& ray) const;
-		float Distance(const Sphere& sphere) const;
-		float Distance(const BoundingBox& box) const;
-		float Distance(const Frustum& frustum) const;
+		__m128 Distance(const Ray& ray) const;
+		__m128 Distance(const Sphere& sphere) const NOT_IMPLEMENTED;
+		__m128 Distance(const BoundingBox& box) const NOT_IMPLEMENTED;
+		__m128 Distance(const Frustum& frustum) const NOT_IMPLEMENTED;
             
 	public:
 
-		glm::vec3 GetPosition() const
-		{ 
-			return mMin; 
+		__m128 GetPosition() const
+		{
+			return mMin;
 		}
 
-		glm::vec3 GetSize() const
-		{ 
-			return mMax - mMin; 
+		__m128 GetSize() const
+		{
+			return _mm_sub_ps(mMax, mMin);
 		}
 
-		glm::vec3 GetMin() const
-		{ 
-			return mMin; 
+		__m128 GetMin() const
+		{
+			return mMin;
 		}
 
-		glm::vec3 GetMax() const
-		{ 
-			return mMax; 
+		__m128 GetMax() const
+		{
+			return mMax;
 		}
 
-		glm::vec4 GetPlane(size_t idx) const
+		__m128 GetPlane(size_t idx) const
 		{
 			if (mDirty) { Compute(); }
 			assert(0 <= idx && idx < 6);
 			return mPlanes[idx];
 		}
 
-		glm::vec3 GetCorner(size_t idx) const
+		__m128 GetCorner(size_t idx) const
 		{
 			if (mDirty) { Compute(); }
 			assert(0 <= idx && idx < 8);
 			return mCorners[idx];
 		}
-
-		void SetPosition(const glm::vec3& pos)
-		{
-			mMax = pos + mMax - mMin;
-			mMin = pos;
-			mDirty = true;
-		}
-
-		void SetSize(const glm::vec3& size) 
-		{ 
-			mMax = mMin + size; 
-			mDirty = true; 
-		}
-
-		void SetMin(const glm::vec3& min) 
-		{
-			mMin = min; 
-			mDirty = true; 
-		}
-
-		void SetMax(const glm::vec3& max) 
-		{
-			mMax = max; 
-			mDirty = true; 
-		}
-
+		
     private:
     
 		/// Cache internal data
 		void Compute() const;
 
 	private:
+		
+		/// Lower - Left - Front
+		__m128 mMin;
 
-        /// Front - left - bottom
-        glm::vec3 mMin;
+		/// Upper - Right - Back
+		__m128 mMax;
+		
+		/// Corner point coordinates
+		mutable __m128 mCorners[8];
         
-        /// Back - right - top
-        glm::vec3 mMax;
-        
+		/// Bounding plane equations
+		mutable __m128 mPlanes[6];
+
 		/// True if something changed
 		mutable bool mDirty;
-
-        /// The 8 corner points
-        mutable glm::vec3 mCorners[8];
         
-        /// The 6 bounding planes
-        mutable glm::vec4 mPlanes[6];
+	private:
 
-		/// List of friends
 		friend class Ray;
 		friend class Sphere;
 		friend class Frustum;

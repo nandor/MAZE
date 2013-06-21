@@ -2,16 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZLog.h"
-#include "MZGL.h"
-#include "MZProgram.h"
-#include "MZEngine.h"
-#include "MZRsmngr.h"
-#include "MZRenderer.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------	
@@ -126,23 +117,6 @@ static const MGLenum BUFFERS[] =
 };
 
 // ------------------------------------------------------------------------------------------------
-int DEBUG_ATTRIBS[] =
-{
-	MWGL_CONTEXT_MAJOR_VERSION, 4,
-	MWGL_CONTEXT_MINOR_VERSION, 3,
-	MWGL_CONTEXT_FLAGS, MWGL_CONTEXT_FORWARD_COMPATIBLE_BIT | MWGL_CONTEXT_DEBUG_BIT,        
-	MWGL_CONTEXT_PROFILE_MASK, MWGL_CONTEXT_COMPATIBILITY_PROFILE_BIT,
-	NULL
-};
-
-static void CALLBACK DebugCallback(unsigned int source, unsigned int type, unsigned int id, 
-								   unsigned int severity,  int length, const char* message, 
-								   void* userParam)
-{
-	Log::Inst() << message;
-}
-
-// ------------------------------------------------------------------------------------------------
 MGLuint CreateTarget(MGLenum format, size_t width, size_t height)
 {
 	MGLuint texture;
@@ -179,23 +153,24 @@ Renderer::Renderer(Engine* engine)
 	  mFogProgram(NULL),
 	  mDOFProgram(NULL),
 	  mWidgetProgram(NULL),
-	  mGeomDiffuseTarget(NULL),
-	  mGeomNormalTarget(NULL),
-	  mGeomPositionTarget(NULL),
-	  mColor0Target(NULL),
-	  mColor1Target(NULL),
-	  mShadowTarget(NULL),
-	  mDepthTarget(NULL),
-	  mLightVBO(NULL),
-	  mSkyboxVBO(NULL),
-	  mQuadVBO(NULL),
-	  mWidgetVBO(NULL),
+	  mGeomDiffuseTarget(0),
+	  mGeomNormalTarget(0),
+	  mGeomPositionTarget(0),
+	  mColor0Target(0),
+	  mColor1Target(0),
+	  mShadowTarget(0),
+	  mDepthTarget(0),
+	  mLightVBO(0),
+	  mSkyboxVBO(0),
+	  mQuadVBO(0),
+	  mWidgetVBO(0),
 	  mWidgets(NULL),
-	  mInstanceVBO(NULL),
+	  mInstanceVBO(0),
 	  mInstances(NULL),
 	  mMapSize(1024),
 	  mEngine(engine),
 	  mContext(NULL),
+	  mBuffers(new RenderBuffer[2]),
 	  mFront(&mBuffers[0])
 {	
 	Engine::Setup& setup = mEngine->GetSetup();
@@ -212,6 +187,12 @@ Renderer::Renderer(Engine* engine)
 Renderer::~Renderer()
 {
 	Destroy();
+
+	if (mBuffers) 
+	{ 
+		delete[] mBuffers; 
+		mBuffers = NULL; 
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -465,13 +446,13 @@ void Renderer::DestroyBuffers()
 {
 	mglBindBuffer(MGL_ARRAY_BUFFER, 0);
 
-	if (mLightVBO != NULL)	  { mglDeleteBuffers(1, &mLightVBO);		mLightVBO = NULL;	 }
-	if (mSkyboxVBO != NULL)	  { mglDeleteBuffers(1, &mSkyboxVBO);		mLightVBO = NULL;	 }
-	if (mQuadVBO != NULL)	  { mglDeleteBuffers(1, &mQuadVBO);		mLightVBO = NULL;	 }
-	if (mInstanceVBO != NULL) { mglDeleteBuffers(1, &mInstanceVBO);	mInstanceVBO = NULL; }
-	if (mInstances != NULL)	  { delete[] mInstances;					mInstances = NULL;	 }
-	if (mWidgetVBO != NULL)	  { mglDeleteBuffers(1, &mWidgetVBO);		mWidgetVBO = NULL;	 }
-	if (mWidgets != NULL)	  { delete[] mWidgets;					mWidgets = NULL;	 }
+	if (mLightVBO)	  { mglDeleteBuffers(1, &mLightVBO);		mLightVBO = 0;	  }
+	if (mSkyboxVBO)	  { mglDeleteBuffers(1, &mSkyboxVBO);		mSkyboxVBO = 0;	  }
+	if (mQuadVBO)	  { mglDeleteBuffers(1, &mQuadVBO);			mQuadVBO = 0;	  }
+	if (mInstanceVBO) { mglDeleteBuffers(1, &mInstanceVBO);		mInstanceVBO = 0; }
+	if (mInstances)	  { delete[] mInstances;					mInstances = NULL;}
+	if (mWidgetVBO)	  { mglDeleteBuffers(1, &mWidgetVBO);		mWidgetVBO = 0;	  }
+	if (mWidgets)	  { delete[] mWidgets;						mWidgets = NULL;  }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -569,12 +550,12 @@ void Renderer::RenderObjects()
 	
 	while (count)
 	{
-		Model *model = mFront->Objects[0].Model;	
+		Model *model = mFront->Objects[0].model;	
 
 		size_t instanceCount = 0;
 		for (size_t i = 0; i < count && instanceCount < INSTANCE_BATCH;)
 		{
-			if (mFront->Objects[i].Model->GetID() != model->GetID())
+			if (mFront->Objects[i].model->GetID() != model->GetID())
 			{
 				++i;
 				continue;
@@ -724,7 +705,6 @@ void Renderer::RenderSpotlights()
 // ------------------------------------------------------------------------------------------------
 void Renderer::RenderDirlights()
 {
-	glm::mat4 shadowMVP[4];
 	glm::vec4 shadowZ;
 
 	MGLuint index0 = mShadowProgram->Attribute("aModel0");
@@ -771,19 +751,18 @@ void Renderer::RenderDirlights()
 						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
 						mglClear(MGL_DEPTH_BUFFER_BIT);
 				
-						shadowMVP[i] = DEPTH_BIAS * light->Shadow[i].MVP;
 						shadowZ[i] = light->Shadow[i].NearZ;
 						mShadowProgram->Uniform("uVP", light->Shadow[i].MVP);
 
 						size_t count = light->Shadow[i].Count, beg = light->Shadow[i].Index;	
 						while (count)
 						{
-							Model *model = mFront->ShadowCasters[beg].Model;	
+							Model *model = mFront->ShadowCasters[beg].model;	
 
 							size_t instanceCount = 0;
 							for (size_t j = 0; j < count && instanceCount < INSTANCE_BATCH;)
 							{
-								if (mFront->ShadowCasters[beg + j].Model->GetID() != model->GetID())
+								if (mFront->ShadowCasters[beg + j].model->GetID() != model->GetID())
 								{
 									++j;
 									continue;
@@ -851,10 +830,10 @@ void Renderer::RenderDirlights()
 			{
 				mDirlightProgram->Uniform("uLevels", light->ShadowLevels);
 				mDirlightProgram->Uniform("uShadow",    MGL_TEXTURE_2D_ARRAY, 4, mShadowTarget);
-				mDirlightProgram->Uniform("uShadowMVP0", shadowMVP[0]);
-				mDirlightProgram->Uniform("uShadowMVP1", shadowMVP[1]);
-				mDirlightProgram->Uniform("uShadowMVP2", shadowMVP[2]);
-				mDirlightProgram->Uniform("uShadowMVP3", shadowMVP[3]);	
+				mDirlightProgram->Uniform("uShadowMVP0", DEPTH_BIAS * light->Shadow[0].MVP);
+				mDirlightProgram->Uniform("uShadowMVP1", DEPTH_BIAS * light->Shadow[1].MVP);
+				mDirlightProgram->Uniform("uShadowMVP2", DEPTH_BIAS * light->Shadow[2].MVP);
+				mDirlightProgram->Uniform("uShadowMVP3", DEPTH_BIAS * light->Shadow[3].MVP);	
 				mDirlightProgram->Uniform("uShadowZ", shadowZ);
 			}
 
@@ -982,7 +961,7 @@ void Renderer::RenderWidgets()
 			WidgetRenderData *widget;
 			
 			widget = &mFront->Widgets[i];
-			if (widget->Texture != front->Texture)
+			if (widget->texture != front->texture)
 			{
 				++i;
 				continue;
@@ -1024,9 +1003,9 @@ void Renderer::RenderWidgets()
 			std::swap(mFront->Widgets[i], mFront->Widgets[--count]);
 		}
 
-		if (j > 0 && front->Texture != NULL && front->Texture->IsReady())
+		if (j > 0 && front->texture != NULL && front->texture->IsReady())
 		{
-			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->Texture->mTexture);
+			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->texture->mTexture);
 
 			mglBindBuffer(MGL_ARRAY_BUFFER, mWidgetVBO);
 			mglBufferData(MGL_ARRAY_BUFFER, WIDGET_BATCH * 6 * sizeof(Vertex), mWidgets, MGL_DYNAMIC_DRAW);
@@ -1049,7 +1028,7 @@ void Renderer::RenderWidgets()
 			TextRenderData *text;
 			
 			text = &mFront->Text[i];
-			if (text->Font != mFront->Text[0].Font || j + text->Text.size() > WIDGET_BATCH)
+			if (text->font != mFront->Text[0].font || j + text->Text.size() > WIDGET_BATCH)
 			{
 				++i;
 				continue;
@@ -1058,7 +1037,7 @@ void Renderer::RenderWidgets()
 			float offset = 0.0f;
 			for (size_t k = 0; k < text->Text.size(); ++k)
 			{
-				Font::Glyph& glyph = text->Font->GetGlyph(text->Text[k]);
+				Font::Glyph& glyph = text->font->GetGlyph(text->Text[k]);
 								
 				mWidgets[j * 6 + 0].x = text->Position.x + glyph.Offset.x + offset;
 				mWidgets[j * 6 + 0].y = text->Position.y + glyph.Offset.y;
@@ -1103,9 +1082,9 @@ void Renderer::RenderWidgets()
 			std::swap(mFront->Widgets[i], mFront->Widgets[--count]);
 		}
 
-		if (j > 0 && front->Font != NULL && front->Font->IsReady())
+		if (j > 0 && front->font != NULL && front->font->IsReady())
 		{
-			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->Font->mTexture);
+			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->font->mTexture);
 
 			mglBindBuffer(MGL_ARRAY_BUFFER, mWidgetVBO);
 			mglBufferData(MGL_ARRAY_BUFFER, WIDGET_BATCH * 6 * sizeof(Vertex), mWidgets, MGL_DYNAMIC_DRAW);
@@ -1133,6 +1112,8 @@ int Renderer::Worker()
 		wglMakeCurrent(mEngine->GetDC(), mContext);
 		mglViewport(0, 0, mWidth, mHeight);
 		
+		Log::Inst() << "[Renderer] Thread started";
+
 		while (IsRunning()) 
 		{	
 			{
@@ -1152,13 +1133,15 @@ int Renderer::Worker()
 			::SwapBuffers(mEngine->GetDC());
 		}
 
+		Log::Inst() << "[Renderer] Thread stopped";
+
 		wglMakeCurrent(NULL, NULL);
 		return 0;
 	} 
 	catch (std::exception& e) 
 	{
 		wglMakeCurrent(NULL, NULL);
-		Log::Inst() << "Renderer exception: " << e.what();
+		Log::Inst() << "[Renderer] Unhandled exception: " << e.what();
 		mEngine->Quit();		
 		return -1;
 	}

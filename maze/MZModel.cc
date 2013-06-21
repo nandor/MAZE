@@ -2,14 +2,12 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <fstream>
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZRenderer.h"
-#include "MZRsmngr.h"
-#include "MZEngine.h"
-#include "MZModel.h"
 using namespace MAZE;
+
+
+// ------------------------------------------------------------------------------------------------
+const Resource::Type Model::TYPE = Resource::MODEL;
 
 // ------------------------------------------------------------------------------------------------
 #pragma pack(push, 1)

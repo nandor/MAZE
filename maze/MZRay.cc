@@ -2,24 +2,8 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include "MZRay.h"
-#include "MZSphere.h"
-#include "MZFrustum.h"
-#include "MZException.h"
-#include "MZBoundingBox.h"
+#include "MZPlatform.h"
 using namespace MAZE;
-
-// ------------------------------------------------------------------------------------------------
-bool Ray::Inside(const Ray& ray) const
-{
-    throw std::runtime_error("Not implemented: Ray::Inside(Ray)");
-}
-
-// ------------------------------------------------------------------------------------------------
-bool Ray::Inside(const Sphere& sphere) const
-{
-	return glm::length(glm::cross(mDirection, sphere.mCenter - mOrigin)) < sphere.mRadius;
-}
 
 // ------------------------------------------------------------------------------------------------
 bool Ray::Inside(const BoundingBox& box) const
@@ -28,26 +12,27 @@ bool Ray::Inside(const BoundingBox& box) const
 
 	for (size_t i = 0; i < 6; ++i)
 	{
-		float dot, dist;
-		glm::vec3 point;
-		glm::vec4& plane = box.mPlanes[i];
+		__m128 dot, dist, point, mask;
 
-		dot = plane.x * mDirection.x + plane.y * mDirection.y + plane.z * mDirection.z;
-		if (dot >= 0.0f)
+		dot = _mm_mul_ps(box.mPlanes[i], mDirection);
+		dot = _mm_hadd_ps(dot, dot);
+		dot = _mm_hadd_ps(dot, dot);
+		if (_mm_movemask_ps(_mm_cmpge_ps(dot, _mm_setzero_ps())) == 0xF)
 		{
 			continue;
 		}
 
-		dist = plane.x * mOrigin.x + plane.y * mOrigin.y + plane.z * mOrigin.z + plane.w;
-		if (dist < 0.0f)
+		dist = _mm_mul_ps(box.mPlanes[i], mOrigin);
+		dist = _mm_hadd_ps(dist, dist);
+		dist = _mm_hadd_ps(dist, dist);
+		if (_mm_movemask_ps(_mm_cmplt_ps(dist, _mm_setzero_ps())) == 0xF)
 		{
 			continue;
 		}
-		
-		point = mOrigin - dist / dot * mDirection;
-		if (box.mMin.x <= point.x && point.x <= box.mMax.x &&
-			box.mMin.y <= point.y && point.y <= box.mMax.y &&
-			box.mMin.z <= point.z && point.z <= box.mMax.z)
+
+		point = _mm_sub_ps(mOrigin, _mm_mul_ps(mDirection, _mm_div_ps(dist, dot)));
+		mask = _mm_and_ps(_mm_cmple_ps(box.mMin, point), _mm_cmple_ps(point, box.mMax));
+		if ((_mm_movemask_ps(mask) & 7) == 7)
 		{
 			return true;
 		}
@@ -57,50 +42,33 @@ bool Ray::Inside(const BoundingBox& box) const
 }
 
 // ------------------------------------------------------------------------------------------------
-bool Ray::Inside(const Frustum& ray) const
-{
-    throw std::runtime_error("Not implemented: Ray::Inside(Frustum)");
-}
-
-// ------------------------------------------------------------------------------------------------
-bool Ray::Outside(const Ray& ray) const
-{
-    throw std::runtime_error("Not implemented: Ray::Outside(Ray)");
-}
-
-// ------------------------------------------------------------------------------------------------
-bool Ray::Outside(const Sphere& sphere) const
-{
-	return glm::length(glm::cross(mDirection, sphere.mCenter - mOrigin)) > sphere.mRadius;
-}
-
-// ------------------------------------------------------------------------------------------------
 bool Ray::Outside(const BoundingBox& box) const
 {
 	if (box.mDirty) { box.Compute(); }
 	
 	for (size_t i = 0; i < 6; ++i)
 	{
-		float dot, dist;
-		glm::vec3 point;
-		glm::vec4& plane = box.mPlanes[i];
+		__m128 dot, dist, point, mask;
 
-		dot = plane.x * mDirection.x + plane.y * mDirection.y + plane.z * mDirection.z;
-		if (dot == 0.0f)
+		dot = _mm_mul_ps(box.mPlanes[i], mDirection);
+		dot = _mm_hadd_ps(dot, dot);
+		dot = _mm_hadd_ps(dot, dot);
+		if (_mm_movemask_ps(_mm_cmpeq_ps(dot, _mm_setzero_ps())) == 0xF)
 		{
 			continue;
 		}
 
-		dist = plane.x * mOrigin.x + plane.y * mOrigin.y + plane.z * mOrigin.z + plane.w;
-		if (dist == 0.0f)
+		dist = _mm_mul_ps(box.mPlanes[i], mOrigin);
+		dist = _mm_hadd_ps(dist, dist);
+		dist = _mm_hadd_ps(dist, dist);
+		if (_mm_movemask_ps(_mm_cmpeq_ps(dist, _mm_setzero_ps())) == 0xF)
 		{
 			continue;
 		}
-		
-		point = mOrigin - dist / dot * mDirection;
-		if (box.mMin.x <= point.x && point.x <= box.mMax.x &&
-			box.mMin.y <= point.y && point.y <= box.mMax.y &&
-			box.mMin.z <= point.z && point.z <= box.mMax.z)
+
+		point = _mm_sub_ps(mOrigin, _mm_mul_ps(mDirection, _mm_div_ps(dist, dot)));
+		mask = _mm_and_ps(_mm_cmple_ps(box.mMin, point), _mm_cmple_ps(point, box.mMax));
+		if ((_mm_movemask_ps(mask) & 7) == 7)
 		{
 			return false;
 		}
@@ -108,64 +76,42 @@ bool Ray::Outside(const BoundingBox& box) const
 
 	return true;
 }
-
-// ------------------------------------------------------------------------------------------------
-bool Ray::Outside(const Frustum& ray) const
-{
-    throw std::runtime_error("Not implemented: Ray::Outside(Frustum)");
-}
-
-// ------------------------------------------------------------------------------------------------
-float Ray::Distance(const Ray& ray) const
-{
-    throw std::runtime_error("Not implemented: Ray::Distance(Ray)");
-}
-
-// ------------------------------------------------------------------------------------------------
-float Ray::Distance(const Sphere& sphere) const
-{
-	return glm::length(glm::cross(mDirection, sphere.mCenter - mOrigin));
-}
 		
 // ------------------------------------------------------------------------------------------------
-float Ray::Distance(const BoundingBox& box) const
+__m128 Ray::Distance(const BoundingBox& box) const
 {
-	float r;
+	__m128 r;
+
 	if (box.mDirty) { box.Compute(); }
 
-	r = std::numeric_limits<float>::max();
+	r = _mm_set_ps1(FLT_MAX);
 	for (size_t i = 0; i < 6; ++i)
 	{
-		float dot, dist;
-		glm::vec3 point;
-		glm::vec4& plane = box.mPlanes[i];
+		__m128 dot, dist, point, mask;
 
-		dot = plane.x * mDirection.x + plane.y * mDirection.y + plane.z * mDirection.z;
-		if (dot >= 0.0f)
+		dot = _mm_mul_ps(box.mPlanes[i], mDirection);
+		dot = _mm_hadd_ps(dot, dot);
+		dot = _mm_hadd_ps(dot, dot);
+		if (_mm_movemask_ps(_mm_cmpge_ps(dot, _mm_setzero_ps())) == 0xF)
 		{
 			continue;
 		}
 
-		dist = plane.x * mOrigin.x + plane.y * mOrigin.y + plane.z * mOrigin.z + plane.w;
-		if (dist < 0.0f)
+		dist = _mm_mul_ps(box.mPlanes[i], mOrigin);
+		dist = _mm_hadd_ps(dist, dist);
+		dist = _mm_hadd_ps(dist, dist);
+		if (_mm_movemask_ps(_mm_cmplt_ss(dist, _mm_setzero_ps())) == 0xF)
 		{
 			continue;
 		}
-
-		point = mOrigin - dist / dot * mDirection;
-		if (box.mMin.x <= point.x && point.x <= box.mMax.x &&
-			box.mMin.y <= point.y && point.y <= box.mMax.y &&
-			box.mMin.z <= point.z && point.z <= box.mMax.z)
+		
+		point = _mm_sub_ps(mOrigin, _mm_mul_ps(mDirection, _mm_div_ps(dist, dot)));
+		mask = _mm_and_ps(_mm_cmple_ps(box.mMin, point), _mm_cmple_ps(point, box.mMax));
+		if ((_mm_movemask_ps(mask) & 7) == 7)
 		{
-			r = std::min(r, -dist / dot);
+			r = _mm_min_ps(r, _mm_sub_ps(_mm_setzero_ps(), _mm_div_ps(dist, dot)));
 		}
 	}
 
 	return r;
-}
-
-// ------------------------------------------------------------------------------------------------
-float Ray::Distance(const Frustum& frustum) const
-{
-    throw std::runtime_error("Not implemented: Ray::Distance(Frustum)");
 }

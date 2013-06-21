@@ -6,9 +6,6 @@
 #define LIGHT_H
 #pragma once
 
-#include "MZMath.h"
-#include "MZEntity.h"
-
 namespace MAZE
 {
 	/**

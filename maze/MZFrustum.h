@@ -6,8 +6,6 @@
 #define MZFRUSTUM_H
 #pragma once
 
-#include <glm/glm.hpp>
-
 namespace MAZE
 {
     class Ray;
@@ -29,20 +27,20 @@ namespace MAZE
 		Frustum Slice(float near, float far);
         Frustum GetLightVolume(const glm::vec3& lightDir);
                 
-        bool Inside(const Ray& ray) const;
-        bool Inside(const Sphere& sphere) const;
-        bool Inside(const Frustum& frustum) const;
-        bool Inside(const BoundingBox& ray) const;
+        bool Inside(const Ray& ray) const NOT_IMPLEMENTED;
+        bool Inside(const Sphere& sphere) const NOT_IMPLEMENTED;
+        bool Inside(const Frustum& frustum) const NOT_IMPLEMENTED;
+        bool Inside(const BoundingBox& box) const;
         
-        bool Outside(const Ray& ray) const;
-        bool Outside(const Sphere& sphere) const;
-        bool Outside(const Frustum& frustum) const;
-        bool Outside(const BoundingBox& ray) const;
+        bool Outside(const Ray& ray) const NOT_IMPLEMENTED;
+        bool Outside(const Sphere& sphere) const NOT_IMPLEMENTED;
+        bool Outside(const Frustum& frustum) const NOT_IMPLEMENTED;
+        bool Outside(const BoundingBox& box) const;
 
-		float Distance(const BoundingBox& box) const;
-		float Distance(const Sphere& sphere) const;
-		float Distance(const Ray& ray) const;
-		float Distance(const Frustum& frustum) const;
+		__m128 Distance(const BoundingBox& box) const NOT_IMPLEMENTED;
+		__m128 Distance(const Sphere& sphere) const NOT_IMPLEMENTED;
+		__m128 Distance(const Ray& ray) const NOT_IMPLEMENTED;
+		__m128 Distance(const Frustum& frustum) const NOT_IMPLEMENTED;
     
 	public:
 
@@ -83,6 +81,8 @@ namespace MAZE
 		/// Computes internal data
 		void Compute() const;
 
+	private:
+		
 		/// Camera position
 		glm::vec3 mPosition;
 
@@ -118,14 +118,15 @@ namespace MAZE
 
 		/// View matrix
 		mutable glm::mat4 mViewMat;
-
+			
 		/// List of bounding planes
-		mutable glm::vec4 mPlanes[6];
+		mutable __m128 mPlanes[6];
 
 		/// List of corner points
-		mutable glm::vec3 mCorners[8];
+		mutable __m128 mCorners[8];	
 
-		/// List of friend
+	private:
+
 		friend class Ray;
 		friend class Sphere;
 		friend class BoundingBox;

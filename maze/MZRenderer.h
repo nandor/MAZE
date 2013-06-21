@@ -6,12 +6,6 @@
 #define RENDERER_H
 #pragma once
 
-#include <hash_map>
-#include "MZPlatform.h"
-#include "MZThread.h"
-#include "MZLight.h"
-#include "MZRenderBuffer.h"
-
 namespace MAZE
 {
 	class Program;
@@ -165,7 +159,7 @@ namespace MAZE
 		HGLRC mContext;
 
 		// Renderbuffer
-		RenderBuffer mBuffers[2];
+		RenderBuffer *mBuffers;
 		RenderBuffer *mFront;
 		Mutex mBufferMutex;
 

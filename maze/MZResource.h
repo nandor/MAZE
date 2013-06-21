@@ -6,10 +6,6 @@
 #define RESOURCE_H
 #pragma once
 
-#include "MZPlatform.h"
-#include "MZException.h"
-#include "MZThread.h"
-
 namespace MAZE
 {
 	class Engine;
@@ -70,6 +66,19 @@ namespace MAZE
 
 		/// Resource key
 		typedef std::pair<std::string, Type> Key;
+
+		/// Resource key hash function
+		class KeyHash
+		{
+		public:
+
+			size_t operator() (const Key& key) const
+			{
+				size_t h1 = std::hash<std::string>()(key.first);
+				size_t h2 = std::hash<unsigned>()(key.second);
+				return h1 ^ (h2 << 1);
+			}
+		};
 		
 		/**
 			Reference to a resource
@@ -316,7 +325,6 @@ namespace MAZE
 				
 		/// Resource manager is friend
 		friend ResourceManager;
-
 	};
 };
 

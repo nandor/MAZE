@@ -6,8 +6,6 @@
 #define MZCALLBACK_H
 #pragma once
 
-#include "MZLua.h"
-
 namespace MAZE
 {
     class Entity;

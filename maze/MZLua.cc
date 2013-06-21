@@ -2,10 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <sstream>
-#include <glm/glm.hpp>
-#include "MZLua.h"
-#include "MZLog.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -205,8 +202,10 @@ int MAZE::mzlDefaultSetter(lua_State* L)
 }
 
 // ------------------------------------------------------------------------------------------------
-void* MAZE::mzlGetObject(lua_State *L, int arg, const std::string& type)
+void* MAZE::mzlGetObject(lua_State *L, int arg, const std::string& type, size_t align)
 {
+	void *p;
+
 	lua_getmetatable(L, arg);
 		
 	while (lua_istable(L, -1))
@@ -223,7 +222,11 @@ void* MAZE::mzlGetObject(lua_State *L, int arg, const std::string& type)
 		if (!strcmp(type.c_str(), lua_tostring(L, -1)))
 		{
 			lua_pop(L, 2);
-			return lua_touserdata(L, arg);
+
+			p = lua_touserdata(L, arg);
+			p = (void*)(((size_t)p + align - 1) & ~(align - 1));
+
+			return p;
 		}
 
 		lua_pop(L, 1);
@@ -239,11 +242,12 @@ void* MAZE::mzlGetObject(lua_State *L, int arg, const std::string& type)
 }
 
 // ------------------------------------------------------------------------------------------------
-void* MAZE::mzlCreateObject(lua_State *L, size_t sz, const std::string& type)
+void* MAZE::mzlCreateObject(lua_State *L, size_t sz, const std::string& type, size_t align)
 {
-	void* object;
+	void* p;
 
-	object = lua_newuserdata(L, sz);
+	p = lua_newuserdata(L, sz + align - 1);
+	p = (void*)(((size_t)p + align - 1) & ~(align - 1));
 
 	lua_getglobal(L, (type + "__meta").c_str());		
 
@@ -255,5 +259,5 @@ void* MAZE::mzlCreateObject(lua_State *L, size_t sz, const std::string& type)
 	}
 
 	lua_setmetatable(L, -2);
-	return object;
+	return p;
 }

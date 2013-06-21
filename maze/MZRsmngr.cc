@@ -3,17 +3,6 @@
 // (C) 2012 The MAZE project. All rights reserved.
 
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZString.h"
-#include "MZEngine.h"
-#include "MZRenderer.h"
-#include "MZRsmngr.h"
-#include "MZLog.h"
-#include "MZResource.h"
-#include "MZTexture.h"
-#include "MZModel.h"
-#include "MZSound.h"
-#include "MZFont.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -48,14 +37,16 @@ void ResourceManager::Init()
 {
 	mGLContext = wglCreateContext(mEngine->GetDC());
 	wglShareLists(mEngine->GetRenderer()->GetContext(), mGLContext);
+
+	Log::Inst() << "[Rsmngr] Loading '" << mEngine->GetSetup().ResourceDir << "'";
 	DiscoverFolder(mEngine->GetSetup().ResourceDir);
 }
 
 // ------------------------------------------------------------------------------------------------
 void ResourceManager::DiscoverFolder(const std::string& dir)
 {
-	::WIN32_FIND_DATA ffd;
-	::HANDLE handle;
+	WIN32_FIND_DATA ffd;
+	HANDLE handle;
 	std::string folder = dir + "\\*";
 
 	if ((handle = ::FindFirstFileA(folder.c_str(), &ffd)) == INVALID_HANDLE_VALUE)
@@ -104,7 +95,9 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 		id = tokens[0];
 		
 		if ((it = mKeyMap.find(std::make_pair(id, Texture::TYPE))) != mKeyMap.end())
+		{
 			tex = (Texture*)it->second;
+		}
 
 		if (tokens.size() == 2)
 		{
@@ -115,7 +108,8 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 					tex = new Texture(this, id, Texture::TEX_2D);
 					Add(tex);
 				}
-
+				
+				Log::Inst() << "[Rsmngr] Discovered texture: '" << id << "'";
 				tex->AddImage(fn);
 				return;
 			}
@@ -126,10 +120,11 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 			{
 				if (!tex)
 				{
+					Log::Inst() << "[Rsmngr] Discovered cubemap: '" << id << "'";
 					tex = new Texture(this, id, Texture::TEX_CUBEMAP);
 					Add(tex);
 				}
-
+				
 				tex->AddImage(fn);
 				return;
 			}
@@ -141,14 +136,17 @@ void ResourceManager::DiscoverResource(const std::string& fn)
 
 		Split(id, '.', tokens);
 		
+		Log::Inst() << "[Rsmngr] Discovered font: '" << id << "'";
 		Add(new Font(this, tokens[0], atoi(tokens[1].c_str()), fn));
 	}
 	else if (ext == "mzo")
 	{
+		Log::Inst() << "[Rsmngr] Discovered model: '" << id << "'";
 		Add(new Model(this, id, fn));
 	}
 	else if (ext == "ogg")
 	{
+		Log::Inst() << "[Rsmngr] Discovered sound: '" << id << "'";
 		Add(new Sound(this, id, fn));
 	}
 }
@@ -187,6 +185,7 @@ int ResourceManager::Worker()
 {
 	try
 	{
+		Log::Inst() << "[Rsmngr] Thread started";
 		wglMakeCurrent(mEngine->GetDC(), mGLContext);
 
 		while (IsRunning())
@@ -226,12 +225,13 @@ int ResourceManager::Worker()
 			}
 			catch (std::exception& e)
 			{
-				Log::Inst() << "Resource load failed: " << e.what();
+				Log::Inst() << "[Rsmngr] Error: " << e.what();
 			}
 		}
 		
 		alcMakeContextCurrent(NULL);
 		wglMakeCurrent(NULL, NULL);
+		Log::Inst() << "[Rsmngr] Thread stopped";
 		return 0;
 	}
 	catch (std::exception& e)
@@ -239,7 +239,7 @@ int ResourceManager::Worker()
 		alcMakeContextCurrent(NULL);
 		wglMakeCurrent(NULL, NULL);
 
-		Log::Inst() << "Unhandled exception: " << e.what();
+		Log::Inst() << "[Rsmngr] Unhandled exception: " << e.what();
 		mEngine->Quit();
 		return -1;
 	}

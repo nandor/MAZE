@@ -2,12 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <vector>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include "MZPlatform.h"
-#include "MZException.h"
-#include "MZProgram.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------

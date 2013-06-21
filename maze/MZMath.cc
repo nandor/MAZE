@@ -2,7 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include "MZMath.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -24,22 +24,4 @@ glm::vec3 MAZE::Intersect(const glm::vec4& a, const glm::vec4& b, const glm::vec
 	float z = glm::determinant(glm::mat3(c1, c2, cc)) / det;
 
 	return glm::vec3(x, y, z);
-}
-
-// ------------------------------------------------------------------------------------------------
-bool MAZE::SameSide(const glm::vec3& p1, 
-						   const glm::vec3& p2, 
-						   const glm::vec3& a, 
-						   const glm::vec3& b)
-{
-	return glm::dot(glm::cross(b - a, p1 - a), glm::cross(b - a, p2 - a)) >= 0.0f;
-}
-
-// ------------------------------------------------------------------------------------------------
-bool MAZE::Inside(const glm::vec3& a, 
-						 const glm::vec3& b, 
-						 const glm::vec3& c, 
-						 const glm::vec3& p)
-{
-	return SameSide(p, a, b, c) && SameSide(p, b, a, c) && SameSide(p, c, a, b);
 }

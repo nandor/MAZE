@@ -6,9 +6,6 @@
 #define MZSOUND_H
 #pragma once
 
-#include <al/al.h>
-#include "MZResource.h"
-
 namespace MAZE
 {
 	class Sound : public Resource
@@ -16,7 +13,7 @@ namespace MAZE
 	public:
 
 		/// Template related stuff
-		const static Resource::Type TYPE = Resource::SOUND;
+		const static Resource::Type TYPE;
 		
 	public:
 

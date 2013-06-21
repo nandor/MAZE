@@ -6,16 +6,6 @@
 #define RSMNGR_H
 #pragma once
 
-#include <map>
-#include <al/al.h>
-#include <al/alc.h>
-#include "MZPlatform.h"
-#include "MZException.h"
-#include "MZAtomic.h"
-#include "MZThread.h"
-#include "MZLog.h"
-#include "MZResource.h"
-
 namespace MAZE
 {
 	class Engine;
@@ -74,14 +64,14 @@ namespace MAZE
 		{
 			ResourceHandleIter it;
 
-			if ((it = mHandleMap.find(id)) == mHandleMap.end())
+			if ((it = mHandleMap.find(handle)) == mHandleMap.end())
 			{
-				throw Exception("Resource not found: '" + id + "'");
+				throw Exception("Resource not found: ") << handle;
 			}
 			
 			if (it->second->GetType() != T::Type)
 			{
-				throw Exception("Invalid resource type: '" + id + "'");
+				throw Exception("Invalid resource type: '" + it->second->GetID() + "'");
 			}
 
 			return Resource::Ptr<T>((T*)it->second);	
@@ -137,14 +127,14 @@ namespace MAZE
 		Atomic<unsigned> mResourceCount;
 
 		/// ID - handle conversion
-		std::map<Resource::Handle, Resource*> mHandleMap;
+		std::unordered_map<Resource::Handle, Resource*> mHandleMap;
 
 		/// Hash map containing resources
-		std::map<Resource::Key, Resource*> mKeyMap;
+		std::unordered_map<Resource::Key, Resource*, Resource::KeyHash> mKeyMap;
 
 		/// Resource iterator
-		typedef std::map<Resource::Key, Resource*>::iterator ResourceKeyIter;
-		typedef std::map<Resource::Handle, Resource*>::iterator ResourceHandleIter;
+		typedef std::unordered_map<Resource::Key, Resource*, Resource::KeyHash>::iterator ResourceKeyIter;
+		typedef std::unordered_map<Resource::Handle, Resource*>::iterator ResourceHandleIter;
 	};
 };
 

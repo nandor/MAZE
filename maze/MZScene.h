@@ -6,11 +6,6 @@
 #define OCTREE_H
 #pragma once
 
-#include <hash_map>
-#include <forward_list>
-#include "MZAtomic.h"
-#include "MZBoundingBox.h"
-
 namespace MAZE
 {
 	class Entity;
@@ -20,7 +15,7 @@ namespace MAZE
 	/**
 		A node in the octree
 	*/
-	class SceneNode
+	class SceneNode : public Aligned
 	{
 	public:
 
@@ -96,12 +91,7 @@ namespace MAZE
 	class Scene
 	{
 	public:
-
-		/**
-			Initializes the tree
-		*/
-		Scene(Engine* engine, float width, float height, float depth);
-
+		
 		/**
 			Initializes the tree
 		*/
@@ -140,7 +130,7 @@ namespace MAZE
 		{
 			T* entity;
 			unsigned id;
-			std::hash_map<std::string, Entity*>::iterator it;
+			std::unordered_map<std::string, Entity*>::iterator it;
 
 			if (name == "")
 			{
@@ -171,7 +161,7 @@ namespace MAZE
 		template <class  T>
 		T* Get(const std::string& name)
 		{
-			std::hash_map<std::string, Entity*>::iterator it;
+			std::unordered_map<std::string, Entity*>::iterator it;
 
 			if ((it = mNamedEntities.find(name)) != mNamedEntities.end())
 			{
@@ -235,10 +225,10 @@ namespace MAZE
 		SceneNode *mRoot;
 
 		/// Handle - Entity mapping
-		std::hash_map<unsigned, Entity*> mEntities;
+		std::unordered_map<unsigned, Entity*> mEntities;
 
 		/// Name - Entity mapping
-		std::hash_map<std::string, Entity*> mNamedEntities;
+		std::unordered_map<std::string, Entity*> mNamedEntities;
 
 		/// Entity count
 		Atomic<unsigned> mEntityCount;

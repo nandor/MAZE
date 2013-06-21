@@ -2,14 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include "MZPlatform.h"
-#include "MZObject.h"
-#include "MZScene.h"
-#include "MZRsmngr.h"
-#include "MZEngine.h"
-#include "MZRenderBuffer.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -65,7 +58,7 @@ void Object::Render(RenderBuffer* buffer, RenderMode mode)
 	data->ModelMatrix = mModelMat;
 	data->TextureMatrix = glm::mat2(1.0f);
 	data->Position = mPosition;
-	data->Model = mModel;
+	data->model = mModel;
 	data->Handle = fHandle;
 }
 

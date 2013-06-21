@@ -6,10 +6,6 @@
 #define MZSOUNDSOURCE_H
 #pragma once
 
-#include <al/al.h>
-#include <glm/glm.hpp>
-#include "MZSound.h"
-
 namespace MAZE
 {
     class SoundSource

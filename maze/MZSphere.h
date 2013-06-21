@@ -6,12 +6,10 @@
 #define MZSPHERE_H
 #pragma once
 
-#include <glm/glm.hpp>
-
 namespace MAZE
 {
     class Ray;
-    class Sphere;
+    class BoundingBox;
     class Frustum;
     
     class Sphere
@@ -19,15 +17,15 @@ namespace MAZE
     public:
     
         Sphere()
-            : mCenter(0.0f),
-              mRadius(1.0f)
-        {
+        {			
+			mCenter = _mm_setr_ps(0.0f, 0.0f, 0.0f, 0.0f);
+			mRadius = _mm_set_ps1(1.0f);
         }
         
         Sphere(const glm::vec3 c, float r)
-            : mCenter(c),
-              mRadius(r)
         {
+			mCenter = _mm_setr_ps(c.z, c.y, c.x, 0.0f);
+			mRadius = _mm_set_ps1(r);
         }
             
         bool Inside(const Ray& ray) const;
@@ -44,40 +42,19 @@ namespace MAZE
 		float Distance(const Sphere& sphere) const;
 		float Distance(const BoundingBox& box) const;
 		float Distance(const Frustum& frustum) const;
-
-	public:
-
-		void SetCenter(const glm::vec3& c)
-		{
-			mCenter = c;
-		}
-
-		void SetRadius(float r)
-		{
-			mRadius = r;
-		}
-
-		glm::vec3 GetCenter()
-		{
-			return mCenter;
-		}
-
-		float GetRadius()
-		{
-			return mRadius;
-		}
-		
+				
     private:
     
-        /// Center of the sphere
-        glm::vec3 mCenter;
-        
-        /// Radius of the sphere
-        float mRadius;
+		/// Position of the sphere
+		__m128 mCenter;
 
-		/// List of friends
+		/// Radius of the sphere
+		__m128 mRadius;
+		
+	private:
+
 		friend class Ray;
-		friend class Sphere;
+		friend class BoundingBox;
 		friend class Frustum;
     
     };

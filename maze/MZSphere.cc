@@ -2,11 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include "MZRay.h"
-#include "MZSphere.h"
-#include "MZFrustum.h"
-#include "MZException.h"
-#include "MZBoundingBox.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------

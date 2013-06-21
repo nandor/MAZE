@@ -6,10 +6,6 @@
 #define MZJSON_H
 #pragma once
 
-#include <cassert>
-#include <vector>
-#include <hash_map>
-
 namespace MAZE
 {
 	/**
@@ -36,7 +32,7 @@ namespace MAZE
 		typedef std::vector<Config> ArrayType;
 
 		/// Type used for the JSON object
-		typedef std::hash_map<std::string, Config> ObjectType;
+		typedef std::unordered_map<std::string, Config> ObjectType;
 
 	public:
 

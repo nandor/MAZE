@@ -6,12 +6,6 @@
 #define ENGINE_H
 #pragma once
 
-#include <string>
-#include <al/al.h>
-#include <al/alc.h>
-#include <glm/glm.hpp>
-#include "MZPlatform.h"
-
 namespace MAZE 
 {
 	class World;
@@ -62,6 +56,12 @@ namespace MAZE
 
 			/// View distance
 			float ViewDistance;
+
+			/// Server address
+			std::string Server;
+
+			/// Server port
+			unsigned short Port;
 		};
 
 		/**
@@ -203,6 +203,9 @@ namespace MAZE
 
 		/// Resource manager
 		ResourceManager *mRsmngr;
+
+		/// Networking
+		Network *mNetwork;
 		
 		/// Game world
 		World *mWorld;

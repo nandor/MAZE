@@ -2,11 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
-#include "MZLight.h"
-#include "MZScene.h"
-#include "MZRenderBuffer.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------

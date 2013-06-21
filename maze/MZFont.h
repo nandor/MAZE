@@ -6,10 +6,6 @@
 #define MZFONT_H
 #pragma once
 
-#include <hash_map>
-#include <glm/glm.hpp>
-#include "MZResource.h"
-
 namespace MAZE
 {
 	class Font : public Resource
@@ -42,7 +38,7 @@ namespace MAZE
 	public:
 		
 		/// Template related stuff
-		const static Resource::Type TYPE = Resource::FONT;
+		const static Resource::Type TYPE;
 
 		/**
 			Createse a new font resource

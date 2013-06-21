@@ -6,16 +6,12 @@
 #define CAMERA_H
 #pragma once
 
-#include "MZPlatform.h"
-#include "MZRenderer.h"
-#include "MZFrustum.h"
-
 namespace MAZE
 {
 	class Engine;
 	class RenderBuffer;
 
-	class Camera
+	class Camera : public Aligned
 	{
 	public:
 

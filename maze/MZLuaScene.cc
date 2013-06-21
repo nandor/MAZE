@@ -2,14 +2,7 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#include <sstream>
-#include "MZEntity.h"
-#include "MZObject.h"
-#include "MZLight.h"
-#include "MZPlayer.h"
-#include "MZScene.h"
-#include "MZRsmngr.h"
-#include "MZLuaScene.h"
+#include "MZPlatform.h"
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
@@ -75,7 +68,7 @@ static int entity__setter(lua_State *L)
 	}
 	else if (!strcmp(field, "box"))
 	{
-		(*object)->SetBoundingBox(*(BoundingBox*)mzlGetObject(L, 3, "box"));
+		(*object)->SetBoundingBox(*(BoundingBox*)mzlGetObject(L, 3, "box", 16));
 		return 0;
 	}
 	
@@ -170,7 +163,7 @@ static int entity__getter(lua_State *L)
 	{
 		void *box;
 
-		box = mzlCreateObject(L, sizeof(BoundingBox), "box");
+		box = mzlCreateObject(L, sizeof(BoundingBox), "box", 16);
 		new (box) BoundingBox((*object)->GetBoundingBox());
 
 		return 1;
@@ -271,7 +264,15 @@ static int object__getter(lua_State *L)
 	{
 		Model *model;
 
-		(model = (*object)->GetModel()) ? lua_pushstring(L, model->GetID().c_str()) : lua_pushnil(L);
+		if (!(model = (*object)->GetModel()))
+		{
+			lua_pushnil(L);
+		}
+		else
+		{
+			lua_pushstring(L, model->GetID().c_str());
+		}
+		
 		return 1;
 	}
 

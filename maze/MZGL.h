@@ -5,12 +5,11 @@
 #ifndef MGL_H
 #define MGL_H
 
-#ifdef __cplusplus
-extern "C"
-{
+#ifdef APIENTRY
+#	define MZAPIENTRY APIENTRY
+#else
+#	define MZAPIENTRY __stdcall
 #endif
-
-#include "MZPlatform.h"
 	
 // ------------------------------------------------------------------------------------------------ 
 typedef char			MGLchar;
@@ -31,7 +30,7 @@ typedef double			MGLdouble;
 typedef double			MGLclampd;
 typedef void			MGLvoid;
 typedef ptrdiff_t		MGLintptr;
-typedef ptrdiff_t		MGLsizeiptr;
+typedef ptrdiff_t 		MGLsizeiptr;
 	
 // ------------------------------------------------------------------------------------------------ 
 #define MWGL_CONTEXT_MAJOR_VERSION				0x2091
@@ -233,113 +232,113 @@ typedef ptrdiff_t		MGLsizeiptr;
 #define MGL_COLOR_BUFFER_BIT					0x00004000
 
 // ------------------------------------------------------------------------------------------------  
-typedef MGLenum (APIENTRY *mglGetErrorProc) (void);
-typedef const MGLubyte* (APIENTRY *mglGetStringProc) (MGLenum name);
-typedef void (APIENTRY *mglClearProc) (MGLbitfield);
-typedef void (APIENTRY *mglClearColorProc) (MGLfloat, MGLfloat, MGLfloat, MGLfloat);
-typedef void (APIENTRY *mglGetIntegervProc) (MGLenum, MGLint*);
-typedef void (APIENTRY *mglGetFloatvProc) (MGLenum, MGLfloat*);
-typedef void (APIENTRY *mglViewportProc) (MGLint, MGLint, MGLsizei, MGLsizei);
-typedef void (APIENTRY *mglDepthMaskProc) (MGLboolean);
-typedef void (APIENTRY *mglColorMaskProc) (MGLboolean, MGLboolean, MGLboolean, MGLboolean);
-typedef void (APIENTRY *mglStencilMaskProc) (MGLuint);
-typedef void (APIENTRY *mglEnableProc) (MGLenum);
-typedef void (APIENTRY *mglDisableProc) (MGLenum);
-typedef void (APIENTRY *mglFrontFaceProc) (MGLenum);
-typedef void (APIENTRY *mglCullFaceProc) (MGLenum);
-typedef void (APIENTRY *mglFinishProc) (void);
-typedef void (APIENTRY *mglFlushProc) (void);
-typedef void (APIENTRY *mglBlendFuncProc) (MGLenum, MGLenum);
-typedef void (APIENTRY *mglStencilFuncProc) (MGLenum, MGLint, MGLuint);
-typedef void (APIENTRY *mglStencilOpProc) (MGLenum, MGLenum, MGLenum);
-typedef void (APIENTRY *mglClearStencilProc) (MGLint);
-typedef void (APIENTRY *mglPolygonOffsetProc) (MGLfloat, MGLfloat);
-typedef MGLuint (APIENTRY *mglCreateProgramProc) ();
-typedef MGLuint (APIENTRY *mglCreateShaderProc) (MGLenum);
-typedef MGLint (APIENTRY *mglGetUniformLocationProc) (MGLuint, const MGLchar*);
-typedef MGLint (APIENTRY *mglGetAttribLocationProc) (MGLuint, const MGLchar*);
-typedef void (APIENTRY *mglUseProgramProc) (MGLuint);;
-typedef void (APIENTRY *mglShaderSourceProc) (MGLuint, MGLsizei, const MGLchar**, const MGLint*);
-typedef void (APIENTRY *mglCompileShaderProc) (MGLuint);
-typedef void (APIENTRY *mglGetShaderivProc) (MGLuint, MGLenum, MGLint*);
-typedef void (APIENTRY *mglGetProgramivProc) (MGLuint, MGLenum, MGLint*);
-typedef void (APIENTRY *mglGetShaderInfoLogProc) (MGLuint, MGLsizei, MGLsizei*, MGLchar*);
-typedef void (APIENTRY *mglGetProgramInfoLogProc) (MGLuint, MGLsizei, MGLsizei*, MGLchar*);
-typedef void (APIENTRY *mglAttachShaderProc) (MGLuint, MGLuint);
-typedef void (APIENTRY *mglDetachShaderProc) (MGLuint, MGLuint);
-typedef void (APIENTRY *mglLinkProgramProc) (MGLuint);
-typedef void (APIENTRY *mglValidateProgramProc) (MGLuint);
-typedef void (APIENTRY *mglGetAttachedShadersProc) (MGLuint, MGLsizei, MGLsizei*, MGLuint*);
-typedef void (APIENTRY *mglDeleteShaderProc) (MGLuint);
-typedef void (APIENTRY *mglDeleteProgramProc) (MGLuint);
-typedef void (APIENTRY *mglUniformMatrix2fvProc) (MGLint, MGLsizei, MGLboolean, const MGLfloat*);
-typedef void (APIENTRY *mglUniformMatrix3fvProc) (MGLint, MGLsizei, MGLboolean, const MGLfloat*);
-typedef void (APIENTRY *mglUniformMatrix4fvProc) (MGLint, MGLsizei, MGLboolean, const MGLfloat*);
-typedef void (APIENTRY *mglUniform1iProc) (MGLint, MGLint);
-typedef void (APIENTRY *mglUniform1fProc) (MGLint, MGLfloat);
-typedef void (APIENTRY *mglUniform1fvProc) (MGLint, MGLsizei, const MGLfloat *);
-typedef void (APIENTRY *mglUniform3fvProc) (MGLint, MGLsizei, const MGLfloat *);
-typedef void (APIENTRY *mglUniform4fvProc) (MGLint, MGLsizei, const MGLfloat *);
-typedef void (APIENTRY *mglGetActiveUniformProc) (MGLuint, MGLuint, MGLsizei, MGLsizei*, MGLint*, MGLenum*, MGLchar*);
-typedef void (APIENTRY *mglGetActiveAttribProc) (MGLuint, MGLuint, MGLsizei, MGLsizei*, MGLint*, MGLenum*, MGLchar*);
-typedef void (APIENTRY *mglGenTexturesProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY *mglBindTextureProc) (MGLenum, MGLuint);
-typedef void (APIENTRY *mglTexParameterfProc) (MGLenum, MGLenum, MGLfloat);
-typedef void (APIENTRY *mglTexParameteriProc) (MGLenum, MGLenum, MGLint);
-typedef void (APIENTRY *mglTexSubImage2DProc) (MGLenum, MGLint, MGLint, MGLint, MGLsizei, MGLsizei, MGLenum, MGLenum, const MGLvoid*);
-typedef void (APIENTRY *mglTexImage2DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
-typedef void (APIENTRY *mglTexImage3DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
-typedef void (APIENTRY *mglGenerateMipmapProc) (MGLenum);
-typedef void (APIENTRY *mglActiveTextureProc) (MGLenum);
-typedef void (APIENTRY *mglClearDepthProc) (MGLdouble);
-typedef void (APIENTRY *mglDepthFuncProc) (MGLenum);
-typedef void (APIENTRY *mglVertexPointerProc) (MGLint, MGLenum, MGLsizei, const MGLvoid *);
-typedef void (APIENTRY *mglNormalPointerProc) (MGLenum, MGLsizei, const MGLvoid *);
-typedef void (APIENTRY *mglTexCoordPointerProc) (MGLint, MGLenum, MGLsizei, const MGLvoid *);
-typedef void (APIENTRY *mglEnableClientStateProc) (MGLenum);
-typedef void (APIENTRY *mglDisableClientStateProc) (MGLenum);
-typedef void (APIENTRY *mglDrawArraysProc) (MGLenum, MGLint, MGLsizei);
-typedef void (APIENTRY *mglDeleteTexturesProc) (MGLsizei, const MGLuint*);
-typedef void (APIENTRY *mglGenBuffersProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY *mglDeleteBuffersProc) (MGLsizei, const MGLuint*);
-typedef void (APIENTRY *mglBindBufferProc) (MGLenum, MGLuint);
-typedef void (APIENTRY *mglBufferSubDataProc) (MGLenum, MGLintptr, MGLsizeiptr size, const MGLvoid *);
-typedef void (APIENTRY *mglBufferDataProc) (MGLenum, MGLsizeiptr, const MGLvoid *, MGLenum);
-typedef void* (APIENTRY *mglMapBufferProc) (MGLenum, MGLenum);
-typedef MGLboolean (APIENTRY *mglUnmapBufferProc) (MGLenum);
-typedef void (APIENTRY *mglEnableVertexAttribArrayProc) (MGLuint);
-typedef void (APIENTRY *mglDisableVertexAttribArrayProc) (MGLuint);
-typedef void (APIENTRY *mglVertexAttribPointerProc) (MGLuint, MGLint, MGLenum, MGLboolean, MGLsizei, const MGLvoid *);
-typedef void (APIENTRY *mglVertexAttribDivisorProc) (MGLuint, MGLuint);
-typedef void (APIENTRY *mglGenVertexArraysProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY *mglDeleteVertexArraysProc) (MGLsizei, const MGLuint*);
-typedef void (APIENTRY *mglBindVertexArrayProc) (MGLuint);
-typedef void (APIENTRY *mglDrawArraysInstancedProc) (MGLenum, MGLint, MGLsizei, MGLsizei);
-typedef void (APIENTRY *mglClientActiveTextureProc) (MGLenum);
-typedef void (APIENTRY *mglBeginConditionalRenderProc) (MGLuint, MGLenum);
-typedef void (APIENTRY *mglEndConditionalRenderProc) ();
-typedef void (APIENTRY *mglBeginQueryProc) (MGLenum, MGLuint);
-typedef void (APIENTRY *mglEndQueryProc) (MGLenum);
-typedef void (APIENTRY *mglGetQueryObjectuivProc) (MGLenum, MGLenum, MGLuint *);
-typedef void (APIENTRY *mglDeleteQueriesProc) (MGLsizei, const MGLuint*);
-typedef void (APIENTRY *mglGenQueriesProc) (MGLsizei, MGLuint*);
-typedef MGLboolean (APIENTRY *mglIsRenderbufferProc) (MGLuint);
-typedef MGLboolean (APIENTRY *mglIsFramebufferProc) (MGLuint);
-typedef MGLenum (APIENTRY *mglCheckFramebufferStatusProc) (MGLenum);
-typedef void (APIENTRY *mglFramebufferTextureLayerProc) (MGLenum, MGLenum, MGLuint, MGLint, MGLint);
-typedef void (APIENTRY *mglGenFramebuffersProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY *mglDeleteFramebuffersProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY *mglBindFramebufferProc) (MGLenum, MGLuint);
-typedef void (APIENTRY *mglFramebufferTexture2DProc) (MGLenum, MGLenum, MGLenum, MGLuint, MGLint);
-typedef void (APIENTRY *mglFramebufferRenderbufferProc) (MGLenum, MGLenum, MGLenum, MGLuint);
-typedef void (APIENTRY *mglGenRenderbuffersProc) (MGLsizei, MGLuint*);
-typedef void (APIENTRY *mglDeleteRenderbuffersProc) (MGLsizei, const MGLuint *);
-typedef void (APIENTRY *mglBindRenderbufferProc) (MGLenum, MGLuint);
-typedef void (APIENTRY *mglRenderbufferStorageProc) (MGLenum, MGLenum, MGLsizei, MGLsizei);
-typedef void (APIENTRY *mglDrawBuffersProc) (MGLsizei, const MGLenum*);
-typedef void (APIENTRY *mglDrawBufferProc) (MGLenum);
-typedef void (APIENTRY *mglReadBufferProc) (MGLenum);
-typedef void (APIENTRY *mglBlitFramebufferProc) (MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLbitfield, MGLenum);
+typedef MGLenum (MZAPIENTRY *mglGetErrorProc) (void);
+typedef const MGLubyte* (MZAPIENTRY *mglGetStringProc) (MGLenum name);
+typedef void (MZAPIENTRY *mglClearProc) (MGLbitfield);
+typedef void (MZAPIENTRY *mglClearColorProc) (MGLfloat, MGLfloat, MGLfloat, MGLfloat);
+typedef void (MZAPIENTRY *mglGetIntegervProc) (MGLenum, MGLint*);
+typedef void (MZAPIENTRY *mglGetFloatvProc) (MGLenum, MGLfloat*);
+typedef void (MZAPIENTRY *mglViewportProc) (MGLint, MGLint, MGLsizei, MGLsizei);
+typedef void (MZAPIENTRY *mglDepthMaskProc) (MGLboolean);
+typedef void (MZAPIENTRY *mglColorMaskProc) (MGLboolean, MGLboolean, MGLboolean, MGLboolean);
+typedef void (MZAPIENTRY *mglStencilMaskProc) (MGLuint);
+typedef void (MZAPIENTRY *mglEnableProc) (MGLenum);
+typedef void (MZAPIENTRY *mglDisableProc) (MGLenum);
+typedef void (MZAPIENTRY *mglFrontFaceProc) (MGLenum);
+typedef void (MZAPIENTRY *mglCullFaceProc) (MGLenum);
+typedef void (MZAPIENTRY *mglFinishProc) (void);
+typedef void (MZAPIENTRY *mglFlushProc) (void);
+typedef void (MZAPIENTRY *mglBlendFuncProc) (MGLenum, MGLenum);
+typedef void (MZAPIENTRY *mglStencilFuncProc) (MGLenum, MGLint, MGLuint);
+typedef void (MZAPIENTRY *mglStencilOpProc) (MGLenum, MGLenum, MGLenum);
+typedef void (MZAPIENTRY *mglClearStencilProc) (MGLint);
+typedef void (MZAPIENTRY *mglPolygonOffsetProc) (MGLfloat, MGLfloat);
+typedef MGLuint (MZAPIENTRY *mglCreateProgramProc) ();
+typedef MGLuint (MZAPIENTRY *mglCreateShaderProc) (MGLenum);
+typedef MGLint (MZAPIENTRY *mglGetUniformLocationProc) (MGLuint, const MGLchar*);
+typedef MGLint (MZAPIENTRY *mglGetAttribLocationProc) (MGLuint, const MGLchar*);
+typedef void (MZAPIENTRY *mglUseProgramProc) (MGLuint);;
+typedef void (MZAPIENTRY *mglShaderSourceProc) (MGLuint, MGLsizei, const MGLchar**, const MGLint*);
+typedef void (MZAPIENTRY *mglCompileShaderProc) (MGLuint);
+typedef void (MZAPIENTRY *mglGetShaderivProc) (MGLuint, MGLenum, MGLint*);
+typedef void (MZAPIENTRY *mglGetProgramivProc) (MGLuint, MGLenum, MGLint*);
+typedef void (MZAPIENTRY *mglGetShaderInfoLogProc) (MGLuint, MGLsizei, MGLsizei*, MGLchar*);
+typedef void (MZAPIENTRY *mglGetProgramInfoLogProc) (MGLuint, MGLsizei, MGLsizei*, MGLchar*);
+typedef void (MZAPIENTRY *mglAttachShaderProc) (MGLuint, MGLuint);
+typedef void (MZAPIENTRY *mglDetachShaderProc) (MGLuint, MGLuint);
+typedef void (MZAPIENTRY *mglLinkProgramProc) (MGLuint);
+typedef void (MZAPIENTRY *mglValidateProgramProc) (MGLuint);
+typedef void (MZAPIENTRY *mglGetAttachedShadersProc) (MGLuint, MGLsizei, MGLsizei*, MGLuint*);
+typedef void (MZAPIENTRY *mglDeleteShaderProc) (MGLuint);
+typedef void (MZAPIENTRY *mglDeleteProgramProc) (MGLuint);
+typedef void (MZAPIENTRY *mglUniformMatrix2fvProc) (MGLint, MGLsizei, MGLboolean, const MGLfloat*);
+typedef void (MZAPIENTRY *mglUniformMatrix3fvProc) (MGLint, MGLsizei, MGLboolean, const MGLfloat*);
+typedef void (MZAPIENTRY *mglUniformMatrix4fvProc) (MGLint, MGLsizei, MGLboolean, const MGLfloat*);
+typedef void (MZAPIENTRY *mglUniform1iProc) (MGLint, MGLint);
+typedef void (MZAPIENTRY *mglUniform1fProc) (MGLint, MGLfloat);
+typedef void (MZAPIENTRY *mglUniform1fvProc) (MGLint, MGLsizei, const MGLfloat *);
+typedef void (MZAPIENTRY *mglUniform3fvProc) (MGLint, MGLsizei, const MGLfloat *);
+typedef void (MZAPIENTRY *mglUniform4fvProc) (MGLint, MGLsizei, const MGLfloat *);
+typedef void (MZAPIENTRY *mglGetActiveUniformProc) (MGLuint, MGLuint, MGLsizei, MGLsizei*, MGLint*, MGLenum*, MGLchar*);
+typedef void (MZAPIENTRY *mglGetActiveAttribProc) (MGLuint, MGLuint, MGLsizei, MGLsizei*, MGLint*, MGLenum*, MGLchar*);
+typedef void (MZAPIENTRY *mglGenTexturesProc) (MGLsizei, MGLuint*);
+typedef void (MZAPIENTRY *mglBindTextureProc) (MGLenum, MGLuint);
+typedef void (MZAPIENTRY *mglTexParameterfProc) (MGLenum, MGLenum, MGLfloat);
+typedef void (MZAPIENTRY *mglTexParameteriProc) (MGLenum, MGLenum, MGLint);
+typedef void (MZAPIENTRY *mglTexSubImage2DProc) (MGLenum, MGLint, MGLint, MGLint, MGLsizei, MGLsizei, MGLenum, MGLenum, const MGLvoid*);
+typedef void (MZAPIENTRY *mglTexImage2DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
+typedef void (MZAPIENTRY *mglTexImage3DProc) (MGLenum, MGLint, MGLint, MGLsizei, MGLsizei, MGLsizei, MGLint, MGLenum, MGLenum, const MGLvoid*);
+typedef void (MZAPIENTRY *mglGenerateMipmapProc) (MGLenum);
+typedef void (MZAPIENTRY *mglActiveTextureProc) (MGLenum);
+typedef void (MZAPIENTRY *mglClearDepthProc) (MGLdouble);
+typedef void (MZAPIENTRY *mglDepthFuncProc) (MGLenum);
+typedef void (MZAPIENTRY *mglVertexPointerProc) (MGLint, MGLenum, MGLsizei, const MGLvoid *);
+typedef void (MZAPIENTRY *mglNormalPointerProc) (MGLenum, MGLsizei, const MGLvoid *);
+typedef void (MZAPIENTRY *mglTexCoordPointerProc) (MGLint, MGLenum, MGLsizei, const MGLvoid *);
+typedef void (MZAPIENTRY *mglEnableClientStateProc) (MGLenum);
+typedef void (MZAPIENTRY *mglDisableClientStateProc) (MGLenum);
+typedef void (MZAPIENTRY *mglDrawArraysProc) (MGLenum, MGLint, MGLsizei);
+typedef void (MZAPIENTRY *mglDeleteTexturesProc) (MGLsizei, const MGLuint*);
+typedef void (MZAPIENTRY *mglGenBuffersProc) (MGLsizei, MGLuint*);
+typedef void (MZAPIENTRY *mglDeleteBuffersProc) (MGLsizei, const MGLuint*);
+typedef void (MZAPIENTRY *mglBindBufferProc) (MGLenum, MGLuint);
+typedef void (MZAPIENTRY *mglBufferSubDataProc) (MGLenum, MGLintptr, MGLsizeiptr size, const MGLvoid *);
+typedef void (MZAPIENTRY *mglBufferDataProc) (MGLenum, MGLsizeiptr, const MGLvoid *, MGLenum);
+typedef void* (MZAPIENTRY *mglMapBufferProc) (MGLenum, MGLenum);
+typedef MGLboolean (MZAPIENTRY *mglUnmapBufferProc) (MGLenum);
+typedef void (MZAPIENTRY *mglEnableVertexAttribArrayProc) (MGLuint);
+typedef void (MZAPIENTRY *mglDisableVertexAttribArrayProc) (MGLuint);
+typedef void (MZAPIENTRY *mglVertexAttribPointerProc) (MGLuint, MGLint, MGLenum, MGLboolean, MGLsizei, const MGLvoid *);
+typedef void (MZAPIENTRY *mglVertexAttribDivisorProc) (MGLuint, MGLuint);
+typedef void (MZAPIENTRY *mglGenVertexArraysProc) (MGLsizei, MGLuint*);
+typedef void (MZAPIENTRY *mglDeleteVertexArraysProc) (MGLsizei, const MGLuint*);
+typedef void (MZAPIENTRY *mglBindVertexArrayProc) (MGLuint);
+typedef void (MZAPIENTRY *mglDrawArraysInstancedProc) (MGLenum, MGLint, MGLsizei, MGLsizei);
+typedef void (MZAPIENTRY *mglClientActiveTextureProc) (MGLenum);
+typedef void (MZAPIENTRY *mglBeginConditionalRenderProc) (MGLuint, MGLenum);
+typedef void (MZAPIENTRY *mglEndConditionalRenderProc) ();
+typedef void (MZAPIENTRY *mglBeginQueryProc) (MGLenum, MGLuint);
+typedef void (MZAPIENTRY *mglEndQueryProc) (MGLenum);
+typedef void (MZAPIENTRY *mglGetQueryObjectuivProc) (MGLenum, MGLenum, MGLuint *);
+typedef void (MZAPIENTRY *mglDeleteQueriesProc) (MGLsizei, const MGLuint*);
+typedef void (MZAPIENTRY *mglGenQueriesProc) (MGLsizei, MGLuint*);
+typedef MGLboolean (MZAPIENTRY *mglIsRenderbufferProc) (MGLuint);
+typedef MGLboolean (MZAPIENTRY *mglIsFramebufferProc) (MGLuint);
+typedef MGLenum (MZAPIENTRY *mglCheckFramebufferStatusProc) (MGLenum);
+typedef void (MZAPIENTRY *mglFramebufferTextureLayerProc) (MGLenum, MGLenum, MGLuint, MGLint, MGLint);
+typedef void (MZAPIENTRY *mglGenFramebuffersProc) (MGLsizei, MGLuint*);
+typedef void (MZAPIENTRY *mglDeleteFramebuffersProc) (MGLsizei, MGLuint*);
+typedef void (MZAPIENTRY *mglBindFramebufferProc) (MGLenum, MGLuint);
+typedef void (MZAPIENTRY *mglFramebufferTexture2DProc) (MGLenum, MGLenum, MGLenum, MGLuint, MGLint);
+typedef void (MZAPIENTRY *mglFramebufferRenderbufferProc) (MGLenum, MGLenum, MGLenum, MGLuint);
+typedef void (MZAPIENTRY *mglGenRenderbuffersProc) (MGLsizei, MGLuint*);
+typedef void (MZAPIENTRY *mglDeleteRenderbuffersProc) (MGLsizei, const MGLuint *);
+typedef void (MZAPIENTRY *mglBindRenderbufferProc) (MGLenum, MGLuint);
+typedef void (MZAPIENTRY *mglRenderbufferStorageProc) (MGLenum, MGLenum, MGLsizei, MGLsizei);
+typedef void (MZAPIENTRY *mglDrawBuffersProc) (MGLsizei, const MGLenum*);
+typedef void (MZAPIENTRY *mglDrawBufferProc) (MGLenum);
+typedef void (MZAPIENTRY *mglReadBufferProc) (MGLenum);
+typedef void (MZAPIENTRY *mglBlitFramebufferProc) (MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLbitfield, MGLenum);
 
 // ------------------------------------------------------------------------------------------------ 
 extern mglGetErrorProc							mglGetError;
@@ -482,9 +481,5 @@ int mglIsSupported(const char* ext);
 	@return Anisotropy from 0.0f to 16.0f
 */
 float mglGetMaxAnisotropy();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*MGL_H*/

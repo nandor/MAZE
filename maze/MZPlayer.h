@@ -6,12 +6,6 @@
 #define MZPLAYER_H
 #pragma once
 
-#include "MZMath.h"
-#include "MZSound.h"
-#include "MZEntity.h"
-#include "MZCamera.h"
-#include "MZSoundSource.h"
-
 namespace MAZE
 {
 	class Player : public Entity

@@ -2,13 +2,9 @@
 // Licensing information can be found in the LICENSE file
 // (C) 2012 The MAZE project. All rights reserved.
 
-#ifndef MATH_H
-#define MATH_H
+#ifndef MZMATH_H
+#define MZMATH_H
 #pragma once
-
-#include <algorithm>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 
 namespace MAZE
 {
@@ -78,18 +74,24 @@ namespace MAZE
 		@param a First point
 		@param b Second point
 	*/
-	bool SameSide(const glm::vec3& p1, 
-				  const glm::vec3& p2, 
-				  const glm::vec3& a, 
-				  const glm::vec3& b);
+	inline bool SameSide(const glm::vec3& p1, 
+						 const glm::vec3& p2, 
+						 const glm::vec3& a, 
+						 const glm::vec3& b)
+	{
+		return glm::dot(glm::cross(b - a, p1 - a), glm::cross(b - a, p2 - a)) >= -EPS;
+	}
 
 	/**
 		Check if a point is inside a triangle
 	*/
-	bool Inside(const glm::vec3& a, 
-				const glm::vec3& b, 
-				const glm::vec3& c, 
-				const glm::vec3& p);
+	inline bool Inside(const glm::vec3& a, 
+					   const glm::vec3& b, 
+					   const glm::vec3& c, 
+					   const glm::vec3& p)
+	{
+		return SameSide(p, a, b, c) && SameSide(p, b, a, c) && SameSide(p, c, a, b);
+	}
 };
 
 #endif

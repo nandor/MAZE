@@ -6,12 +6,6 @@
 #define TEXTURE_H
 #pragma once
 
-#include <string>
-#include <vector>
-#include "MZPlatform.h"
-#include "MZResource.h"
-#include "MZGL.h"
-
 namespace MAZE
 {
 	class Texture : public Resource
@@ -40,7 +34,7 @@ namespace MAZE
 		};
 		
 		/// Template related stuff
-		const static Resource::Type TYPE = Resource::TEXTURE;
+		const static Resource::Type TYPE;
 
 	private:
 		

@@ -6,9 +6,6 @@
 #define STRING_H
 #pragma once
 
-#include <string>
-#include <vector>
-
 namespace MAZE
 {
 	// ------------------------------------------------------------------------------------------------
