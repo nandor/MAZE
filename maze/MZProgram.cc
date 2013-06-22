@@ -11,7 +11,7 @@ Program::Program(Renderer *renderer, const std::string& id)
 	  mProgram(0),
 	  mID(id),
 	  mCached(false),
-	  mCacheable(renderer->GetEngine()->GetSetup().CachePrograms),
+	  mCacheable(renderer->GetEngine()->GetSetup().CachePrograms && GL.SupportCache),
 	  mCacheFile(renderer->GetEngine()->GetSetup().CacheDir + "\\" + id + ".glc")
 {
 	if (!mCacheable)

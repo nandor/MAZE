@@ -19,24 +19,8 @@ using namespace MAZE;
 		return 0;\
 	}
 
-/**
-	Struct containing state information
-*/
-struct
-{
-	/// List of OpenGL extensions
-	const char *ExtList;
-	
-	/// Major version
-	MGLint MajorVersion;
-
-	/// Minor version
-	MGLint MinorVersion;
-	
-	/// Max anisotropy supported
-	MGLfloat Anisotropy;
-
-} GL;
+// GL State -------------------------------------------------------------------
+GLState GL;
 
 // Core -----------------------------------------------------------------------
 mglGetErrorProc								mglGetError;
@@ -299,6 +283,7 @@ int mglInit()
 
 	if (mglIsSupported("GL_ARB_occlusion_query"))
 	{
+		GL.SupportQueries = 1;
 		GET_ADDR(glBeginConditionalRender);
 		GET_ADDR(glEndConditionalRender);
 		GET_ADDR(glBeginQuery);
@@ -307,12 +292,21 @@ int mglInit()
 		GET_ADDR(glDeleteQueries);
 		GET_ADDR(glGenQueries);
 	}
+	else
+	{
+		GL.SupportCache = 0;
+	}
 
 	if (mglIsSupported("GL_ARB_get_program_binary"))
 	{
+		GL.SupportCache = 1;
 		GET_ADDR(glGetProgramBinary);
 		GET_ADDR(glProgramBinary);
 		GET_ADDR(glProgramParameteri);
+	}
+	else
+	{
+		GL.SupportCache = 0;
 	}
 
 	// Anisotropic filtering is a plus	

@@ -10,7 +10,7 @@
 #else
 #	define MZAPIENTRY __stdcall
 #endif
-	
+
 // ------------------------------------------------------------------------------------------------ 
 typedef char			MGLchar;
 typedef unsigned int	MGLenum;
@@ -31,6 +31,31 @@ typedef double			MGLclampd;
 typedef void			MGLvoid;
 typedef ptrdiff_t		MGLintptr;
 typedef ptrdiff_t 		MGLsizeiptr;
+	
+// ------------------------------------------------------------------------------------------------ 
+typedef struct
+{
+	/// List of OpenGL extensions
+	const char *ExtList;
+	
+	/// Major version
+	MGLint MajorVersion;
+
+	/// Minor version
+	MGLint MinorVersion;
+	
+	/// Max anisotropy supported
+	MGLfloat Anisotropy;
+
+	/// Program binary cacheing
+	MGLboolean SupportCache;
+
+	/// Occlusion queries
+	MGLboolean SupportQueries;
+
+} GLState;
+
+extern GLState GL;
 	
 // ------------------------------------------------------------------------------------------------ 
 #define MWGL_CONTEXT_MAJOR_VERSION				0x2091

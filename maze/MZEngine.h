@@ -190,6 +190,11 @@ namespace MAZE
 			return mKeyState[k];
 		}
 
+		/**
+			True if we have focus
+		*/
+		bool IsFocused();
+
 	private:
 		
 		/**
@@ -227,6 +232,9 @@ namespace MAZE
 
 		/// Loop state
 		bool mRunning;
+
+		/// Focus
+		bool mFocus;
 
 		/// Last frame time
 		float mLastFrameTime;

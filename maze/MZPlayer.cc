@@ -52,12 +52,15 @@ void Player::Update(float time, float dt)
 {
 	int width = fEngine->GetSetup().WindowWidth;
 	int height = fEngine->GetSetup().WindowHeight;
-	glm::ivec2 pos;
+	glm::ivec2 pos(width >> 1, height >> 1);
 	glm::vec3 moveDir(0.0f), moveDist(0.0f), lookDir(0.0f), actualDist;
 
 	// Handle the mouse
-	pos = fEngine->GetMousePos();
-	fEngine->SetMousePos(glm::ivec2(width, height) >> 1);
+	if (fEngine->IsFocused())
+	{
+		pos = fEngine->GetMousePos();
+		fEngine->SetMousePos(glm::ivec2(width, height) >> 1);
+	}
 
 	// Compute rotation
 	mRotation.y += ((width >> 1) - pos.x) * ROTATE_SPEED;
@@ -68,7 +71,7 @@ void Player::Update(float time, float dt)
 	lookDir.x = sin(mRotation.y) * cos(mRotation.x);
 	lookDir.y = sin(mRotation.x);
 	lookDir.z = cos(mRotation.y) * cos(mRotation.x);
-	
+
 	// Movement direction
 	if (fEngine->IsKeyDown(Engine::KEY_W))
 	{

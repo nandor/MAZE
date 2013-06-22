@@ -8,6 +8,22 @@ using namespace MAZE;
 // ------------------------------------------------------------------------------------------------
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	Engine * e;
+
+	if (msg == WM_CREATE) 
+	{
+		if (!(e = (Engine*)((CREATESTRUCT*)lParam)->lpCreateParams)) 
+		{
+			return ::DefWindowProc(hwnd, msg, wParam, lParam);
+		}
+		
+		::SetWindowLong(hwnd, GWL_USERDATA, (LONG)e);
+	}
+	else if (!(e = (Engine*)::GetWindowLong(hwnd, GWL_USERDATA))) 
+	{
+		return ::DefWindowProc(hwnd, msg, wParam, lParam);
+	}
+
 	switch (msg) 
 	{
 		case WM_CLOSE:
@@ -31,6 +47,7 @@ Engine::Engine()
 	  mDevice(NULL),
 	  mContext(NULL),
 	  mRunning(false),
+	  mFocus(true),
 	  mLastFrameTime(0.0f),
 	  mMouse(0, 0),
 	  mInstance(::GetModuleHandle(NULL)),
@@ -286,6 +303,12 @@ void Engine::InitSound()
 void Engine::Quit()
 {
 	::PostMessage(mWindow, WM_CLOSE, 0, 0);
+}
+
+// ------------------------------------------------------------------------------------------------
+bool Engine::IsFocused()
+{
+	return mWindow == ::GetFocus();
 }
 
 // ------------------------------------------------------------------------------------------------
