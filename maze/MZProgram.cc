@@ -6,10 +6,54 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-Program::Program(const std::string& id)
-	: mProgram(0),
-	  mID(id)
+Program::Program(Renderer *renderer, const std::string& id)
+	: mRenderer(renderer),
+	  mProgram(0),
+	  mID(id),
+	  mCached(false),
+	  mCacheable(renderer->GetEngine()->GetSetup().CachePrograms),
+	  mCacheFile(renderer->GetEngine()->GetSetup().CacheDir + "\\" + id + ".glc")
 {
+	if (!mCacheable)
+	{
+		return;
+	}
+
+	FILE * fin;
+	MGLsizei length;
+	MGLenum format;
+	void * buffer;
+
+	if (!(fin = fopen(mCacheFile.c_str(), "rb")))
+	{
+		return;
+	}
+
+	fread(&format, sizeof(MGLenum), 1, fin);
+	fread(&length, sizeof(MGLsizei), 1, fin);
+		
+	if (length <= 0 || !(buffer = malloc(length)))
+	{
+		fclose(fin);
+		return;
+	}
+
+	if (fread(buffer, 1, length, fin) != length)
+	{
+		fclose(fin);
+		free(buffer);
+		return;
+	}
+
+	mProgram = mglCreateProgram();
+	mglProgramBinary(mProgram, format, buffer, length);
+	mCached = true;
+
+	fclose(fin);
+	free(buffer);
+
+	GetUniforms();
+	GetAttributes();
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -43,6 +87,11 @@ Program::~Program()
 // ------------------------------------------------------------------------------------------------
 void Program::Compile(Program::ShaderType type, const std::string& fn)
 {
+	if (mCached)
+	{
+		return;
+	}
+
 	MGLuint shader;
 	MGLint status;		
 	MGLint length;
@@ -76,10 +125,14 @@ void Program::Compile(Program::ShaderType type, const std::string& fn)
 	mglGetShaderInfoLog(shader, length, NULL, &log[0]);
 
 	if (status != MGL_TRUE)
+	{
 		throw Exception("Shader compilation failed '" + mID + "':\n") << log;
-	
-	if (!mProgram && !(mProgram = mglCreateProgram())) 
+	}
+
+	if (!mProgram && !(mProgram = mglCreateProgram()))
+	{
 		throw MGLException("Cannot create program");
+	}
 
 	mglAttachShader(mProgram, shader);
 }
@@ -87,12 +140,22 @@ void Program::Compile(Program::ShaderType type, const std::string& fn)
 // ------------------------------------------------------------------------------------------------
 void Program::Link()
 {
+	if (mCached)
+	{
+		return;
+	}
+
 	MGLint length, status;
 	std::string log;
 
 	if (!mProgram)
 	{
 		throw Exception("No shaders attached to program");
+	}
+
+	if (mCacheable)
+	{
+		mglProgramParameteri(mProgram, MGL_PROGRAM_BINARY_RETRIEVABLE_HINT, MGL_TRUE);
 	}
 
 	mglLinkProgram(mProgram);
@@ -109,6 +172,11 @@ void Program::Link()
 
 	GetUniforms();
 	GetAttributes();
+	
+	if (mCacheable)
+	{
+		Cache();
+	}
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -174,6 +242,43 @@ void Program::GetAttributes()
 			mAttributes.insert(std::make_pair(name, loc));
 		}
 	}
+}
+
+// ------------------------------------------------------------------------------------------------
+void Program::Cache()
+{
+	MGLint length = 0;
+	MGLsizei read;
+	MGLenum format;
+	void *binary;
+	FILE *fout;
+
+	if (!(fout = fopen(mCacheFile.c_str(), "wb")))
+	{
+		return;
+	}
+
+	mglGetProgramiv(mProgram, MGL_PROGRAM_BINARY_LENGTH, &length);
+	if (length <= 0)	
+	{
+		fclose(fout);
+		return;
+	}
+
+	if (!(binary = malloc(length)))
+	{
+		fclose(fout);
+		return;
+	}
+
+	mglGetProgramBinary(mProgram, length, &read, &format, binary);
+
+	fwrite(&format, sizeof(MGLenum), 1, fout);
+	fwrite(&read, sizeof(MGLsizei), 1, fout);
+	fwrite(binary, 1, read, fout);
+
+	free(binary);
+	fclose(fout);
 }
 
 // ------------------------------------------------------------------------------------------------

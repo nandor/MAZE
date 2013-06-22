@@ -25,3 +25,15 @@ glm::vec3 MAZE::Intersect(const glm::vec4& a, const glm::vec4& b, const glm::vec
 
 	return glm::vec3(x, y, z);
 }
+
+// ------------------------------------------------------------------------------------------------
+bool MAZE::SameSide(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& a, const glm::vec3& b)
+{
+	return glm::dot(glm::cross(b - a, p1 - a), glm::cross(b - a, p2 - a)) >= -EPS;
+}
+	
+// ------------------------------------------------------------------------------------------------
+bool MAZE::Inside(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& p)
+{
+	return SameSide(p, a, b, c) && SameSide(p, b, a, c) && SameSide(p, c, a, b);
+}

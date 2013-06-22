@@ -35,6 +35,7 @@ set (SOURCES MZCamera.cc
 			 MZSphere.cc
              MZSound.cc
 			 MZSoundSource.cc
+			 MZSSE.cc
 			 MZTexture.cc
 			 MZThread.cc
 			 MZWorld.cc)

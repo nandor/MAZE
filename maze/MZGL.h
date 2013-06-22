@@ -141,6 +141,7 @@ typedef ptrdiff_t 		MGLsizeiptr;
 #define MGL_MAJOR_VERSION						0x821B
 #define MGL_MINOR_VERSION						0x821C
 #define MGL_R8									0x8229
+#define MGL_PROGRAM_BINARY_RETRIEVABLE_HINT		0x8257
 #define MGL_ACTIVE_PROGRAM						0x8259
 #define MGL_TEXTURE								0x84C0
 #define MGL_DEPTH_STENCIL						0x84F9
@@ -153,6 +154,9 @@ typedef ptrdiff_t 		MGLsizeiptr;
 #define MGL_TEXTURE_CUBE_MAP_NEGATIVE_Y			0x8518
 #define MGL_TEXTURE_CUBE_MAP_POSITIVE_Z			0x8519
 #define MGL_TEXTURE_CUBE_MAP_NEGATIVE_Z			0x851A
+#define MGL_PROGRAM_BINARY_LENGTH				0x8741
+#define MGL_NUM_PROGRAM_BINARY_FORMATS			0x87FE
+#define MGL_PROGRAM_BINARY_FORMATS				0x87FF
 #define MGL_RGBA32F								0x8814
 #define MGL_RGB32F								0x8815
 #define MGL_RGBA16F								0x881A
@@ -339,6 +343,9 @@ typedef void (MZAPIENTRY *mglDrawBuffersProc) (MGLsizei, const MGLenum*);
 typedef void (MZAPIENTRY *mglDrawBufferProc) (MGLenum);
 typedef void (MZAPIENTRY *mglReadBufferProc) (MGLenum);
 typedef void (MZAPIENTRY *mglBlitFramebufferProc) (MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLint, MGLbitfield, MGLenum);
+typedef void (MZAPIENTRY *mglGetProgramBinaryProc) (MGLuint, MGLsizei, MGLsizei*, MGLenum*, void*);
+typedef void (MZAPIENTRY *mglProgramBinaryProc) (MGLuint, MGLenum, const void*, MGLsizei);
+typedef void (MZAPIENTRY *mglProgramParameteriProc) (MGLuint, MGLenum, MGLint);
 
 // ------------------------------------------------------------------------------------------------ 
 extern mglGetErrorProc							mglGetError;
@@ -448,6 +455,9 @@ extern mglEndQueryProc							mglEndQuery;
 extern mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
 extern mglDeleteQueriesProc						mglDeleteQueries;
 extern mglGenQueriesProc						mglGenQueries;
+extern mglGetProgramBinaryProc					mglGetProgramBinary;
+extern mglProgramBinaryProc						mglProgramBinary;
+extern mglProgramParameteriProc					mglProgramParameteri;
 
 /**
 	@brief 

@@ -72,6 +72,14 @@ namespace MAZE
 			return mContext;
 		}
 
+		/**
+			Return a reference to the engine
+		*/
+		Engine* GetEngine()
+		{
+			return mEngine;
+		}
+
 	private:
 						
 		void RenderGeometry();

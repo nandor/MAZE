@@ -285,44 +285,44 @@ void Renderer::InitPrograms()
 {
 	const std::string dir = mEngine->GetSetup().ResourceDir + "/shader/";
 
-	mObjectProgram = new Program("object");
+	mObjectProgram = new Program(this, "object");
 	mObjectProgram->Compile(Program::VERTEX, dir + "object.vs.glsl");
 	mObjectProgram->Compile(Program::FRAGMENT, dir + "object.fs.glsl");
 	mObjectProgram->Link();
 		
-	mSkyboxProgram = new Program("skybox");
+	mSkyboxProgram = new Program(this, "skybox");
 	mSkyboxProgram->Compile(Program::VERTEX, dir + "skybox.vs.glsl");
 	mSkyboxProgram->Compile(Program::FRAGMENT, dir + "skybox.fs.glsl");
 	mSkyboxProgram->Link();
 	
-	mDirlightProgram = new Program("dirlight");
+	mDirlightProgram = new Program(this, "dirlight");
 	mDirlightProgram->Compile(Program::VERTEX, dir + "dirlight.vs.glsl");
 	mDirlightProgram->Compile(Program::FRAGMENT, dir + (mEnableShadows ? "dirlight_shadow.fs.glsl" : "dirlight.fs.glsl"));
 	mDirlightProgram->Link();
 
-	mSpotlightProgram = new Program("spotlight");
+	mSpotlightProgram = new Program(this, "spotlight");
 	mSpotlightProgram->Compile(Program::VERTEX, dir + "spotlight.vs.glsl");
 	mSpotlightProgram->Compile(Program::FRAGMENT, dir + "spotlight.fs.glsl");
 	mSpotlightProgram->Link();
 
-	mPointlightProgram = new Program("pointlight");
+	mPointlightProgram = new Program(this, "pointlight");
 	mPointlightProgram->Compile(Program::VERTEX, dir + "pointlight.vs.glsl");
 	mPointlightProgram->Compile(Program::FRAGMENT, dir + "pointlight.fs.glsl");
 	mPointlightProgram->Link();
 
-	mVolumeProgram = new Program("volume");
+	mVolumeProgram = new Program(this, "volume");
 	mVolumeProgram->Compile(Program::VERTEX, dir + "volume.vs.glsl");
 	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.fs.glsl");
 	mVolumeProgram->Link();
 	
-	mWidgetProgram = new Program("widget");
+	mWidgetProgram = new Program(this, "widget");
 	mWidgetProgram->Compile(Program::VERTEX, dir + "widget.vs.glsl");
 	mWidgetProgram->Compile(Program::FRAGMENT, dir + "widget.fs.glsl");
 	mWidgetProgram->Link();
 
 	if (mEnableShadows)
 	{
-		mShadowProgram = new Program("shadow");
+		mShadowProgram = new Program(this, "shadow");
 		mShadowProgram->Compile(Program::VERTEX, dir + "shadow.vs.glsl");
 		mShadowProgram->Compile(Program::FRAGMENT, dir + "shadow.fs.glsl");
 		mShadowProgram->Link();
@@ -330,7 +330,7 @@ void Renderer::InitPrograms()
 
 	if (mEnableFog)
 	{
-		mFogProgram = new Program("fog");
+		mFogProgram = new Program(this, "fog");
 		mFogProgram->Compile(Program::VERTEX, dir + "fog.vs.glsl");
 		mFogProgram->Compile(Program::FRAGMENT, dir + "fog.fs.glsl");
 		mFogProgram->Link();
@@ -338,7 +338,7 @@ void Renderer::InitPrograms()
 
 	if (mEnableDOF)
 	{
-		mDOFProgram = new Program("dof");
+		mDOFProgram = new Program(this, "dof");
 		mDOFProgram->Compile(Program::VERTEX, dir + "dof.vs.glsl");
 		mDOFProgram->Compile(Program::FRAGMENT, dir + "dof.fs.glsl");
 		mDOFProgram->Link();
@@ -1079,7 +1079,7 @@ void Renderer::RenderWidgets()
 				++j;
 			}
 
-			std::swap(mFront->Widgets[i], mFront->Widgets[--count]);
+			std::swap(mFront->Text[i], mFront->Text[--count]);
 		}
 
 		if (j > 0 && front->font != NULL && front->font->IsReady())

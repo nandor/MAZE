@@ -8,7 +8,6 @@
 
 namespace MAZE
 {
-	
 	/**
 		Allocates memory aligned on a 16 byte boundary
 		so the much faster movaps can be used. Aligned
@@ -62,6 +61,24 @@ namespace MAZE
 	};
 
 	/**
+		Union to provide access to invidiual members of a float
+	*/
+	typedef union
+	{
+		__m128 v;
+
+		struct
+		{
+			float fx, fy, fz, fw;
+		};
+		
+		struct
+		{
+			int ix, iy, iz, iw;
+		};
+	} ssev;
+
+	/**
 		Computes the dot product of two vectors
 		@param a First vector
 		@param b Second vector
@@ -113,27 +130,7 @@ namespace MAZE
 
 		return _mm_sqrt_ps(t);
 	}
-
-	/**
-		Computes the intersection point of three planes
-		@param a First plane
-		@param b Second plane
-		@param c Third plane
-		@return Intersection point (if exists) or zero
-	*/
-	inline __m128 Intersect(const __m128& a, 
-							const __m128& b, 
-							const __m128& c)
-	{
-		glm::vec4 aa = glm::vec4(a.m128_f32[0], a.m128_f32[1], a.m128_f32[2], a.m128_f32[3]);
-		glm::vec4 bb = glm::vec4(b.m128_f32[0], b.m128_f32[1], b.m128_f32[2], b.m128_f32[3]);
-		glm::vec4 cc = glm::vec4(c.m128_f32[0], c.m128_f32[1], c.m128_f32[2], c.m128_f32[3]);
-
-		glm::vec3 v = Intersect(aa, bb, cc);
-
-		return _mm_setr_ps(v.x, v.y, v.z, 1.0f);
-	}
-
+	
 	/**
 		Inverts the sign of a vector VERY quickly by 
 		changing the sign bit
@@ -152,24 +149,32 @@ namespace MAZE
 	}
 
 	/**
+		Computes the determinant of a 3x3 matrix
+		@param a First column
+		@param b Second column
+		@param c Third column
+	*/
+	__m128 Determinant(const __m128& a, 
+					   const __m128& b,
+					   const __m128& c);
+
+	/**
+		Computes the intersection point of three planes
+		@param a First plane
+		@param b Second plane
+		@param c Third plane
+		@return Intersection point (if exists) or zero
+	*/
+	__m128 Intersect(const __m128& a, 
+					 const __m128& b, 
+					 const __m128& c);
+	/**
 		Check if two points are on the same side of a line
 	*/
-	inline bool SameSide(const __m128& p1, 
-						 const __m128& p2, 
-						 const __m128& a, 
-						 const __m128& b)
-	{
-		__m128 side1, side2, dot;
-		
-		side1 = Cross(_mm_sub_ps(b, a), _mm_sub_ps(p1, a));
-		side2 = Cross(_mm_sub_ps(b, a), _mm_sub_ps(p2, a));
-
-		dot = _mm_mul_ps(side1, side2);
-		dot = _mm_hadd_ps(dot, dot);
-		dot = _mm_hadd_ps(dot, dot);
-	
-		return _mm_movemask_ps(_mm_cmpge_ps(dot, _mm_set_ps1(-EPS))) == 0xF;
-	}
+	bool SameSide(const __m128& p1, 
+				  const __m128& p2, 
+				  const __m128& a, 
+				  const __m128& b);
 
 	/**
 		Check if a point is inside a triangle

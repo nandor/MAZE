@@ -145,6 +145,9 @@ mglEndQueryProc								mglEndQuery;
 mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
 mglDeleteQueriesProc						mglDeleteQueries;
 mglGenQueriesProc							mglGenQueries;
+mglGetProgramBinaryProc						mglGetProgramBinary;
+mglProgramBinaryProc						mglProgramBinary;
+mglProgramParameteriProc					mglProgramParameteri;
 
 // ------------------------------------------------------------------------------------------------
 int mglIsSupported(const char *ext)
@@ -293,13 +296,24 @@ int mglInit()
 	GET_ADDR(glRenderbufferStorage);
 	GET_ADDR(glBlitFramebuffer);
 	GET_ADDR(glDrawBuffers);	
-	GET_ADDR(glBeginConditionalRender);
-	GET_ADDR(glEndConditionalRender);
-	GET_ADDR(glBeginQuery);
-	GET_ADDR(glEndQuery);
-	GET_ADDR(glGetQueryObjectuiv);
-	GET_ADDR(glDeleteQueries);
-	GET_ADDR(glGenQueries);
+
+	if (mglIsSupported("GL_ARB_occlusion_query"))
+	{
+		GET_ADDR(glBeginConditionalRender);
+		GET_ADDR(glEndConditionalRender);
+		GET_ADDR(glBeginQuery);
+		GET_ADDR(glEndQuery);
+		GET_ADDR(glGetQueryObjectuiv);
+		GET_ADDR(glDeleteQueries);
+		GET_ADDR(glGenQueries);
+	}
+
+	if (mglIsSupported("GL_ARB_get_program_binary"))
+	{
+		GET_ADDR(glGetProgramBinary);
+		GET_ADDR(glProgramBinary);
+		GET_ADDR(glProgramParameteri);
+	}
 
 	// Anisotropic filtering is a plus	
 	GL.Anisotropy = 0.0f;

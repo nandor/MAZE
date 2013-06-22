@@ -30,6 +30,7 @@ void main()
             
     vec3 color = vec3(0.0);   
     vec3 lightDir = lPosition.xyz - geomPos;
+    vec3 viewDir = normalize(uEyePosition - geomPos.xyz);
     float angle, dist;
     
     dist = length(lightDir);
@@ -39,16 +40,13 @@ void main()
     if (dot(-lightDir, lDirection.xyz) >= lDirection.w)
     {
         float att, spec;
-        vec3 viewDir;
          
-        att = max(1.0 - dist / lPosition.w, 0.0) * angle;
-                    
-        viewDir = normalize(uEyePosition - geomPos.xyz);
+        att = max(1.0 - dist / lPosition.w, 0.0) * angle;                    
         spec = max(dot(reflect(-lightDir, geomNormal), viewDir), 0.0);
         
         color += geomDiffuse.xyz * lDiffuse * att;
-        color += lSpecular * pow(spec, geomDiffuse.w * 255.0) * angle * att;
+        color += lSpecular * pow(spec, geomDiffuse.w * 255.0) * att;
     }
     
-    gl_FragData[0] = vec4(color, 1.0);
+    gl_FragData[0].rgb = color;
 }

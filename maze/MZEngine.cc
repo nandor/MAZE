@@ -144,7 +144,7 @@ void Engine::LoadConfig(const std::string& cfg)
 	mSetup.WindowHeight  = config["window"]["height"].AsInt(576);
 	mSetup.FullScreen    = config["window"]["fullscreen"].AsBool(false);
 	mSetup.WindowTitle	 = config["window"]["title"].AsString("MAZE");
-	mSetup.ResourceDir   = config["rsmngr"]["dir"].AsString("./data");
+	mSetup.ResourceDir   = config["rsmngr"]["dir"].AsString(".\\data");
 	mSetup.Anisotropy    = config["gfx"]["anisotropy"].AsFloat(0.0f);
 	mSetup.TextureFilter = config["gfx"]["texture"].AsInt(0);
 	mSetup.ViewDistance  = config["gfx"]["viewDistance"].AsFloat(50.0f);
@@ -153,6 +153,11 @@ void Engine::LoadConfig(const std::string& cfg)
 	mSetup.EnableFog	 = config["gfx"]["fog"].AsBool(false);
 	mSetup.Server		 = config["network"]["server"].AsString("127.0.0.1");
 	mSetup.Port			 = config["network"]["port"].AsInt(12345);
+	mSetup.CacheDir		 = config["cache"]["dir"].AsString(".\\cache");
+	mSetup.CachePrograms = config["cache"]["programs"].AsBool(false);
+	
+	CreateDirectory(mSetup.ResourceDir.c_str(), NULL);
+	CreateDirectory(mSetup.CacheDir.c_str(), NULL);
 }
 
 // ------------------------------------------------------------------------------------------------

@@ -74,24 +74,18 @@ namespace MAZE
 		@param a First point
 		@param b Second point
 	*/
-	inline bool SameSide(const glm::vec3& p1, 
-						 const glm::vec3& p2, 
-						 const glm::vec3& a, 
-						 const glm::vec3& b)
-	{
-		return glm::dot(glm::cross(b - a, p1 - a), glm::cross(b - a, p2 - a)) >= -EPS;
-	}
+	bool SameSide(const glm::vec3& p1, 
+				  const glm::vec3& p2, 
+				  const glm::vec3& a, 
+				  const glm::vec3& b);
 
 	/**
 		Check if a point is inside a triangle
 	*/
-	inline bool Inside(const glm::vec3& a, 
-					   const glm::vec3& b, 
-					   const glm::vec3& c, 
-					   const glm::vec3& p)
-	{
-		return SameSide(p, a, b, c) && SameSide(p, b, a, c) && SameSide(p, c, a, b);
-	}
+	bool Inside(const glm::vec3& a, 
+				const glm::vec3& b, 
+				const glm::vec3& c, 
+				const glm::vec3& p);
 };
 
 #endif

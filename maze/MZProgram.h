@@ -8,6 +8,8 @@
 
 namespace MAZE
 {
+	class Renderer;
+
 	class Program
 	{
 	public:
@@ -29,7 +31,7 @@ namespace MAZE
 		/**
 			Creates a new shader
 		*/
-		Program(const std::string& id);
+		Program(Renderer *renderer, const std::string& id);
 
 		/**
 			Destroys the shader
@@ -69,6 +71,7 @@ namespace MAZE
 
 		void GetUniforms();
 		void GetAttributes();
+		void Cache();
 
 	private:
 		
@@ -94,6 +97,9 @@ namespace MAZE
 		typedef std::map<std::string, MGLuint>::iterator AttribIter;
 
 	private:
+		
+		/// Rendering system
+		Renderer *mRenderer;
 
 		/// ID of the program
 		MGLuint mProgram;
@@ -106,6 +112,15 @@ namespace MAZE
 
 		/// List of active attributes
 		std::map<std::string, MGLuint> mAttributes;
+
+		/// True if program binary was cached
+		bool mCached;
+
+		/// True if the program binary can be cached
+		bool mCacheable;
+
+		/// Cached file name
+		std::string mCacheFile;
 
 	};
 };

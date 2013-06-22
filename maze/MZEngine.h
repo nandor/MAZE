@@ -62,6 +62,12 @@ namespace MAZE
 
 			/// Server port
 			unsigned short Port;
+
+			/// Cache folder
+			std::string CacheDir;
+
+			/// Shader cache
+			bool CachePrograms;
 		};
 
 		/**

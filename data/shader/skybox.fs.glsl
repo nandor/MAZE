@@ -12,6 +12,6 @@ varying vec3 vVertex;
 void main()
 {
     // Position data is relevant for fog generation
-    gl_FragData[0] = vec4(uPosition + normalize(vVertex) * uFarPlane, 1.0);
-    gl_FragData[1] = vec4(textureCube(uTexture, vVertex).rgb, 1.0);
+    gl_FragData[0].rgb = normalize(vVertex) * uFarPlane + uPosition;
+    gl_FragData[1].rgb = textureCube(uTexture, vVertex).rgb;
 }
