@@ -32,12 +32,7 @@ namespace MAZE
 			Checks if the obj has a collision mesh
 		*/
 		bool HasCollisionMesh() const;
-
-		/**
-			Plays a sound
-		*/
-		void PlaySound(const std::string& sound);
-		
+					
 		/**
 			Called when the object is picked
 		*/
@@ -120,9 +115,6 @@ namespace MAZE
 
 		/// Callback on use of the object
 		Callback mUseCall;
-		
-		/// List of sound sources
-		std::vector<SoundSource> mSounds;
 	};
 };
 

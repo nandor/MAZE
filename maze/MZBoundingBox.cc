@@ -56,21 +56,21 @@ BoundingBox BoundingBox::Extend(const __m128& d)
 // ------------------------------------------------------------------------------------------------
 void BoundingBox::Compute() const
 {	
-	mPlanes[0] = _mm_setr_ps( 1.0f,  0.0f,  0.0f, -mMax.m128_f32[0]);
-	mPlanes[1] = _mm_setr_ps( 0.0f,  1.0f,  0.0f, -mMax.m128_f32[1]);
-	mPlanes[2] = _mm_setr_ps( 0.0f,  0.0f,  1.0f, -mMax.m128_f32[2]);
-	mPlanes[3] = _mm_setr_ps(-1.0f,  0.0f,  0.0f,  mMin.m128_f32[0]);
-	mPlanes[4] = _mm_setr_ps( 0.0f, -1.0f,  0.0f,  mMin.m128_f32[1]);
-	mPlanes[5] = _mm_setr_ps( 0.0f,  0.0f, -1.0f,  mMin.m128_f32[2]);
+	mPlanes[0] = _mm_setr_ps( 1.0f,  0.0f,  0.0f, -((float*)&mMax)[0]);
+	mPlanes[1] = _mm_setr_ps( 0.0f,  1.0f,  0.0f, -((float*)&mMax)[1]);
+	mPlanes[2] = _mm_setr_ps( 0.0f,  0.0f,  1.0f, -((float*)&mMax)[2]);
+	mPlanes[3] = _mm_setr_ps(-1.0f,  0.0f,  0.0f,  ((float*)&mMin)[0]);
+	mPlanes[4] = _mm_setr_ps( 0.0f, -1.0f,  0.0f,  ((float*)&mMin)[1]);
+	mPlanes[5] = _mm_setr_ps( 0.0f,  0.0f, -1.0f,  ((float*)&mMin)[2]);
 
-	mCorners[0]	= _mm_setr_ps(mMin.m128_f32[0], mMax.m128_f32[1], mMin.m128_f32[2], 1.0f);
-	mCorners[1]	= _mm_setr_ps(mMax.m128_f32[0], mMax.m128_f32[1], mMin.m128_f32[2], 1.0f);
-	mCorners[2]	= _mm_setr_ps(mMin.m128_f32[0], mMin.m128_f32[1], mMin.m128_f32[2], 1.0f);
-	mCorners[3] = _mm_setr_ps(mMax.m128_f32[0], mMin.m128_f32[1], mMin.m128_f32[2], 1.0f);
-	mCorners[4]	= _mm_setr_ps(mMin.m128_f32[0], mMax.m128_f32[1], mMax.m128_f32[2], 1.0f);
-	mCorners[5]	= _mm_setr_ps(mMax.m128_f32[0], mMax.m128_f32[1], mMax.m128_f32[2], 1.0f);
-	mCorners[6]	= _mm_setr_ps(mMin.m128_f32[0], mMin.m128_f32[1], mMax.m128_f32[2], 1.0f);
-	mCorners[7]	= _mm_setr_ps(mMax.m128_f32[0], mMin.m128_f32[1], mMax.m128_f32[2], 1.0f);
+	mCorners[0]	= _mm_setr_ps(((float*)&mMin)[0], ((float*)&mMax)[1], ((float*)&mMin)[2], 1.0f);
+	mCorners[1]	= _mm_setr_ps(((float*)&mMax)[0], ((float*)&mMax)[1], ((float*)&mMin)[2], 1.0f);
+	mCorners[2]	= _mm_setr_ps(((float*)&mMin)[0], ((float*)&mMin)[1], ((float*)&mMin)[2], 1.0f);
+	mCorners[3] = _mm_setr_ps(((float*)&mMax)[0], ((float*)&mMin)[1], ((float*)&mMin)[2], 1.0f);
+	mCorners[4]	= _mm_setr_ps(((float*)&mMin)[0], ((float*)&mMax)[1], ((float*)&mMax)[2], 1.0f);
+	mCorners[5]	= _mm_setr_ps(((float*)&mMax)[0], ((float*)&mMax)[1], ((float*)&mMax)[2], 1.0f);
+	mCorners[6]	= _mm_setr_ps(((float*)&mMin)[0], ((float*)&mMin)[1], ((float*)&mMax)[2], 1.0f);
+	mCorners[7]	= _mm_setr_ps(((float*)&mMax)[0], ((float*)&mMin)[1], ((float*)&mMax)[2], 1.0f);
 
 	mDirty = false;
 }

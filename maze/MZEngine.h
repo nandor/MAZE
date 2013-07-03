@@ -84,8 +84,10 @@ namespace MAZE
 			KEY_D		= 'D',
 			KEY_W		= 'W',
 			KEY_F		= 'F',
+			KEY_Q		= 'Q',
 			KEY_ESC		= VK_ESCAPE,
-			KEY_SPACE	= VK_SPACE
+			KEY_SPACE	= VK_SPACE,
+			KEY_LSHIFT	= VK_LSHIFT
 		};
 		
 	public:
@@ -206,6 +208,11 @@ namespace MAZE
 			Initializes the sound system
 		*/
 		void InitSound();
+		
+		/**
+			Window message handler
+		*/
+		static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 	private:
 

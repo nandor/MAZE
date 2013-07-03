@@ -79,7 +79,7 @@ static int entity__setter(lua_State *L)
 // ------------------------------------------------------------------------------------------------
 static int entity__getter(lua_State *L)
 {
-	const Object** object = (const Object**)mzlGetObject(L, 1, "object");
+	const Object** object = (const Object**)mzlGetObject(L, 1, "entity");
 	const char *field = luaL_checkstring(L, 2);
 	
 	if (!strcmp(field, "collider"))
@@ -178,7 +178,7 @@ static int entity__tostring(lua_State *L)
 	std::stringstream ss;
 	Object** obj;
 
-	obj = (Object**)mzlGetObject(L,  1, "player");
+	obj = (Object**)mzlGetObject(L,  1, "entity");
 
 	ss << "entity('"  << (*obj)->GetName() << "')";
 		
@@ -189,7 +189,15 @@ static int entity__tostring(lua_State *L)
 // ------------------------------------------------------------------------------------------------
 static int entity__delete(lua_State *L)
 {
-	(*(Object**)mzlGetObject(L,  1, "object"))->Delete();
+	(*(Object**)mzlGetObject(L,  1, "entity"))->Delete();
+	return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+static int entityplay_sound(lua_State *L)
+{
+	Object **p = (Object**)mzlGetObject(L,  1, "entity");
+	(*p)->PlaySound(luaL_checkstring(L, 2));
 	return 0;
 }
 
@@ -199,6 +207,7 @@ static const struct luaL_Reg entity_m[] =
 	{"__setter", entity__setter},
 	{"__getter", entity__getter},
 	{"__tostring", entity__tostring},
+	{"play_sound", entityplay_sound},
 	{"delete", entity__delete},
 	{NULL, NULL}
 };
@@ -296,22 +305,12 @@ static int object__tostring(lua_State *L)
 	return 1;
 }
 
-
-// ------------------------------------------------------------------------------------------------
-static int objectplay_sound(lua_State *L)
-{
-	Object **p = (Object**)mzlGetObject(L,  1, "object");
-	(*p)->PlaySound(luaL_checkstring(L, 2));
-	return 0;
-}
-
 // ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg object_m[] =
 {
 	{"__setter", object__setter},
 	{"__getter", object__getter},
 	{"__tostring", object__tostring},
-	{"play_sound", objectplay_sound},
 	{NULL, NULL}
 };
 
@@ -499,7 +498,7 @@ static int player__tostring(lua_State *L)
 	std::stringstream ss;
 	std::string name;
 
-	Player **p = (Player**)mzlGetObject(L,  1, "object");
+	Player **p = (Player**)mzlGetObject(L,  1, "player");
 
 	ss << "player(vec3(" 
 	   << (*p)->GetPosition().x << ", "
@@ -511,11 +510,23 @@ static int player__tostring(lua_State *L)
 }
 
 // ------------------------------------------------------------------------------------------------
+static int playeradd_coin(lua_State* L)
+{
+	Player **p;
+	
+	p = (Player**)mzlGetObject(L,  1, "player");
+	(*p)->SetCoins((*p)->GetCoins() + 1);
+
+	return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg player_m[] =
 {
 	{"__setter", player__setter},
 	{"__getter", player__getter},
 	{"__tostring", player__tostring},
+	{"add_coin", playeradd_coin},
 	{NULL, NULL}
 };
 

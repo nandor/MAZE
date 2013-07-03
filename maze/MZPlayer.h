@@ -63,6 +63,22 @@ namespace MAZE
 		}
 
 		/**
+			Return number of coins
+		*/
+		unsigned GetCoins() const
+		{
+			return mCoins;
+		}
+
+		/**
+			Change the number of coins
+		*/
+		void SetCoins(unsigned c)
+		{
+			mCoins = c;
+		}
+
+		/**
 			Returns the camera attached to the player
 		*/
 		Camera* GetCamera()
@@ -89,7 +105,7 @@ namespace MAZE
 			@param dt	Time since last frame
 		*/
 		void Update(float time, float dt);
-
+		
 	private:
 		
 		void UpdateInternals()
@@ -111,7 +127,13 @@ namespace MAZE
 		static const float GRAVITY;
 		
 		/// Crosshair texture
-		Resource::Ptr<Texture> mCrosshair;
+		Resource::Ptr<Texture> mCrosshairTexture;
+
+		/// Sprint texture
+		Resource::Ptr<Texture> mSprintTexture;
+
+		/// Crosshair texture
+		Resource::Ptr<Texture> mLightTexture;
 
 		/// UI font
 		Resource::Ptr<Font> mFont;
@@ -140,6 +162,12 @@ namespace MAZE
 		/// Sprint flag
 		bool mIsSprinting;
 
+		/// Light flag
+		bool mIsLighting;
+
+		/// Light can be toggled
+		bool mLit;
+
 		/// Movement flag
 		bool mIsMoving;
 
@@ -160,6 +188,15 @@ namespace MAZE
 
 		/// Movement oscillation timer
 		float mMoveTime;
+
+		/// Number of coins picked up
+		unsigned mCoins;
+
+		/// Light intensity
+		float mLight;
+
+		/// Sprint energy
+		float mSprint;
 	};
 };
 

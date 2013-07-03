@@ -215,6 +215,7 @@ void Renderer::Init()
 	mglEnable(MGL_TEXTURE_CUBE_MAP_SEAMLESS);
 	Log::Inst() << "[Renderer] GL vendor:     " << (const char*)mglGetString(MGL_VENDOR);
 	Log::Inst() << "[Renderer] GL version:    " << (const char*)mglGetString(MGL_VERSION);
+	Log::Inst() << "[Renderer] GLSL version:  " << (const char*)mglGetString(MGL_SHADING_LANGUAGE_VERSION);
 
 	InitTargets();
 	InitPrograms();
@@ -953,7 +954,7 @@ void Renderer::RenderWidgets()
 	count = mFront->Widgets.size();
 	while (count)
 	{
-		WidgetRenderData *front = &mFront->Widgets[0];
+		Texture *front = mFront->Widgets[0].texture;
 		
 		size_t j = 0;
 		for (size_t i = 0; i < WIDGET_BATCH && i < count;)
@@ -961,7 +962,7 @@ void Renderer::RenderWidgets()
 			WidgetRenderData *widget;
 			
 			widget = &mFront->Widgets[i];
-			if (widget->texture != front->texture)
+			if (widget->texture != front)
 			{
 				++i;
 				continue;
@@ -1003,9 +1004,9 @@ void Renderer::RenderWidgets()
 			std::swap(mFront->Widgets[i], mFront->Widgets[--count]);
 		}
 
-		if (j > 0 && front->texture != NULL && front->texture->IsReady())
+		if (j > 0 && front != NULL && front->IsReady())
 		{
-			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->texture->mTexture);
+			mWidgetProgram->Uniform("uTexture", MGL_TEXTURE_2D, 0, front->mTexture);
 
 			mglBindBuffer(MGL_ARRAY_BUFFER, mWidgetVBO);
 			mglBufferData(MGL_ARRAY_BUFFER, WIDGET_BATCH * 6 * sizeof(Vertex), mWidgets, MGL_DYNAMIC_DRAW);

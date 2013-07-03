@@ -176,7 +176,7 @@ void ResourceManager::Post(Resource* res)
 	{
 		Resume();
 	}
-
+	
 	mJobMutex.Unlock();
 }
 

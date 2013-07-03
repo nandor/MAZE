@@ -65,6 +65,11 @@ void SoundSource::Update()
 	ALint state;	
 	alGetSourcei(mSource, AL_SOURCE_STATE, &state);
 
+	if (state == AL_STOPPED)
+	{
+		mFinished = true;
+	}
+
 	if (mPlaying && !mStarted)
 	{
 		if (mBuffer != NULL && mBuffer->IsReady())

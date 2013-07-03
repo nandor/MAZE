@@ -166,7 +166,7 @@ Frustum Frustum::GetLightVolume(const glm::vec3& lightDir)
 			if (good)
 			{
 				v.mPlanes[i] = normal[i];
-				_mm_store_ss(&v.mPlanes[i].m128_f32[3], d);
+				_mm_store_ss((float*)&v.mPlanes[i] + 3, d);
 				break;
 			}
 		}
@@ -183,11 +183,11 @@ Frustum Frustum::GetLightVolume(const glm::vec3& lightDir)
 	
 	glm::vec3 v0, v1, v2, v3, v4;
 
-	v0 = glm::vec3(v.mCorners[0].m128_f32[0], v.mCorners[0].m128_f32[1], v.mCorners[0].m128_f32[2]);
-	v1 = glm::vec3(v.mCorners[1].m128_f32[0], v.mCorners[1].m128_f32[1], v.mCorners[1].m128_f32[2]);
-	v2 = glm::vec3(v.mCorners[2].m128_f32[0], v.mCorners[2].m128_f32[1], v.mCorners[2].m128_f32[2]);
-	v3 = glm::vec3(v.mCorners[3].m128_f32[0], v.mCorners[3].m128_f32[1], v.mCorners[3].m128_f32[2]);
-	v4 = glm::vec3(v.mCorners[4].m128_f32[0], v.mCorners[4].m128_f32[1], v.mCorners[4].m128_f32[2]);
+	v0 = glm::vec3(((float*)&v.mCorners[0])[0], ((float*)&v.mCorners[0])[1], ((float*)&v.mCorners[0])[2]);
+	v1 = glm::vec3(((float*)&v.mCorners[1])[0], ((float*)&v.mCorners[1])[1], ((float*)&v.mCorners[1])[2]);
+	v2 = glm::vec3(((float*)&v.mCorners[2])[0], ((float*)&v.mCorners[2])[1], ((float*)&v.mCorners[2])[2]);
+	v3 = glm::vec3(((float*)&v.mCorners[3])[0], ((float*)&v.mCorners[3])[1], ((float*)&v.mCorners[3])[2]);
+	v4 = glm::vec3(((float*)&v.mCorners[4])[0], ((float*)&v.mCorners[4])[1], ((float*)&v.mCorners[4])[2]);
 
 	v.mPosition = (v0 + v1 + v2 + v3) / 4.0f;
 	v.mDirection = z;
@@ -239,37 +239,37 @@ void Frustum::Compute() const
 		dot = _mm_mul_ps(mPlanes[0], mCorners[5]);
 		dot = _mm_mul_ps(dot, dot);
 		dot = _mm_mul_ps(dot, dot);
-		_mm_store_ss(&mPlanes[0].m128_f32[3], dot);
+		_mm_store_ss((float*)&mPlanes[0] + 3, dot);
 				
 		mPlanes[1] = _mm_setr_ps(y.x, y.y, y.z, 0.0f);
 		dot = _mm_mul_ps(mPlanes[1], mCorners[5]);
 		dot = _mm_mul_ps(dot, dot);
 		dot = _mm_mul_ps(dot, dot);
-		_mm_store_ss(&mPlanes[1].m128_f32[3], dot);
+		_mm_store_ss((float*)&mPlanes[1] + 3, dot);
 		
 		mPlanes[2] = _mm_setr_ps(z.x, z.y, z.z, 0.0f);
 		dot = _mm_mul_ps(mPlanes[2], mCorners[5]);
 		dot = _mm_mul_ps(dot, dot);
 		dot = _mm_mul_ps(dot, dot);
-		_mm_store_ss(&mPlanes[2].m128_f32[3], dot);
+		_mm_store_ss((float*)&mPlanes[2] + 3, dot);
 		
 		mPlanes[3] = _mm_setr_ps(-x.x, -x.y, -x.z, 0.0f);
 		dot = _mm_mul_ps(mPlanes[3], mCorners[2]);
 		dot = _mm_mul_ps(dot, dot);
 		dot = _mm_mul_ps(dot, dot);
-		_mm_store_ss(&mPlanes[3].m128_f32[3], dot);
+		_mm_store_ss((float*)&mPlanes[3] + 3, dot);
 		
 		mPlanes[4] = _mm_setr_ps(-y.x, -y.y, -y.z, 0.0f);
 		dot = _mm_mul_ps(mPlanes[4], mCorners[2]);
 		dot = _mm_mul_ps(dot, dot);
 		dot = _mm_mul_ps(dot, dot);
-		_mm_store_ss(&mPlanes[4].m128_f32[3], dot);
+		_mm_store_ss((float*)&mPlanes[4] + 3, dot);
 
 		mPlanes[5] = _mm_setr_ps(-z.x, -z.y, -z.z, 0.0f);
 		dot = _mm_mul_ps(mPlanes[5], mCorners[2]);
 		dot = _mm_mul_ps(dot, dot);
 		dot = _mm_mul_ps(dot, dot);
-		_mm_store_ss(&mPlanes[5].m128_f32[3], dot);
+		_mm_store_ss((float*)&mPlanes[5] + 3, dot);
 	}
 	else
 	{

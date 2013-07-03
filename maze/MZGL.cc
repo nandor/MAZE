@@ -18,6 +18,13 @@ using namespace MAZE;
 	{\
 		return 0;\
 	}
+	
+#define GET_ADDR_EXT(func)\
+	m ## func = (m ## func ## Proc)wglGetProcAddress(#func "EXT");\
+	if (m ## func == NULL)\
+	{\
+		return 0;\
+	}
 
 // GL State -------------------------------------------------------------------
 GLState GL;
@@ -122,13 +129,6 @@ mglDrawBuffersProc							mglDrawBuffers;
 mglDrawBufferProc							mglDrawBuffer;
 mglReadBufferProc							mglReadBuffer;
 mglBlitFramebufferProc						mglBlitFramebuffer;
-mglBeginConditionalRenderProc				mglBeginConditionalRender;
-mglEndConditionalRenderProc					mglEndConditionalRender;
-mglBeginQueryProc							mglBeginQuery;
-mglEndQueryProc								mglEndQuery;
-mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
-mglDeleteQueriesProc						mglDeleteQueries;
-mglGenQueriesProc							mglGenQueries;
 mglGetProgramBinaryProc						mglGetProgramBinary;
 mglProgramBinaryProc						mglProgramBinary;
 mglProgramParameteriProc					mglProgramParameteri;
@@ -264,37 +264,78 @@ int mglInit()
 	GET_ADDR(glGenVertexArrays);
 	GET_ADDR(glDeleteVertexArrays);
 	GET_ADDR(glBindVertexArray);
-	GET_ADDR(glDrawArraysInstanced);
-	GET_ADDR(glGenFramebuffers);
-	GET_ADDR(glDeleteFramebuffers);
-	GET_ADDR(glBindFramebuffer);
-	GET_ADDR(glIsFramebuffer);
-	GET_ADDR(glFramebufferTexture2D);
-	GET_ADDR(glFramebufferRenderbuffer);
-	GET_ADDR(glCheckFramebufferStatus);
-	GET_ADDR(glFramebufferTextureLayer);
-	GET_ADDR(glGenRenderbuffers);
-	GET_ADDR(glDeleteRenderbuffers);
-	GET_ADDR(glIsRenderbuffer);
-	GET_ADDR(glBindRenderbuffer);
-	GET_ADDR(glRenderbufferStorage);
-	GET_ADDR(glBlitFramebuffer);
-	GET_ADDR(glDrawBuffers);	
 
-	if (mglIsSupported("GL_ARB_occlusion_query"))
+	if (mglIsSupported("GL_ARB_draw_instanced"))
 	{
-		GL.SupportQueries = 1;
-		GET_ADDR(glBeginConditionalRender);
-		GET_ADDR(glEndConditionalRender);
-		GET_ADDR(glBeginQuery);
-		GET_ADDR(glEndQuery);
-		GET_ADDR(glGetQueryObjectuiv);
-		GET_ADDR(glDeleteQueries);
-		GET_ADDR(glGenQueries);
+		GET_ADDR_ARB(glDrawArraysInstanced);
+	}
+	else if (mglIsSupported("GL_EXT_draw_instanced"))
+	{
+		GET_ADDR_EXT(glDrawArraysInstanced);
 	}
 	else
 	{
-		GL.SupportCache = 0;
+		return 0;
+	}
+
+	if (mglIsSupported("GL_ARB_framebuffer_object"))
+	{
+		GET_ADDR(glGenFramebuffers);
+		GET_ADDR(glDeleteFramebuffers);
+		GET_ADDR(glBindFramebuffer);
+		GET_ADDR(glIsFramebuffer);
+		GET_ADDR(glFramebufferTexture2D);
+		GET_ADDR(glFramebufferRenderbuffer);
+		GET_ADDR(glCheckFramebufferStatus);
+		GET_ADDR(glFramebufferTextureLayer);
+		GET_ADDR(glGenRenderbuffers);
+		GET_ADDR(glDeleteRenderbuffers);
+		GET_ADDR(glIsRenderbuffer);
+		GET_ADDR(glBindRenderbuffer);
+		GET_ADDR(glRenderbufferStorage);
+	}
+	else if (mglIsSupported("GL_EXT_framebuffer_object"))
+	{
+		GET_ADDR_EXT(glGenFramebuffers);
+		GET_ADDR_EXT(glDeleteFramebuffers);
+		GET_ADDR_EXT(glBindFramebuffer);
+		GET_ADDR_EXT(glIsFramebuffer);
+		GET_ADDR_EXT(glFramebufferTexture2D);
+		GET_ADDR_EXT(glFramebufferRenderbuffer);
+		GET_ADDR_EXT(glCheckFramebufferStatus);
+		GET_ADDR_EXT(glFramebufferTextureLayer);
+		GET_ADDR_EXT(glGenRenderbuffers);
+		GET_ADDR_EXT(glDeleteRenderbuffers);
+		GET_ADDR_EXT(glIsRenderbuffer);
+		GET_ADDR_EXT(glBindRenderbuffer);
+		GET_ADDR_EXT(glRenderbufferStorage);
+		GET_ADDR_EXT(glDrawBuffers);	
+	}
+	else
+	{
+		return 0;
+	}
+
+	if (mglIsSupported("GL_ARB_draw_buffers"))
+	{
+		GET_ADDR_ARB(glDrawBuffers);	
+	}
+	else if (mglIsSupported("GL_EXT_draw_buffers"))
+	{
+		GET_ADDR_EXT(glDrawBuffers);
+	}
+	else
+	{
+		return 0;
+	}
+
+	if (mglIsSupported("GL_EXT_framebuffer_blit"))
+	{
+		GET_ADDR_EXT(glBlitFramebuffer);
+	}
+	else
+	{
+		return 0;
 	}
 
 	if (mglIsSupported("GL_ARB_get_program_binary"))

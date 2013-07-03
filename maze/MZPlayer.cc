@@ -19,13 +19,18 @@ Player::Player(Engine *engine)
 	  mIsJumping(false),
 	  mIsFalling(false),
 	  mIsSprinting(false),
+	  mIsLighting(false),
 	  mIsMoving(true),
 	  mMoveSpeed(0.007f),
 	  mSize(1.0f, 2.0f, 1.0f),
 	  mUseable(NULL),
 	  mUsed(false),
+	  mLit(false),
 	  mJumped(false),
-	  mMoveTime(0.0f)
+	  mMoveTime(0.0f),
+	  mCoins(0),
+	  mLight(1.0f),
+	  mSprint(1.0f)
 {
 	mBoxModel = BoundingBox(glm::vec3(-0.4f, -1.5f, -0.4f), glm::vec3(0.8f, 1.5f, 0.8f));
 	mPosition = glm::vec3(0.0f, 2.0f, 0.0f);
@@ -33,9 +38,11 @@ Player::Player(Engine *engine)
 
 	// Retrieve resources
 	ResourceManager *rsmngr = fEngine->GetResourceManager();
-	mCrosshair = rsmngr->Get<Texture> ("cross");
-	mTorch	   = rsmngr->Get<Model> ("torch");
-	mFont	   = rsmngr->Get<Font> ("hud");
+	mCrosshairTexture	= rsmngr->Get<Texture> ("cross");
+	mSprintTexture		= rsmngr->Get<Texture> ("sprint");
+	mLightTexture		= rsmngr->Get<Texture> ("light");
+	mTorch				= rsmngr->Get<Model> ("torch");
+	mFont				= rsmngr->Get<Font> ("hud");
 
 	// Initialize sounds
 	mWalk.SetSource(rsmngr->Get<Sound> ("walk"));
@@ -96,6 +103,76 @@ void Player::Update(float time, float dt)
 		moveDir.x += sin(mRotation.y - PIOVER2) * cos(mRotation.x);
 		moveDir.z += cos(mRotation.y - PIOVER2) * cos(mRotation.x);
 	}
+	
+	if (fEngine->IsKeyDown(Engine::KEY_LSHIFT))
+	{
+		if (mIsMoving)
+		{
+			if (mIsSprinting && mSprint >= dt / 3000.0f)
+			{
+				mIsSprinting = true;
+			}
+			else
+			{
+				mIsSprinting = false;
+			}
+
+			if (!mIsSprinting && mSprint >= 0.3f)
+			{
+				mIsSprinting = true;
+			}
+		}
+		else
+		{
+			mIsSprinting = false;
+		}
+	}
+	else
+	{
+		mIsSprinting = false;
+	}
+
+	if (fEngine->IsKeyDown(Engine::KEY_Q))
+	{
+		if (!mLit && !mIsLighting && mLight >= 0.3f)
+		{
+			mLit = true;
+			mIsLighting = true;
+		}
+
+		if (!mLit && mIsLighting)
+		{
+			mLit = true;
+			mIsLighting = false;
+		}
+	}
+	else
+	{
+		mLit = false;
+	}
+
+	if (mIsLighting)
+	{
+		mLight -= dt / 10000.0f;
+		if (mLight < 0.0f)
+		{
+			mLight = 0.0f;
+			mIsLighting = false;
+		}
+	}
+	else
+	{
+		mLight = std::min(1.0f, mLight + dt / 30000.0f);
+	}
+
+	if (mIsSprinting)
+	{
+		mSprint = std::max(0.0f, mSprint - dt / 3000.0f);
+	}
+	else
+	{
+		mSprint = std::min(1.0f, mSprint + dt / 12000.0f);
+	}
 
 	// Compute movement direction & speed
 	if (glm::length(moveDir) > 0.0f)
@@ -110,7 +187,7 @@ void Player::Update(float time, float dt)
 		mMoveTime += dt;
 		if (mIsSprinting)
 		{
-			moveDir *= 2.0f;
+			moveDir *= 1.5f;
 		}
 	}
 	else
@@ -216,6 +293,8 @@ void Player::Update(float time, float dt)
 	{
 		mUsed = false;
 	}
+
+	Entity::Update(time, dt);
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -223,50 +302,78 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 {
 	int width = fEngine->GetSetup().WindowWidth;
 	int height = fEngine->GetSetup().WindowHeight;
-	glm::mat4 torchMtx;
-	glm::vec3 torchPos;
+	std::stringstream ss;
+
+	if (mIsLighting)
+	{
+		glm::mat4 torchMtx;
+		glm::vec3 torchPos;
 	
-	// Camera parameters
-	glm::vec3 z = glm::normalize(mCamera->GetDirection());
-	glm::vec3 x = glm::normalize(glm::cross(mCamera->GetUp(), z));
-	glm::vec3 y = glm::cross(z, x);
-	float n = mCamera->GetNearPlane();
-	float f = mCamera->GetFarPlane();
-	float h = n * tan(mCamera->GetFOV() * PI / 360.0f);
-	float w = h * mCamera->GetAspect();
+		// Camera parameters
+		glm::vec3 z = glm::normalize(mCamera->GetDirection());
+		glm::vec3 x = glm::normalize(glm::cross(mCamera->GetUp(), z));
+		glm::vec3 y = glm::cross(z, x);
+		float n = mCamera->GetNearPlane();
+		float f = mCamera->GetFarPlane();
+		float h = n * tan(mCamera->GetFOV() * PI / 360.0f);
+		float w = h * mCamera->GetAspect();
 
-	// Compute the position of the torch
-	torchPos = mPosition + z * n + x * w - y * h / 2.0f; 
-	torchMtx = glm::translate(torchPos);
-	torchMtx *= glm::rotate(mRotation.y * 180.0f / PI, glm::vec3(0.0f, 1.0f, 0.0f));
+		// Compute the position of the torch
+		torchPos = mPosition + z * n + x * w - y * h / 2.0f; 
+		torchMtx = glm::translate(torchPos);
+		torchMtx *= glm::rotate(mRotation.y * 180.0f / PI, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	// The light provided by the torch
-	LightRenderData* light = buffer->AddLight();
-	light->Type	= Light::POINT;
-	light->Specular	= glm::vec3(0.88f, 0.34f, 0.13f);
-	light->Diffuse = glm::vec3(0.88f, 0.34f, 0.13f);
-	light->Position	= glm::vec4(torchPos, 10.0f);	
-	light->ModelMatrix = glm::translate(torchPos);
-	light->ModelMatrix *= glm::scale(glm::vec3(10.0f * 2.15));
+		// The light provided by the torch
+		LightRenderData* light = buffer->AddLight();
+		light->Type	= Light::POINT;
+		light->Specular	= glm::vec3(0.88f, 0.34f, 0.13f);
+		light->Diffuse = glm::vec3(0.88f, 0.34f, 0.13f);
+		light->Position	= glm::vec4(torchPos, 10.0f);	
+		light->ModelMatrix = glm::translate(torchPos);
+		light->ModelMatrix *= glm::scale(glm::vec3(10.0f * 2.15));
 
-	// Torch model
-	ObjectRenderData* object = buffer->AddObject();
-	object->model = mTorch;
-	object->ModelMatrix = torchMtx;
-	object->Position = torchPos;
+		// Torch model
+		ObjectRenderData* object = buffer->AddObject();
+		object->model = mTorch;
+		object->ModelMatrix = torchMtx;
+		object->Position = torchPos;
+	}
 	
 	// Crosshair
 	WidgetRenderData* cross = buffer->AddWidget();
-	cross->texture = mCrosshair;
-	cross->Size = glm::vec2(mCrosshair->Width(), mCrosshair->Height());
+	cross->texture = mCrosshairTexture;
+	cross->Size = glm::vec2(mCrosshairTexture->Width(), mCrosshairTexture->Height());
 	cross->Position = glm::floor((glm::vec2(width, height) - cross->Size) / 2.0f);
 	cross->Z = 0;
 
 	// Use text
-	TextRenderData* text;
-	text = buffer->AddText();
-	text->Position = glm::floor(glm::vec2(width / 2.0f + 100.0f, height / 2.0f + 100.0f));
-	text->Z = 0;
-	text->font = mFont;
-	text->Text = mUseable ? mUseable->GetUseText() : "";
+	TextRenderData* useText;
+	useText = buffer->AddText();
+	useText->Position = glm::floor(glm::vec2(width / 2.0f + 100.0f, height / 2.0f + 100.0f));
+	useText->Z = 0;
+	useText->font = mFont;
+	useText->Text = mUseable ? mUseable->GetUseText() : "";
+
+	// Coin count
+	TextRenderData* coins;
+	coins = buffer->AddText();
+	coins->Position = glm::vec2(10.0f, height - 100.0f);
+	coins->font = mFont;
+	coins->Z = 0;
+	ss << "Coins: " << mCoins;
+	coins->Text = ss.str();
+
+	// Sprint bar
+	WidgetRenderData* sprintBar = buffer->AddWidget();
+	sprintBar->texture = mSprintTexture;
+	sprintBar->Position = glm::vec2(10.0f, height - 60.0f);
+	sprintBar->Z = 0;
+	sprintBar->Size = glm::vec2(mSprint * 200.0f, 20.0f);
+
+	// Light bar
+	WidgetRenderData* lightBar = buffer->AddWidget();
+	lightBar->texture = mLightTexture;
+	lightBar->Position = glm::vec2(10.0f, height - 30.0f);
+	lightBar->Z = 0;
+	lightBar->Size = glm::vec2(mLight * 200.0f, 20.0f);
 }

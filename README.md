@@ -1,12 +1,15 @@
 MAZE - Readme
 
-GLSL Version: 120
+If the game is not starting, try disabling some features in engine.cfg.
+In case something goes wrong, you can report the bug on https://github.com/nandor/MAZE/issues.
+OpenAL must be installed using oalinst.exe!
 
-OpenGL Version: 2.1
-
-OpenGL Extensions:
-- GL_ARB_draw_buffers
-- GL_ARB_seamless_cube_map
-- GL_ARB_framebuffer_object
-- GL_EXT_texture_filter_anisotropic
-- GL_EXT_texture_array
+Controls:
+W - move forward
+S - move backwards
+A - move left
+D - move right
+Q - torch
+F - use object
+LSHIFT - sprint
+ESCAPE - quit

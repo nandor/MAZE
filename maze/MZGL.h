@@ -244,6 +244,7 @@ extern GLState GL;
 #define MGL_ACTIVE_UNIFORM_MAX_LENGTH			0x8B87
 #define MGL_ACTIVE_ATTRIBUTES					0x8B89
 #define MGL_ACTIVE_ATTRIBUTE_MAX_LENGTH			0x8B8A
+#define MGL_SHADING_LANGUAGE_VERSION       		0x8B8C
 #define MGL_TEXTURE_2D_ARRAY					0x8C1A
 #define MGL_ANY_SAMPLES_PASSED					0x8C2F
 #define MGL_READ_FRAMEBUFFER					0x8CA8
@@ -344,13 +345,6 @@ typedef void (MZAPIENTRY *mglDeleteVertexArraysProc) (MGLsizei, const MGLuint*);
 typedef void (MZAPIENTRY *mglBindVertexArrayProc) (MGLuint);
 typedef void (MZAPIENTRY *mglDrawArraysInstancedProc) (MGLenum, MGLint, MGLsizei, MGLsizei);
 typedef void (MZAPIENTRY *mglClientActiveTextureProc) (MGLenum);
-typedef void (MZAPIENTRY *mglBeginConditionalRenderProc) (MGLuint, MGLenum);
-typedef void (MZAPIENTRY *mglEndConditionalRenderProc) ();
-typedef void (MZAPIENTRY *mglBeginQueryProc) (MGLenum, MGLuint);
-typedef void (MZAPIENTRY *mglEndQueryProc) (MGLenum);
-typedef void (MZAPIENTRY *mglGetQueryObjectuivProc) (MGLenum, MGLenum, MGLuint *);
-typedef void (MZAPIENTRY *mglDeleteQueriesProc) (MGLsizei, const MGLuint*);
-typedef void (MZAPIENTRY *mglGenQueriesProc) (MGLsizei, MGLuint*);
 typedef MGLboolean (MZAPIENTRY *mglIsRenderbufferProc) (MGLuint);
 typedef MGLboolean (MZAPIENTRY *mglIsFramebufferProc) (MGLuint);
 typedef MGLenum (MZAPIENTRY *mglCheckFramebufferStatusProc) (MGLenum);
@@ -473,13 +467,6 @@ extern mglDrawBuffersProc						mglDrawBuffers;
 extern mglDrawBufferProc						mglDrawBuffer;
 extern mglReadBufferProc						mglReadBuffer;
 extern mglBlitFramebufferProc					mglBlitFramebuffer;
-extern mglBeginConditionalRenderProc			mglBeginConditionalRender;
-extern mglEndConditionalRenderProc				mglEndConditionalRender;
-extern mglBeginQueryProc						mglBeginQuery;
-extern mglEndQueryProc							mglEndQuery;
-extern mglGetQueryObjectuivProc					mglGetQueryObjectuiv;
-extern mglDeleteQueriesProc						mglDeleteQueries;
-extern mglGenQueriesProc						mglGenQueries;
 extern mglGetProgramBinaryProc					mglGetProgramBinary;
 extern mglProgramBinaryProc						mglProgramBinary;
 extern mglProgramParameteriProc					mglProgramParameteri;

@@ -8,6 +8,7 @@ set (SOURCES MZCamera.cc
 			 MZCallback.cc
              MZConfig.cc
              MZEngine.cc
+             MZEntity.cc
 			 MZException.cc
 			 MZBoundingBox.cc
 			 MZFont.cc

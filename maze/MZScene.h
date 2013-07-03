@@ -163,7 +163,7 @@ namespace MAZE
 		{
 			std::unordered_map<std::string, Entity*>::iterator it;
 
-			if ((it = mNamedEntities.find(name)) != mNamedEntities.end())
+			if ((it = mNamedEntities.find(name)) == mNamedEntities.end())
 			{
 				throw Exception("Entity '" + name + "' not found");
 			}

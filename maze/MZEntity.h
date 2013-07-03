@@ -225,6 +225,14 @@ namespace MAZE
 		}
 
 		/**
+			Check if the object can be deleted
+		*/
+		virtual bool IsDeletable() const
+		{
+			return mSounds.size() == 0;
+		}
+
+		/**
 			Checks if the entity has a collision mesh
 		*/
 		virtual bool HasCollisionMesh() const
@@ -375,11 +383,16 @@ namespace MAZE
 		}
 
 		/**
+			Plays a sound
+		*/
+		void PlaySound(const std::string& sound);
+
+		/**
 			Updates the entity on each frame
 			@param time Total elapsed time
-			@param dt	Time since last updateo
+			@param dt	Time since last updated
 		*/
-		virtual void Update(float time, float dt) = 0;
+		virtual void Update(float time, float dt);
 
 		/**
 			Places the entity in the renderbuffer
@@ -457,6 +470,9 @@ namespace MAZE
 
 		/// True if the entity was modifies
 		bool fDirty;
+		
+		/// List of sound sources
+		std::vector<SoundSource> mSounds;
 		
 		/// Scene needs access to Entity
 		friend class Scene;

@@ -23,18 +23,6 @@ bool Object::HasCollisionMesh() const
 }
 
 // ------------------------------------------------------------------------------------------------
-void Object::PlaySound(const std::string& sound)
-{
-	SoundSource *src;
-
-	mSounds.resize(mSounds.size() + 1);
-	src = &(*mSounds.rbegin());
-
-	src->SetSource(fEngine->GetResourceManager()->Get<Sound> (sound));
-	src->Play();
-}
-
-// ------------------------------------------------------------------------------------------------
 void Object::Render(RenderBuffer* buffer, RenderMode mode)
 {
 	ObjectRenderData* data;
@@ -84,20 +72,7 @@ void Object::Update(float time, float dt)
 	mModelMat *= glm::rotate(mRotation.z, glm::vec3(0.0, 0.0, 1.0));
 	mModelMat *= glm::scale(mScale);
 
-	for (size_t i = 0; i < mSounds.size();)
-	{
-		mSounds[i].Update();
-		mSounds[i].SetPosition(mPosition);
-
-		if (mSounds[i].Finished())
-		{
-			std::swap(mSounds[i], mSounds[mSounds.size() - 1]);
-		}
-		else
-		{
-			++i;
-		}
-	}
+	Entity::Update(time, dt);
 }
 
 // ------------------------------------------------------------------------------------------------

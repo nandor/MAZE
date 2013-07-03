@@ -98,7 +98,7 @@ void Thread::Resume()
 {
 	if (mRunning && mHandle && mSuspended)
 	{
-		::ResumeThread(mHandle);
+		while (::ResumeThread(mHandle) > 1);
 		mSuspended = false;
 	}
 }

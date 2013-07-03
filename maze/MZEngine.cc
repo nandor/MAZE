@@ -6,7 +6,7 @@
 using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Engine::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	Engine * e;
 
@@ -372,6 +372,9 @@ void Engine::MainLoop()
 				}
 			}
 		}
+
+		mKeyState[VK_LSHIFT] = HIWORD(::GetKeyState(VK_LSHIFT)) != 0;
+		mKeyState[VK_RSHIFT] = HIWORD(::GetKeyState(VK_RSHIFT)) != 0;
 
 		// Retrieve input device states
 		::GetCursorPos(&p);

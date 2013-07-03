@@ -3,6 +3,9 @@
 -- (C) 2013 The MAZE project. All rights reserved.
 
 -------------------------------------------------------------------------------
+local player = nil
+
+-------------------------------------------------------------------------------
 function spawn_pillar(x, y)
     local pillar = scene.create("object")        
     pillar.model = "pillar"
@@ -37,7 +40,7 @@ function spawn_door(x, y, o)
     door.useable  = true
     door.collider = true
     door.shadow_caster = true
-    door.use_text = "Press F to open"
+    door.use_text = "Open"
     
     local door_open = false
     
@@ -87,7 +90,8 @@ end
 
 -------------------------------------------------------------------------------
 function on_world_init()    
-
+	player = scene.get("player", "player")
+	
     -- Place pillars on corners
     for x = 0, 20 do
         for y = 0, 20 do
@@ -136,6 +140,8 @@ function on_world_init()
                 coin.pickable = true     
                 
                 coin.on_pick = function (ent)
+					player:add_coin()
+					player:play_sound('coin')
                     coin:delete()
                 end
                 

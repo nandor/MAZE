@@ -214,18 +214,19 @@ static int box__tostring(lua_State *L)
 	std::stringstream ss;
 	
 	a = (BoundingBox*)mzlGetObject (L, 1, "box", 16);
+	__m128 min = a->GetMin(), max = a->GetMax();
 
 	ss << "box" 
 			<< "(" 
 				<< "(" 
-					<< a->GetMin().m128_f32[2] << ", " 
-					<< a->GetMin().m128_f32[1] << ", " 
-					<< a->GetMin().m128_f32[0] 
+					<< (((float*)&min)[0]) << ", " 
+					<< (((float*)&min)[1]) << ", " 
+					<< (((float*)&min)[2]) 
 				<< ")," 
 			<< "("
-				<< a->GetMax().m128_f32[2] << ", " 
-				<< a->GetMax().m128_f32[1] << ", " 
-				<< a->GetMax().m128_f32[0] 
+				<< (((float*)&max)[0]) << ", " 
+				<< (((float*)&max)[1]) << ", " 
+				<< (((float*)&max)[2]) 
 			<< ")" 
 		<< ")";
 				

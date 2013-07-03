@@ -173,7 +173,7 @@ void Scene::Update(float time, float dt)
 	{
 		Entity *ent = it->second;
 
-		if (ent->fDelete)
+		if (ent->fDelete && ent->IsDeletable())
 		{
 			mNamedEntities.erase(ent->GetName());
 			RemoveEntity(ent);
@@ -369,7 +369,7 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 						d = Invert(d);
 
 						// n.w = d
-						_mm_store_ss(&n.m128_f32[3], d);
+						_mm_store_ss((float*)&n + 3, d);
 						
 						for (size_t j = 0; j < 8; ++j)
 						{
@@ -455,7 +455,7 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 	move = _mm_max_ps(move, _mm_sub_ps(mRoot->Box.GetMin(), entity.GetMin()));
 	move = _mm_min_ps(move, _mm_sub_ps(mRoot->Box.GetMax(), entity.GetMax()));
 
-	return glm::vec3(move.m128_f32[0], move.m128_f32[1], move.m128_f32[2]);
+	return glm::vec3(((float*)&move)[0], ((float*)&move)[1], ((float*)&move)[2]);
 }
 
 // ------------------------------------------------------------------------------------------------

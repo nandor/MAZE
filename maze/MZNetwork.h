@@ -81,8 +81,6 @@ namespace MAZE
 
 		/// Server port
 		unsigned short mPort;
-
-
 	};
 };
 
