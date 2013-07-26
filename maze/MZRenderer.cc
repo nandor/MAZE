@@ -211,6 +211,11 @@ void Renderer::Init()
 	{
 		throw MGLException("[Renderer] Cannot initialize extensions");
 	}
+
+	if (GL.VSync)
+	{
+		mwglSwapInterval(1);
+	}
 	
 	mglEnable(MGL_TEXTURE_CUBE_MAP_SEAMLESS);
 	Log::Inst() << "[Renderer] GL vendor:     " << (const char*)mglGetString(MGL_VENDOR);
@@ -573,16 +578,16 @@ void Renderer::RenderObjects()
 			mObjectProgram->Uniform("uNormalMap", MGL_TEXTURE_2D, 1, model->mBumpMap->mTexture);
 				
 			mglBindBuffer(MGL_ARRAY_BUFFER, model->mVBO);
-			mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
-			mglNormalPointer(MGL_FLOAT, sizeof(Model::Vertex), (void*)12);
-			mglTexCoordPointer(2, MGL_FLOAT, sizeof(Model::Vertex), (void*)24);
+			mglVertexPointer(3, MGL_FLOAT, 32, (void*)0);
+			mglNormalPointer(MGL_FLOAT, 32, (void*)12);
+			mglTexCoordPointer(2, MGL_FLOAT, 32, (void*)24);
 
 			mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);				
 			mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
-			mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)0);
-			mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)16);
-			mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)32);
-			mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)48);
+			mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, 64, (void*)0);
+			mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, 64, (void*)16);
+			mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, 64, (void*)32);
+			mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, 64, (void*)48);
 
 			mglDrawArraysInstanced(MGL_TRIANGLES, 0, model->mVertexCount, instanceCount);
 		}
@@ -1122,7 +1127,7 @@ int Renderer::Worker()
 
 				::QueryPerformanceCounter(&time);
 				mTime = time.QuadPart * 1000.0f / mFreq.QuadPart;
-
+                
 				RenderGeometry();
 				RenderPointlights();
 				RenderSpotlights();
@@ -1132,6 +1137,7 @@ int Renderer::Worker()
 			}
 
 			::SwapBuffers(mEngine->GetDC());
+			mglFinish();
 		}
 
 		Log::Inst() << "[Renderer] Thread stopped";

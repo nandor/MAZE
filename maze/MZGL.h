@@ -53,6 +53,15 @@ typedef struct
 	/// Occlusion queries
 	MGLboolean SupportQueries;
 
+	/// Instancing
+	MGLboolean Instancing;
+
+	/// FBO
+	MGLboolean FBO;
+
+	/// Vertical sync
+	MGLboolean VSync;
+
 } GLState;
 
 extern GLState GL;
@@ -365,6 +374,8 @@ typedef void (MZAPIENTRY *mglBlitFramebufferProc) (MGLint, MGLint, MGLint, MGLin
 typedef void (MZAPIENTRY *mglGetProgramBinaryProc) (MGLuint, MGLsizei, MGLsizei*, MGLenum*, void*);
 typedef void (MZAPIENTRY *mglProgramBinaryProc) (MGLuint, MGLenum, const void*, MGLsizei);
 typedef void (MZAPIENTRY *mglProgramParameteriProc) (MGLuint, MGLenum, MGLint);
+typedef BOOL (MZAPIENTRY *mwglSwapIntervalProc) (int interval);
+typedef int  (MZAPIENTRY *mwglGetSwapIntervalProc) (void);
 
 // ------------------------------------------------------------------------------------------------ 
 extern mglGetErrorProc							mglGetError;
@@ -470,6 +481,8 @@ extern mglBlitFramebufferProc					mglBlitFramebuffer;
 extern mglGetProgramBinaryProc					mglGetProgramBinary;
 extern mglProgramBinaryProc						mglProgramBinary;
 extern mglProgramParameteriProc					mglProgramParameteri;
+extern mwglSwapIntervalProc						mwglSwapInterval;
+extern mwglGetSwapIntervalProc					mwglGetSwapInterval;
 
 /**
 	@brief 

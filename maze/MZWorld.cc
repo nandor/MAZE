@@ -49,22 +49,25 @@ void World::InitScene()
 	
 	/// Player
 	mPlayer = mScene->Create<Player> ("player");
-	mPlayer->SetPosition(glm::vec3(2.5f, 1.6f, 2.5f));
+	mPlayer->SetPosition(glm::vec3(2.5f, 3.0f, 2.5f));
+    mPlayer->SetPersistent(true);
 
 	/// Initialize the moonlight
 	mMoon = mScene->Create<Light>("moon");
 	mMoon->SetType(Light::DIRECTIONAL);
-	mMoon->SetDiffuse(glm::vec3(0.1f, 0.1f, 0.6f));
+	mMoon->SetDiffuse(glm::vec3(0.0f, 0.0f, 0.6f));
 	mMoon->SetSpecular(glm::vec3(0.2f, 0.2f, 1.0f));
-	mMoon->SetAmbient(glm::vec3(0.05f, 0.05f, 0.05f));
+	mMoon->SetAmbient(glm::vec3(0.1f, 0.1f, 0.2f));
 	mMoon->SetDirection(glm::vec3(-1.0f, -1.0f, -1.0f));
 	mMoon->SetShadowCaster(true);
+    mMoon->SetPersistent(true);
 
 	/// Ground plane
 	Model::CreatePlane(mEngine->GetResourceManager(), "floor", "floor_diffuse", "floor_bump", glm::vec2(100.0f), glm::vec2(1.5f));
 	Object* floor = mScene->Create<Object>();
 	floor->SetModel(mEngine->GetResourceManager()->Get<Model> ("floor"));
 	floor->SetPosition(glm::vec3(50.0f, 0.0f, 50.0f));
+    floor->SetPersistent(true);
 	floor->SetCollider(true);
 	floor->SetBoundingBox(BoundingBox(
 		glm::vec3(-50.0f, 0.0f, -50.0f), 

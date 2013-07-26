@@ -84,7 +84,8 @@ namespace MAZE
 			  fEngine(engine),
 			  fParentNode(NULL),
 			  fDelete(false),
-			  fDirty(true)
+			  fDirty(true),
+              fPersistent(false)
 		{
 		}
 
@@ -368,6 +369,15 @@ namespace MAZE
 			mActive = false;
 		}
 
+        /**
+            Prevents the entity from being destroyed
+            when the scene is reloaded
+        */
+        void SetPersistent(bool flag)
+        {
+            fPersistent = flag;
+        }
+
 		/**
 			Called when the object is picked
 		*/
@@ -470,6 +480,9 @@ namespace MAZE
 
 		/// True if the entity was modifies
 		bool fDirty;
+
+        /// True if the entity is not cleared when the scene is reloaded
+        bool fPersistent;
 		
 		/// List of sound sources
 		std::vector<SoundSource> mSounds;

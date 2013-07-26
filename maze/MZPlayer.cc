@@ -29,6 +29,7 @@ Player::Player(Engine *engine)
 	  mJumped(false),
 	  mMoveTime(0.0f),
 	  mCoins(0),
+      mKeys(0),
 	  mLight(1.0f),
 	  mSprint(1.0f)
 {
@@ -61,6 +62,8 @@ void Player::Update(float time, float dt)
 	int height = fEngine->GetSetup().WindowHeight;
 	glm::ivec2 pos(width >> 1, height >> 1);
 	glm::vec3 moveDir(0.0f), moveDist(0.0f), lookDir(0.0f), actualDist;
+
+	mTime = time;
 
 	// Handle the mouse
 	if (fEngine->IsFocused())
@@ -324,13 +327,14 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 		torchMtx *= glm::rotate(mRotation.y * 180.0f / PI, glm::vec3(0.0f, 1.0f, 0.0f));
 
 		// The light provided by the torch
+		float m = sin(mTime / 200.0f) * sin(mTime / 300.0f);
 		LightRenderData* light = buffer->AddLight();
 		light->Type	= Light::POINT;
 		light->Specular	= glm::vec3(0.88f, 0.34f, 0.13f);
-		light->Diffuse = glm::vec3(0.88f, 0.34f, 0.13f);
 		light->Position	= glm::vec4(torchPos, 10.0f);	
 		light->ModelMatrix = glm::translate(torchPos);
 		light->ModelMatrix *= glm::scale(glm::vec3(10.0f * 2.15));
+		light->Diffuse = glm::vec3(0.65f + 0.23f * m, 0.53f + 0.1f * m, 0.13f);
 
 		// Torch model
 		ObjectRenderData* object = buffer->AddObject();
@@ -355,13 +359,13 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 	useText->Text = mUseable ? mUseable->GetUseText() : "";
 
 	// Coin count
-	TextRenderData* coins;
-	coins = buffer->AddText();
-	coins->Position = glm::vec2(10.0f, height - 100.0f);
-	coins->font = mFont;
-	coins->Z = 0;
-	ss << "Coins: " << mCoins;
-	coins->Text = ss.str();
+	TextRenderData* score;
+	score = buffer->AddText();
+	score->Position = glm::vec2(10.0f, height - 100.0f);
+	score->font = mFont;
+	score->Z = 0;
+	ss << "Coins: " << mCoins << " Keys: " << mKeys << "/3";
+	score->Text = ss.str();
 
 	// Sprint bar
 	WidgetRenderData* sprintBar = buffer->AddWidget();

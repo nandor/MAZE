@@ -17,9 +17,9 @@ LRESULT CALLBACK Engine::WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 			return ::DefWindowProc(hwnd, msg, wParam, lParam);
 		}
 		
-		::SetWindowLong(hwnd, GWL_USERDATA, (LONG)e);
+		::SetWindowLongPtr(hwnd, GWLP_USERDATA , (LONG_PTR)e);
 	}
-	else if (!(e = (Engine*)::GetWindowLong(hwnd, GWL_USERDATA))) 
+	else if (!(e = (Engine*)::GetWindowLongPtr(hwnd, GWLP_USERDATA ))) 
 	{
 		return ::DefWindowProc(hwnd, msg, wParam, lParam);
 	}
@@ -135,8 +135,8 @@ void Engine::Init()
 	InitSound();
 
 	// Initialise the network
-	mNetwork = new Network(this);
-	mNetwork->Init();
+	//mNetwork = new Network(this);
+	//mNetwork->Init();
 
 	// Initialise the renderer
 	mRenderer = new Renderer(this);
@@ -160,6 +160,7 @@ void Engine::LoadConfig(const std::string& cfg)
 	mSetup.WindowWidth   = config["window"]["width"].AsInt(1024);
 	mSetup.WindowHeight  = config["window"]["height"].AsInt(576);
 	mSetup.FullScreen    = config["window"]["fullscreen"].AsBool(false);
+	mSetup.VSync		 = config["window"]["vsync"].AsBool(false);
 	mSetup.WindowTitle	 = config["window"]["title"].AsString("MAZE");
 	mSetup.ResourceDir   = config["rsmngr"]["dir"].AsString(".\\data");
 	mSetup.Anisotropy    = config["gfx"]["anisotropy"].AsFloat(0.0f);
@@ -327,7 +328,7 @@ void Engine::MainLoop()
 	
 	mRsmngr->Start();
 	mRenderer->Start();
-	mNetwork->Start();
+	//mNetwork->Start();
 	
 	mRunning = true;
 	while (mRunning) 
@@ -337,8 +338,12 @@ void Engine::MainLoop()
 		LARGE_INTEGER time;
 		float frameBeg;
 		
+		// Get frame time
 		::QueryPerformanceCounter(&time);
 		frameBeg = time.QuadPart * 1000.0f / mFreq.QuadPart;
+		
+		// Compute frame time
+		mTimeDelta = mLastFrameTime > 0 ? frameBeg - mLastFrameTime : 0.0f;
 
 		// Handle events
 		if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))	
@@ -381,13 +386,10 @@ void Engine::MainLoop()
 		mMouse.x = p.x;
 		mMouse.y = p.y;
 
-		// Compute frame time
-		mTimeDelta = mLastFrameTime > 0 ? frameBeg - mLastFrameTime : 0.0f;
-
 		// Update the scene
 		mWorld->Update(mLastFrameTime, mTimeDelta);		
 		mWorld->Render(mRenderer->GetBuffer());
-
+		
 		mLastFrameTime = frameBeg;
 		mRenderer->SwapBuffers();
 	}

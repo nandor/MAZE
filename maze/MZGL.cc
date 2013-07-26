@@ -132,6 +132,8 @@ mglBlitFramebufferProc						mglBlitFramebuffer;
 mglGetProgramBinaryProc						mglGetProgramBinary;
 mglProgramBinaryProc						mglProgramBinary;
 mglProgramParameteriProc					mglProgramParameteri;
+mwglSwapIntervalProc						mwglSwapInterval;
+mwglGetSwapIntervalProc						mwglGetSwapInterval;
 
 // ------------------------------------------------------------------------------------------------
 int mglIsSupported(const char *ext)
@@ -265,16 +267,24 @@ int mglInit()
 	GET_ADDR(glDeleteVertexArrays);
 	GET_ADDR(glBindVertexArray);
 
+	mwglSwapInterval = (mwglSwapIntervalProc)wglGetProcAddress("wglSwapIntervalEXT");
+	mwglGetSwapInterval = (mwglGetSwapIntervalProc)wglGetProcAddress("wglGetSwapIntervalEXT");
+
+	GL.VSync = (!mwglSwapInterval || !mwglGetSwapInterval) ? 0 : 1;
+
 	if (mglIsSupported("GL_ARB_draw_instanced"))
 	{
 		GET_ADDR_ARB(glDrawArraysInstanced);
+		GL.Instancing = 1;
 	}
 	else if (mglIsSupported("GL_EXT_draw_instanced"))
 	{
 		GET_ADDR_EXT(glDrawArraysInstanced);
+		GL.Instancing = 1;
 	}
 	else
 	{
+		GL.Instancing = 0;
 		return 0;
 	}
 
@@ -293,6 +303,9 @@ int mglInit()
 		GET_ADDR(glIsRenderbuffer);
 		GET_ADDR(glBindRenderbuffer);
 		GET_ADDR(glRenderbufferStorage);
+		GET_ADDR(glBlitFramebuffer);
+		GET_ADDR_ARB(glDrawBuffers);
+		GL.FBO = 1;
 	}
 	else if (mglIsSupported("GL_EXT_framebuffer_object"))
 	{
@@ -309,41 +322,23 @@ int mglInit()
 		GET_ADDR_EXT(glIsRenderbuffer);
 		GET_ADDR_EXT(glBindRenderbuffer);
 		GET_ADDR_EXT(glRenderbufferStorage);
-		GET_ADDR_EXT(glDrawBuffers);	
-	}
-	else
-	{
-		return 0;
-	}
-
-	if (mglIsSupported("GL_ARB_draw_buffers"))
-	{
-		GET_ADDR_ARB(glDrawBuffers);	
-	}
-	else if (mglIsSupported("GL_EXT_draw_buffers"))
-	{
 		GET_ADDR_EXT(glDrawBuffers);
-	}
-	else
-	{
-		return 0;
-	}
-
-	if (mglIsSupported("GL_EXT_framebuffer_blit"))
-	{
 		GET_ADDR_EXT(glBlitFramebuffer);
+		GET_ADDR_EXT(glDrawBuffers);
+		GL.FBO = 1;	
 	}
 	else
 	{
+		GL.FBO = 0;	
 		return 0;
 	}
-
+		
 	if (mglIsSupported("GL_ARB_get_program_binary"))
 	{
-		GL.SupportCache = 1;
 		GET_ADDR(glGetProgramBinary);
 		GET_ADDR(glProgramBinary);
 		GET_ADDR(glProgramParameteri);
+		GL.SupportCache = 1;
 	}
 	else
 	{

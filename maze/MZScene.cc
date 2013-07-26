@@ -200,6 +200,21 @@ void Scene::Update(float time, float dt)
 }
 
 // ------------------------------------------------------------------------------------------------
+void Scene::Delete()
+{
+	std::unordered_map<unsigned, Entity*>::iterator it = mEntities.begin();
+	while (it != mEntities.end())
+	{
+        if (!it->second->fPersistent)
+        {
+            it->second->fDelete = true;
+        }
+        
+        ++it;
+    }
+}
+
+// ------------------------------------------------------------------------------------------------
 void Scene::QueryRenderables(const Frustum& v, RenderBuffer* buffer)
 {
 	/*

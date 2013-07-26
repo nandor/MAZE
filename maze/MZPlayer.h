@@ -65,7 +65,7 @@ namespace MAZE
 		/**
 			Return number of coins
 		*/
-		unsigned GetCoins() const
+		int GetCoins() const
 		{
 			return mCoins;
 		}
@@ -73,9 +73,25 @@ namespace MAZE
 		/**
 			Change the number of coins
 		*/
-		void SetCoins(unsigned c)
+		void SetCoins(int c)
 		{
 			mCoins = c;
+		}
+
+		/**
+			Return number of keys
+		*/
+		int GetKeys() const
+		{
+			return mKeys;
+		}
+
+		/**
+			Change the number of keys
+		*/
+		void SetKeys(int c)
+		{
+			mKeys = c;
 		}
 
 		/**
@@ -189,8 +205,14 @@ namespace MAZE
 		/// Movement oscillation timer
 		float mMoveTime;
 
+		/// Timer
+		float mTime;
+
 		/// Number of coins picked up
-		unsigned mCoins;
+		int mCoins;
+
+        /// Number of keys picked up
+        int mKeys;
 
 		/// Light intensity
 		float mLight;

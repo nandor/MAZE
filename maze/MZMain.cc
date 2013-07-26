@@ -38,7 +38,8 @@ int main(int argc, char **argv)
 				delete engine;
 				engine = NULL;
 			}
-		
+            
+            Log::Inst() << "Unhandled exception: " << e.what();
 			MessageBox(NULL, e.what(), "Unhandled exception", MB_ICONERROR);
 			return -1;
 		}

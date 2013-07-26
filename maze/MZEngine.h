@@ -32,7 +32,10 @@ namespace MAZE
 
 			/// Full screen or windowed
 			bool FullScreen;
-			
+
+			/// VSync
+			bool VSync;
+						
 			/// Title of the window
 			std::string WindowTitle;
 

@@ -201,6 +201,11 @@ namespace MAZE
 		*/
 		void Update(float time, float dt);
 
+        /**
+            Deletes every entity from the scene
+        */
+        void Delete();
+
 	private:
 
 		/**

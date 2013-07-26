@@ -459,6 +459,7 @@ static const struct luaL_Reg light_m[] =
 	{"__tostring", light__tostring},
 	{NULL, NULL}
 };
+
 // ------------------------------------------------------------------------------------------------
 // player
 // ------------------------------------------------------------------------------------------------
@@ -471,7 +472,21 @@ static int player__setter(lua_State *L)
 	{
 		(*p)->SetMoveSpeed((float)luaL_checknumber(L, 3));
 		return 0;
-	}
+	}    
+    else if (!strcmp(name, "coins"))
+    {
+        (*p)->SetCoins(luaL_checknumber(L, 3));
+        return 0;
+    }
+    else if (!strcmp(name, "keys"))
+    {
+        (*p)->SetKeys(luaL_checknumber(L, 3));
+        return 1;
+    }
+	else if (!strcmp(name, "position"))
+	{
+		(*p)->SetPosition(*(glm::vec3*)mzlGetObject(L, 3, "vec3"));
+    }
 
 	lua_pushnil(L);
 	return 1;
@@ -488,6 +503,16 @@ static int player__getter(lua_State *L)
 		lua_pushnumber(L, (*p)->GetMoveSpeed());
 		return 1;
 	}
+    else if (!strcmp(name, "coins"))
+    {
+        lua_pushnumber(L, (*p)->GetCoins());
+        return 1;
+    }
+    else if (!strcmp(name, "keys"))
+    {
+        lua_pushnumber(L, (*p)->GetKeys());
+        return 1;
+    }
 
 	return 0;
 }
@@ -510,23 +535,11 @@ static int player__tostring(lua_State *L)
 }
 
 // ------------------------------------------------------------------------------------------------
-static int playeradd_coin(lua_State* L)
-{
-	Player **p;
-	
-	p = (Player**)mzlGetObject(L,  1, "player");
-	(*p)->SetCoins((*p)->GetCoins() + 1);
-
-	return 0;
-}
-
-// ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg player_m[] =
 {
 	{"__setter", player__setter},
 	{"__getter", player__getter},
 	{"__tostring", player__tostring},
-	{"add_coin", playeradd_coin},
 	{NULL, NULL}
 };
 
@@ -598,10 +611,27 @@ static int scene__get(lua_State *L)
 }
 
 // ------------------------------------------------------------------------------------------------
+static int scene__delete(lua_State *L)
+{
+	Scene *scene;
+
+	lua_getglobal(L, "__scene");
+	if (!lua_isuserdata(L, -1) || ((scene = (Scene*)lua_touserdata(L, -1)) == NULL))
+	{
+		lua_pushstring(L, "'__scene' not found");
+		lua_error(L);
+	}
+
+    scene->Delete();
+    return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
 static const struct luaL_Reg scene_s[] =
 {
 	{"create", scene__create},
 	{"get", scene__get},
+    {"delete", scene__delete},
 	{NULL, NULL}
 };
 
