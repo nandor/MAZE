@@ -11,7 +11,7 @@ uniform sampler2D uGNormal;
 uniform sampler2D uGPosition;
 
 // Camera position
-uniform vec3 uEyePosition;
+uniform vec3 uPosition;
 
 uniform vec3 lDiffuse;	
 uniform vec3 lSpecular;
@@ -30,7 +30,7 @@ void main()
             
     vec3 color = vec3(0.0);   
     vec3 lightDir = lPosition.xyz - geomPos;
-    vec3 viewDir = normalize(uEyePosition - geomPos.xyz);
+    vec3 viewDir = normalize(uPosition - geomPos.xyz);
     float angle, dist;
     
     dist = length(lightDir);

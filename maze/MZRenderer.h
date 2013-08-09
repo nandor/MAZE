@@ -121,11 +121,15 @@ namespace MAZE
 		// List of shader programs
 		Program *mObjectProgram;
 		Program *mSkyboxProgram;
-		Program *mDirlightProgram;
-		Program *mSpotlightProgram;
-		Program *mPointlightProgram;
-		Program *mVolumeProgram;
-		Program *mShadowProgram;
+		Program *mDLightProgram;
+		Program *mSLightProgram;
+		Program *mPLightProgram;
+		Program *mDShadowProgram;
+		Program *mSShadowProgram;
+		Program *mPShadowProgram;
+		Program *mDProjProgram;
+		Program *mSProjProgram;
+		Program *mPProjProgram;
 		Program *mFogProgram;
 		Program *mDOFProgram;
 		Program *mWidgetProgram;

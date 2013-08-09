@@ -7,7 +7,7 @@ using namespace MAZE;
 
 // ------------------------------------------------------------------------------------------------
 const float Player::ROTATE_SPEED = 1 / 150.0f;
-const float Player::JUMP_SPEED = 0.012f;
+const float Player::JUMP_SPEED = 0.013f;
 const float Player::GRAVITY = 0.00005f;
 
 // ------------------------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ void Player::Update(float time, float dt)
 	// Compute rotation
 	mRotation.y += ((width >> 1) - pos.x) * ROTATE_SPEED;
 	mRotation.x += ((height >> 1) - pos.y) * ROTATE_SPEED;	
-	mRotation.x = std::min(std::max(mRotation.x, -PIOVER4), PIOVER4);
+	mRotation.x = std::min(std::max(mRotation.x, -PI / 3.0f), PI / 3.0f);
 
 	// Camera orientation
 	lookDir.x = sin(mRotation.y) * cos(mRotation.x);

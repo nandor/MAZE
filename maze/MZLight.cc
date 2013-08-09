@@ -56,7 +56,8 @@ void Light::Render(RenderBuffer* buffer, RenderMode mode)
 			data->ModelMatrix *= glm::orientation(mDirection, glm::vec3(1.0f, 0.0f, 0.0f));
 			data->ModelMatrix *= glm::scale(mRadius, d, d);
 		
-			data->NormalMatrix = glm::inverseTranspose(data->ModelMatrix);
+			data->ShadowLevels = 1;
+
 			break;
 		}
 		case Light::DIRECTIONAL:

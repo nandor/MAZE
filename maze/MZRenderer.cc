@@ -145,11 +145,15 @@ MGLuint CreateTarget(MGLenum format, size_t width, size_t height)
 Renderer::Renderer(Engine* engine)
 	: mObjectProgram(NULL),
 	  mSkyboxProgram(NULL),
-	  mDirlightProgram(NULL),
-	  mSpotlightProgram(NULL),
-	  mPointlightProgram(NULL),
-	  mVolumeProgram(NULL),
-	  mShadowProgram(NULL),
+	  mDLightProgram(NULL),
+	  mSLightProgram(NULL),
+	  mPLightProgram(NULL),
+	  mDShadowProgram(NULL),
+	  mSShadowProgram(NULL),
+	  mPShadowProgram(NULL),
+	  mDProjProgram(NULL),
+	  mSProjProgram(NULL),
+	  mPProjProgram(NULL),
 	  mFogProgram(NULL),
 	  mDOFProgram(NULL),
 	  mWidgetProgram(NULL),
@@ -235,7 +239,7 @@ void Renderer::InitTargets()
 {
 	// Color targets
 	mGeomDiffuseTarget	= CreateTarget(MGL_RGBA,	mWidth, mHeight);
-	mGeomNormalTarget	= CreateTarget(MGL_RGBA,	mWidth, mHeight);
+	mGeomNormalTarget	= CreateTarget(MGL_RGBA16F,	mWidth, mHeight);
 	mGeomPositionTarget = CreateTarget(MGL_RGBA32F,	mWidth, mHeight);
 	mColor0Target		= CreateTarget(MGL_RGBA,	mWidth, mHeight);
 	mColor1Target		= CreateTarget(MGL_RGBA,	mWidth, mHeight);
@@ -300,40 +304,60 @@ void Renderer::InitPrograms()
 	mSkyboxProgram->Compile(Program::VERTEX, dir + "skybox.vs.glsl");
 	mSkyboxProgram->Compile(Program::FRAGMENT, dir + "skybox.fs.glsl");
 	mSkyboxProgram->Link();
-	
-	mDirlightProgram = new Program(this, "dirlight");
-	mDirlightProgram->Compile(Program::VERTEX, dir + "dirlight.vs.glsl");
-	mDirlightProgram->Compile(Program::FRAGMENT, dir + (mEnableShadows ? "dirlight_shadow.fs.glsl" : "dirlight.fs.glsl"));
-	mDirlightProgram->Link();
 
-	mSpotlightProgram = new Program(this, "spotlight");
-	mSpotlightProgram->Compile(Program::VERTEX, dir + "spotlight.vs.glsl");
-	mSpotlightProgram->Compile(Program::FRAGMENT, dir + "spotlight.fs.glsl");
-	mSpotlightProgram->Link();
-
-	mPointlightProgram = new Program(this, "pointlight");
-	mPointlightProgram->Compile(Program::VERTEX, dir + "pointlight.vs.glsl");
-	mPointlightProgram->Compile(Program::FRAGMENT, dir + "pointlight.fs.glsl");
-	mPointlightProgram->Link();
-
-	mVolumeProgram = new Program(this, "volume");
-	mVolumeProgram->Compile(Program::VERTEX, dir + "volume.vs.glsl");
-	mVolumeProgram->Compile(Program::FRAGMENT, dir + "volume.fs.glsl");
-	mVolumeProgram->Link();
-	
 	mWidgetProgram = new Program(this, "widget");
 	mWidgetProgram->Compile(Program::VERTEX, dir + "widget.vs.glsl");
 	mWidgetProgram->Compile(Program::FRAGMENT, dir + "widget.fs.glsl");
 	mWidgetProgram->Link();
+	
+	mDLightProgram = new Program(this, "dlight");
+	mDLightProgram->Compile(Program::VERTEX, dir + "dlight.vs.glsl");
+	mDLightProgram->Compile(Program::FRAGMENT, dir + "dlight.fs.glsl");
+	mDLightProgram->Link();
 
+	mSLightProgram = new Program(this, "slight");
+	mSLightProgram->Compile(Program::VERTEX, dir + "slight.vs.glsl");
+	mSLightProgram->Compile(Program::FRAGMENT, dir + "slight.fs.glsl");
+	mSLightProgram->Link();
+
+	mPLightProgram = new Program(this, "plight");
+	mPLightProgram->Compile(Program::VERTEX, dir + "plight.vs.glsl");
+	mPLightProgram->Compile(Program::FRAGMENT, dir + "plight.fs.glsl");
+	mPLightProgram->Link();
+	
 	if (mEnableShadows)
 	{
-		mShadowProgram = new Program(this, "shadow");
-		mShadowProgram->Compile(Program::VERTEX, dir + "shadow.vs.glsl");
-		mShadowProgram->Compile(Program::FRAGMENT, dir + "shadow.fs.glsl");
-		mShadowProgram->Link();
-	}
+		mDShadowProgram = new Program(this, "dshadow");
+		mDShadowProgram->Compile(Program::VERTEX, dir + "dshadow.vs.glsl");
+		mDShadowProgram->Compile(Program::FRAGMENT, dir + "dshadow.fs.glsl");
+		mDShadowProgram->Link();
 
+		mSShadowProgram = new Program(this, "sshadow");
+		mSShadowProgram->Compile(Program::VERTEX, dir + "sshadow.vs.glsl");
+		mSShadowProgram->Compile(Program::FRAGMENT, dir + "sshadow.fs.glsl");
+		mSShadowProgram->Link();
+
+		mPShadowProgram = new Program(this, "pshadow");
+		mPShadowProgram->Compile(Program::VERTEX, dir + "pshadow.vs.glsl");
+		mPShadowProgram->Compile(Program::FRAGMENT, dir + "pshadow.fs.glsl");
+		mPShadowProgram->Link();
+		
+		mDProjProgram = new Program(this, "dproj");
+		mDProjProgram->Compile(Program::VERTEX, dir + "dproj.vs.glsl");
+		mDProjProgram->Compile(Program::FRAGMENT, dir + "dproj.fs.glsl");
+		mDProjProgram->Link();
+
+		mPProjProgram = new Program(this, "pproj");
+		mPProjProgram->Compile(Program::VERTEX, dir + "pproj.vs.glsl");
+		mPProjProgram->Compile(Program::FRAGMENT, dir + "pproj.fs.glsl");
+		mPProjProgram->Link();
+		
+		mSProjProgram = new Program(this, "sproj");
+		mSProjProgram->Compile(Program::VERTEX, dir + "sproj.vs.glsl");
+		mSProjProgram->Compile(Program::FRAGMENT, dir + "sproj.fs.glsl");
+		mSProjProgram->Link();
+	}
+		
 	if (mEnableFog)
 	{
 		mFogProgram = new Program(this, "fog");
@@ -435,16 +459,20 @@ void Renderer::DestroyTargets()
 // ------------------------------------------------------------------------------------------------
 void Renderer::DestroyPrograms()
 {
-	if (mObjectProgram)		{ delete mObjectProgram;	 mObjectProgram		= NULL; }
-	if (mSkyboxProgram)		{ delete mSkyboxProgram;	 mSkyboxProgram		= NULL; }
-	if (mDirlightProgram)	{ delete mDirlightProgram;	 mDirlightProgram	= NULL; }
-	if (mSpotlightProgram)	{ delete mSpotlightProgram;	 mSpotlightProgram	= NULL; }
-	if (mPointlightProgram) { delete mPointlightProgram; mPointlightProgram = NULL; }
-	if (mVolumeProgram)		{ delete mVolumeProgram;	 mVolumeProgram		= NULL; }
-	if (mShadowProgram)		{ delete mShadowProgram;	 mShadowProgram		= NULL; }
-	if (mFogProgram)		{ delete mFogProgram;		 mFogProgram		= NULL; }
-	if (mDOFProgram)		{ delete mDOFProgram;		 mDOFProgram		= NULL; }
-	if (mWidgetProgram)		{ delete mWidgetProgram;	 mWidgetProgram		= NULL; }
+	if (mObjectProgram)		{ delete mObjectProgram;	mObjectProgram	= NULL; }
+	if (mSkyboxProgram)		{ delete mSkyboxProgram;	mSkyboxProgram	= NULL; }
+	if (mDLightProgram)		{ delete mDLightProgram;	mDLightProgram	= NULL; }
+	if (mSLightProgram)		{ delete mSLightProgram;	mSLightProgram	= NULL; }
+	if (mPLightProgram)		{ delete mPLightProgram;	mPLightProgram	= NULL; }
+	if (mDShadowProgram)	{ delete mDShadowProgram;	mDShadowProgram	= NULL; }
+	if (mSShadowProgram)	{ delete mSShadowProgram;	mSShadowProgram	= NULL; }
+	if (mPShadowProgram)	{ delete mPShadowProgram;	mPShadowProgram	= NULL; }
+	if (mDProjProgram)		{ delete mDProjProgram;		mDProjProgram	= NULL; }
+	if (mSProjProgram)		{ delete mSProjProgram;		mSProjProgram	= NULL; }
+	if (mPProjProgram)		{ delete mPProjProgram;		mPProjProgram	= NULL; }
+	if (mFogProgram)		{ delete mFogProgram;		mFogProgram		= NULL; }
+	if (mDOFProgram)		{ delete mDOFProgram;		mDOFProgram		= NULL; }
+	if (mWidgetProgram)		{ delete mWidgetProgram;	mWidgetProgram	= NULL; }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -452,13 +480,13 @@ void Renderer::DestroyBuffers()
 {
 	mglBindBuffer(MGL_ARRAY_BUFFER, 0);
 
-	if (mLightVBO)	  { mglDeleteBuffers(1, &mLightVBO);		mLightVBO = 0;	  }
-	if (mSkyboxVBO)	  { mglDeleteBuffers(1, &mSkyboxVBO);		mSkyboxVBO = 0;	  }
-	if (mQuadVBO)	  { mglDeleteBuffers(1, &mQuadVBO);			mQuadVBO = 0;	  }
-	if (mInstanceVBO) { mglDeleteBuffers(1, &mInstanceVBO);		mInstanceVBO = 0; }
-	if (mInstances)	  { delete[] mInstances;					mInstances = NULL;}
-	if (mWidgetVBO)	  { mglDeleteBuffers(1, &mWidgetVBO);		mWidgetVBO = 0;	  }
-	if (mWidgets)	  { delete[] mWidgets;						mWidgets = NULL;  }
+	if (mLightVBO)	  { mglDeleteBuffers(1, &mLightVBO);	mLightVBO = 0;	  }
+	if (mSkyboxVBO)	  { mglDeleteBuffers(1, &mSkyboxVBO);	mSkyboxVBO = 0;	  }
+	if (mQuadVBO)	  { mglDeleteBuffers(1, &mQuadVBO);		mQuadVBO = 0;	  }
+	if (mInstanceVBO) { mglDeleteBuffers(1, &mInstanceVBO);	mInstanceVBO = 0; }
+	if (mInstances)	  { delete[] mInstances;				mInstances = NULL;}
+	if (mWidgetVBO)	  { mglDeleteBuffers(1, &mWidgetVBO);	mWidgetVBO = 0;	  }
+	if (mWidgets)	  { delete[] mWidgets;					mWidgets = NULL;  }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -617,12 +645,12 @@ void Renderer::RenderPointlights()
 	mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mGeometryFBO);
 	mglDrawBuffer(MGL_COLOR_ATTACHMENT + 3);
 
-	mPointlightProgram->Use();
-	mPointlightProgram->Uniform("uWidth", mWidth);
-	mPointlightProgram->Uniform("uHeight", mHeight);
-	mPointlightProgram->Uniform("uGDiffuse",	 MGL_TEXTURE_2D, 0, mGeomDiffuseTarget );
-	mPointlightProgram->Uniform("uGNormal",	 MGL_TEXTURE_2D, 1, mGeomNormalTarget  );
-	mPointlightProgram->Uniform("uGPosition", MGL_TEXTURE_2D, 2, mGeomPositionTarget);
+	mPLightProgram->Use();
+	mPLightProgram->Uniform("uWidth", mWidth);
+	mPLightProgram->Uniform("uHeight", mHeight);
+	mPLightProgram->Uniform("uGDiffuse",	 MGL_TEXTURE_2D, 0, mGeomDiffuseTarget );
+	mPLightProgram->Uniform("uGNormal",	 MGL_TEXTURE_2D, 1, mGeomNormalTarget  );
+	mPLightProgram->Uniform("uGPosition", MGL_TEXTURE_2D, 2, mGeomPositionTarget);
 
 	mglBindBuffer(MGL_ARRAY_BUFFER, mLightVBO);
 	mglEnableClientState(MGL_VERTEX_ARRAY);
@@ -643,12 +671,12 @@ void Renderer::RenderPointlights()
 				
 		if (light->Type == Light::POINT)
 		{
-			mPointlightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
-			mPointlightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
-			mPointlightProgram->Uniform("lPosition", light->Position);
-			mPointlightProgram->Uniform("lDirection", light->Direction);
-			mPointlightProgram->Uniform("lDiffuse", light->Diffuse);
-			mPointlightProgram->Uniform("lSpecular", light->Specular);
+			mPLightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
+			mPLightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
+			mPLightProgram->Uniform("lPosition", light->Position);
+			mPLightProgram->Uniform("lDirection", light->Direction);
+			mPLightProgram->Uniform("lDiffuse", light->Diffuse);
+			mPLightProgram->Uniform("lSpecular", light->Specular);
 
 			mglDrawArrays(MGL_TRIANGLES, 0, 132);
 		}
@@ -663,46 +691,51 @@ void Renderer::RenderPointlights()
 // ------------------------------------------------------------------------------------------------
 void Renderer::RenderSpotlights()
 {	
+	LightRenderData * light;
+
 	mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mGeometryFBO);
 	mglDrawBuffer(MGL_COLOR_ATTACHMENT + 3);
 
-	mSpotlightProgram->Use();
-	mSpotlightProgram->Uniform("uWidth", mWidth);
-	mSpotlightProgram->Uniform("uHeight", mHeight);
-	mSpotlightProgram->Uniform("uGDiffuse",	 MGL_TEXTURE_2D, 0, mGeomDiffuseTarget );
-	mSpotlightProgram->Uniform("uGNormal",	 MGL_TEXTURE_2D, 1, mGeomNormalTarget  );
-	mSpotlightProgram->Uniform("uGPosition",  MGL_TEXTURE_2D, 2, mGeomPositionTarget);
-
-	mglBindBuffer(MGL_ARRAY_BUFFER, mLightVBO);
-	mglEnableClientState(MGL_VERTEX_ARRAY);
-	mglVertexPointer(3, MGL_FLOAT, 12, (void*)0);
-
+	mSLightProgram->Use();
+	mSLightProgram->Uniform("uWidth", mWidth);
+	mSLightProgram->Uniform("uHeight", mHeight);
+	mSLightProgram->Uniform("uGDiffuse",	 MGL_TEXTURE_2D, 0, mGeomDiffuseTarget );
+	mSLightProgram->Uniform("uGNormal",	 MGL_TEXTURE_2D, 1, mGeomNormalTarget);
+	mSLightProgram->Uniform("uGPosition",  MGL_TEXTURE_2D, 2, mGeomPositionTarget);
+	
 	mglEnable(MGL_CULL_FACE);
-	mglEnable(MGL_BLEND);
+	mglEnable(MGL_DEPTH_TEST);
+	mglEnableClientState(MGL_VERTEX_ARRAY);
 
 	mglDepthFunc(MGL_GEQUAL);
 	mglDepthMask(MGL_FALSE);
 	mglCullFace(MGL_FRONT);
-	mglBlendFunc(MGL_ONE, MGL_ONE);
 
 	for (size_t i = 0; i < mFront->Lights.size(); ++i)
-	{
-		LightRenderData* light = &mFront->Lights[i];
-				
-		if (light->Type == Light::SPOT)
+	{			
+		if ((light = &mFront->Lights[i])->Type != Light::SPOT)
 		{
-			mSpotlightProgram->Uniform("uEyePosition", mFront->Camera.Position);		
-			mSpotlightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
-			mSpotlightProgram->Uniform("lPosition", light->Position);
-			mSpotlightProgram->Uniform("lDirection", light->Direction);
-			mSpotlightProgram->Uniform("lDiffuse", light->Diffuse);
-			mSpotlightProgram->Uniform("lSpecular", light->Specular);
-
-			mglDrawArrays(MGL_TRIANGLES, 132, 42);
+			continue;
 		}
+
+		if (mEnableShadows && light->CastsShadows)
+		{
+			mSLightProgram->Uniform("uPosition", mFront->Camera.Position);		
+			mSLightProgram->Uniform("uMVP", mFront->Camera.ProjMatrix * mFront->Camera.ViewMatrix * light->ModelMatrix);
+			mSLightProgram->Uniform("lPosition", light->Position);
+			mSLightProgram->Uniform("lDirection", light->Direction);
+			mSLightProgram->Uniform("lDiffuse", light->Diffuse);
+			mSLightProgram->Uniform("lSpecular", light->Specular);
+		}
+		
+		mglEnable(MGL_BLEND);
+		mglBlendFunc(MGL_ONE, MGL_ONE);
+		mglBindBuffer(MGL_ARRAY_BUFFER, mLightVBO);
+		mglVertexPointer(3, MGL_FLOAT, 12, (void*)0);
+		mglDrawArrays(MGL_TRIANGLES, 132, 42);
+		mglDisable(MGL_BLEND);
 	}
 
-	mglDisable(MGL_BLEND);
 	mglDisable(MGL_CULL_FACE);
 	mglDisable(MGL_DEPTH_TEST);
 	mglDisableClientState(MGL_VERTEX_ARRAY);
@@ -711,153 +744,149 @@ void Renderer::RenderSpotlights()
 // ------------------------------------------------------------------------------------------------
 void Renderer::RenderDirlights()
 {
+	LightRenderData* light;
 	glm::vec4 shadowZ;
-
-	MGLuint index0 = mShadowProgram->Attribute("aModel0");
-	MGLuint index1 = mShadowProgram->Attribute("aModel1");
-	MGLuint index2 = mShadowProgram->Attribute("aModel2");
-	MGLuint index3 = mShadowProgram->Attribute("aModel3");
-					
+	
+	mglEnable(MGL_CULL_FACE);
 	mglEnable(MGL_DEPTH_TEST);
 	mglEnableClientState(MGL_VERTEX_ARRAY);
-
-	for (size_t j = 0; j < mFront->Lights.size(); ++j)
-	{
-		LightRenderData* light = &mFront->Lights[j];
-				
-		if (light->Type == Light::DIRECTIONAL)
-		{
-			mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mShadowFBO);	
-			mglViewport(0, 0, mMapSize, mMapSize);
-			
-			if (mEnableShadows)
-			{
-				if (light->CastsShadows)
-				{
-					mglEnable(MGL_CULL_FACE);
-					mglEnable(MGL_POLYGON_OFFSET_FILL);
-
-					mglDepthMask(MGL_TRUE);
-					mglDepthFunc(MGL_LEQUAL);
-					mglCullFace(MGL_BACK);	
-					mglPolygonOffset(1.0f, 2.0f);
-
-					mglVertexAttribDivisor(index0, 1);				
-					mglVertexAttribDivisor(index1, 1);				
-					mglVertexAttribDivisor(index2, 1);								
-					mglVertexAttribDivisor(index3, 1);
-					mglEnableVertexAttribArray(index0);
-					mglEnableVertexAttribArray(index1);
-					mglEnableVertexAttribArray(index2);
-					mglEnableVertexAttribArray(index3);
-
-					mShadowProgram->Use();
-					for (int i = 0; i < light->ShadowLevels; ++i)
-					{
-						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
-						mglClear(MGL_DEPTH_BUFFER_BIT);
-				
-						shadowZ[i] = light->Shadow[i].NearZ;
-						mShadowProgram->Uniform("uVP", light->Shadow[i].MVP);
-
-						size_t count = light->Shadow[i].Count, beg = light->Shadow[i].Index;	
-						while (count)
-						{
-							Model *model = mFront->ShadowCasters[beg].model;	
-
-							size_t instanceCount = 0;
-							for (size_t j = 0; j < count && instanceCount < INSTANCE_BATCH;)
-							{
-								if (mFront->ShadowCasters[beg + j].model->GetID() != model->GetID())
-								{
-									++j;
-									continue;
-								}
-
-								mInstances[instanceCount++] = mFront->ShadowCasters[beg + j].ModelMatrix;
-								std::swap(mFront->ShadowCasters[beg + j], mFront->ShadowCasters[beg + (--count)]);
-							}	
-		
-							if (model && model->GetState() == Resource::LOADED && model->mVBO)
-							{			
-								mglBindBuffer(MGL_ARRAY_BUFFER, model->mVBO);
-								mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
-
-								mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);				
-								mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
-								mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)0);
-								mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)16);
-								mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)32);
-								mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)48);
-
-								mglDrawArraysInstanced(MGL_TRIANGLES, 0, model->mVertexCount, instanceCount);
-							}
-						}
-					}
-
-					mglDisableVertexAttribArray(index3);
-					mglDisableVertexAttribArray(index2);
-					mglDisableVertexAttribArray(index1);
-					mglDisableVertexAttribArray(index0);
-					mglVertexAttribDivisor(index0, 0);				
-					mglVertexAttribDivisor(index1, 0);				
-					mglVertexAttribDivisor(index2, 0);								
-					mglVertexAttribDivisor(index3, 0);
-
-					mglDisable(MGL_POLYGON_OFFSET_FILL);
-					mglDisable(MGL_CULL_FACE);			
-				}
-				else
-				{				
-					mglDepthMask(MGL_TRUE);
-					for (size_t i = 0; i < 4; ++i)
-					{
-						mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
-						mglClear(MGL_DEPTH_BUFFER_BIT);
-					}
-				}
-			}
-
-			mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mGeometryFBO);
-			mglDrawBuffer(MGL_COLOR_ATTACHMENT + 3);
-			mglViewport(0, 0, mWidth, mHeight);
 	
-			mDirlightProgram->Use();
-			mDirlightProgram->Uniform("uGDiffuse",	MGL_TEXTURE_2D, 0, mGeomDiffuseTarget);
-			mDirlightProgram->Uniform("uGNormal",	MGL_TEXTURE_2D, 1, mGeomNormalTarget);
-			mDirlightProgram->Uniform("uGPosition",	MGL_TEXTURE_2D, 2, mGeomPositionTarget);
-			mDirlightProgram->Uniform("uEyePosition", mFront->Camera.Position);
-			mDirlightProgram->Uniform("lDiffuse", light->Diffuse);
-			mDirlightProgram->Uniform("lSpecular", light->Specular);
-			mDirlightProgram->Uniform("lAmbient", light->Ambient);
-			mDirlightProgram->Uniform("lDirection", light->Direction);
-						
-			if (mEnableShadows)
+	mglCullFace(MGL_BACK);	
+	mglPolygonOffset(1.0f, 2.0f);
+	mglBlendFunc(MGL_ONE, MGL_ONE);
+	
+	for (size_t j = 0; j < mFront->Lights.size(); ++j)
+	{		
+		if ((light = &mFront->Lights[j])->Type != Light::DIRECTIONAL)
+		{
+			continue;
+		}
+
+		mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mShadowFBO);	
+		mglViewport(0, 0, mMapSize, mMapSize);
+			
+		if (mEnableShadows && light->CastsShadows)
+		{
+			MGLuint index0 = mDProjProgram->Attribute("aModel0");
+			MGLuint index1 = mDProjProgram->Attribute("aModel1");
+			MGLuint index2 = mDProjProgram->Attribute("aModel2");
+			MGLuint index3 = mDProjProgram->Attribute("aModel3");
+					
+			mglEnable(MGL_POLYGON_OFFSET_FILL);
+			mglDepthMask(MGL_TRUE);
+			mglDepthFunc(MGL_LEQUAL);
+
+			mglVertexAttribDivisor(index0, 1);				
+			mglVertexAttribDivisor(index1, 1);				
+			mglVertexAttribDivisor(index2, 1);								
+			mglVertexAttribDivisor(index3, 1);
+			mglEnableVertexAttribArray(index0);
+			mglEnableVertexAttribArray(index1);
+			mglEnableVertexAttribArray(index2);
+			mglEnableVertexAttribArray(index3);
+
+			mDProjProgram->Use();
+			for (int i = 0; i < light->ShadowLevels; ++i)
 			{
-				mDirlightProgram->Uniform("uLevels", light->ShadowLevels);
-				mDirlightProgram->Uniform("uShadow",    MGL_TEXTURE_2D_ARRAY, 4, mShadowTarget);
-				mDirlightProgram->Uniform("uShadowMVP0", DEPTH_BIAS * light->Shadow[0].MVP);
-				mDirlightProgram->Uniform("uShadowMVP1", DEPTH_BIAS * light->Shadow[1].MVP);
-				mDirlightProgram->Uniform("uShadowMVP2", DEPTH_BIAS * light->Shadow[2].MVP);
-				mDirlightProgram->Uniform("uShadowMVP3", DEPTH_BIAS * light->Shadow[3].MVP);	
-				mDirlightProgram->Uniform("uShadowZ", shadowZ);
+				mglFramebufferTextureLayer(MGL_DRAW_FRAMEBUFFER, MGL_DEPTH_ATTACHMENT, mShadowTarget, 0, i);
+				mglClear(MGL_DEPTH_BUFFER_BIT);
+				
+				shadowZ[i] = light->Shadow[i].NearZ;
+				mDProjProgram->Uniform("uVP", light->Shadow[i].MVP);
+
+				size_t count = light->Shadow[i].Count, beg = light->Shadow[i].Index;	
+				while (count)
+				{
+					Model *model = mFront->ShadowCasters[beg].model;	
+
+					size_t instanceCount = 0;
+					for (size_t j = 0; j < count && instanceCount < INSTANCE_BATCH;)
+					{
+						if (mFront->ShadowCasters[beg + j].model->GetID() != model->GetID())
+						{
+							++j;
+							continue;
+						}
+
+						mInstances[instanceCount++] = mFront->ShadowCasters[beg + j].ModelMatrix;
+						std::swap(mFront->ShadowCasters[beg + j], mFront->ShadowCasters[beg + (--count)]);
+					}	
+		
+					if (model->GetState() == Resource::LOADED && model->mVBO)
+					{			
+						mglBindBuffer(MGL_ARRAY_BUFFER, model->mVBO);
+						mglVertexPointer(3, MGL_FLOAT, sizeof(Model::Vertex), (void*)0);
+
+						mglBindBuffer(MGL_ARRAY_BUFFER, mInstanceVBO);				
+						mglBufferData(MGL_ARRAY_BUFFER, INSTANCE_BATCH * sizeof(glm::mat4), mInstances, MGL_DYNAMIC_DRAW);
+						mglVertexAttribPointer(index0, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)0);
+						mglVertexAttribPointer(index1, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)16);
+						mglVertexAttribPointer(index2, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)32);
+						mglVertexAttribPointer(index3, 4, MGL_FLOAT, MGL_FALSE, sizeof(glm::mat4), (void*)48);
+
+						mglDrawArraysInstanced(MGL_TRIANGLES, 0, model->mVertexCount, instanceCount);
+					}
+				}
 			}
 
-			mglDisable(MGL_CULL_FACE);
-			mglEnable(MGL_BLEND);
+			mglDisableVertexAttribArray(index3);
+			mglDisableVertexAttribArray(index2);
+			mglDisableVertexAttribArray(index1);
+			mglDisableVertexAttribArray(index0);
+			mglVertexAttribDivisor(index0, 0);				
+			mglVertexAttribDivisor(index1, 0);				
+			mglVertexAttribDivisor(index2, 0);								
+			mglVertexAttribDivisor(index3, 0);
 
-			mglDepthFunc(MGL_GREATER);
-			mglDepthMask(MGL_FALSE);
-			mglBlendFunc(MGL_ONE, MGL_ONE);
-
-			mglBindBuffer(MGL_ARRAY_BUFFER, mQuadVBO);
-			mglVertexPointer(2, MGL_FLOAT, 2 * sizeof(float), 0);
-			mglDrawArrays(MGL_TRIANGLES, 0, 6);		
-
-			mglDisable(MGL_BLEND);
+			mglDisable(MGL_POLYGON_OFFSET_FILL);
+		
+			mDShadowProgram->Use();
+			mDShadowProgram->Uniform("uGDiffuse", MGL_TEXTURE_2D, 0, mGeomDiffuseTarget);
+			mDShadowProgram->Uniform("uGNormal", MGL_TEXTURE_2D, 1, mGeomNormalTarget);
+			mDShadowProgram->Uniform("uGPosition", MGL_TEXTURE_2D, 2, mGeomPositionTarget);
+			mDShadowProgram->Uniform("uShadow", MGL_TEXTURE_2D_ARRAY, 4, mShadowTarget);
+			mDShadowProgram->Uniform("uShadowMVP0", DEPTH_BIAS * light->Shadow[0].MVP);
+			mDShadowProgram->Uniform("uShadowMVP1", DEPTH_BIAS * light->Shadow[1].MVP);
+			mDShadowProgram->Uniform("uShadowMVP2", DEPTH_BIAS * light->Shadow[2].MVP);
+			mDShadowProgram->Uniform("uShadowMVP3", DEPTH_BIAS * light->Shadow[3].MVP);	
+			mDShadowProgram->Uniform("uShadowZ", shadowZ);
+			mDShadowProgram->Uniform("uLevels", light->ShadowLevels);
+			mDShadowProgram->Uniform("uPosition", mFront->Camera.Position);
+			mDShadowProgram->Uniform("lDiffuse", light->Diffuse);
+			mDShadowProgram->Uniform("lSpecular", light->Specular);
+			mDShadowProgram->Uniform("lAmbient", light->Ambient);
+			mDShadowProgram->Uniform("lDirection", light->Direction);
 		}
+		else
+		{
+			mDLightProgram->Use();
+			mDLightProgram->Uniform("uGDiffuse", MGL_TEXTURE_2D, 0, mGeomDiffuseTarget);
+			mDLightProgram->Uniform("uGNormal",	MGL_TEXTURE_2D, 1, mGeomNormalTarget);
+			mDLightProgram->Uniform("uGPosition", MGL_TEXTURE_2D, 2, mGeomPositionTarget);
+			mDLightProgram->Uniform("uPosition", mFront->Camera.Position);
+			mDLightProgram->Uniform("lDiffuse", light->Diffuse);
+			mDLightProgram->Uniform("lSpecular", light->Specular);
+			mDLightProgram->Uniform("lAmbient", light->Ambient);
+			mDLightProgram->Uniform("lDirection", light->Direction);
+		}
+
+		mglBindFramebuffer(MGL_DRAW_FRAMEBUFFER, mGeometryFBO);
+		mglDrawBuffer(MGL_COLOR_ATTACHMENT + 3);
+		mglViewport(0, 0, mWidth, mHeight);
+	
+		mglEnable(MGL_BLEND);
+
+		mglDepthFunc(MGL_GREATER);
+		mglDepthMask(MGL_FALSE);
+		
+		mglBindBuffer(MGL_ARRAY_BUFFER, mQuadVBO);
+		mglVertexPointer(2, MGL_FLOAT, 2 * sizeof(float), 0);
+		mglDrawArrays(MGL_TRIANGLES, 0, 6);		
+
+		mglDisable(MGL_BLEND);
 	}
 
+	mglDisable(MGL_CULL_FACE);
 	mglDisable(MGL_DEPTH_TEST);
 	mglDisableClientState(MGL_VERTEX_ARRAY);
 }

@@ -368,7 +368,7 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 						a = _mm_loadu_ps(glm::value_ptr(mtx * glm::vec4(mesh[i + 0], 1.0f)));
 						b = _mm_loadu_ps(glm::value_ptr(mtx * glm::vec4(mesh[i + 1], 1.0f)));
 						c = _mm_loadu_ps(glm::value_ptr(mtx * glm::vec4(mesh[i + 2], 1.0f)));
-
+						
 						// Compute & normalize the normal vector
 						n = Cross(_mm_sub_ps(b, a), _mm_sub_ps(c, a));
 						l = _mm_mul_ps(n, n);
@@ -382,7 +382,7 @@ glm::vec3 Scene::QueryDistance(Entity* who, const glm::vec3& dir)
 						d = _mm_hadd_ps(d, d);
 						d = _mm_hadd_ps(d, d);						
 						d = Invert(d);
-
+						
 						// n.w = d
 						_mm_store_ss((float*)&n + 3, d);
 						

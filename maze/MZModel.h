@@ -8,6 +8,12 @@
 
 namespace MAZE
 {
+
+	/**
+		The model class stores information about meshes:
+		vertex positions, normal vectors, texture coordinates,
+		bone weights and skeleton
+	*/
 	class Model : public Resource
 	{
 	public:
@@ -23,6 +29,15 @@ namespace MAZE
 			glm::vec3 Position;
 			glm::vec3 Normal;
 			glm::vec2 UV;
+		};
+
+		/**
+			Skinning data associated to a vertex
+		*/
+		struct BoneVertex
+		{
+			unsigned short Id;
+			unsigned short Weight;	// weight /= SHORT_MAX
 		};
 				
 	public:
@@ -97,6 +112,9 @@ namespace MAZE
 		
 		/// List of vertices of the mesh
 		std::vector<Vertex> mVertices;
+
+		/// List of bone weights
+		std::vector<BoneVertex> mWeights;
 
 		/// List of vertices of the collision mesh
 		std::vector<glm::vec3> mCollision;

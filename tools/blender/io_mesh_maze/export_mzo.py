@@ -3,13 +3,15 @@
 # (C) 2012 The Maze Project. All rights reserved.
 
 import os
-import struct
 import bpy
 import bmesh
-from mathutils import Vector
+from struct import pack
 from bpy_extras.io_utils import axis_conversion
-from bpy.types import ImageTexture
 
+FLAGS_VERTICES  = 1 << 0
+FLAGS_COLLISION = 1 << 2
+FLAGS_SKELETON  = 1 << 3
+       
 def mesh_prepare(mesh):
     """
         Triangulates the mesh
@@ -32,97 +34,127 @@ def mesh_prepare(mesh):
     mesh.calc_normals()
     mesh.calc_tessface()
     
-        
-def save(operator, ctx, filepath = ''):
+def save(operator, ctx, filepath = '', 
+         use_skeleton = True, 
+         use_collision = True):
     """
-        Saves the active object
+        Saves the active object to a .mzo file
     """
     
-    # Validate the mesh
+    # Data to be saved
+    flags       = 0
+    verts       = []
+    indices     = []
+    phys        = []
+    skeleton    = []
+    
+    # Retrieve the object
     object = ctx.active_object
-    if not object or not object.name:
-        raise Exception('No mesh selected!')
-        
+    if not object:
+        raise Exception('No objects selected!')
+    
+    # Read vertices, indices and bone weights
     mesh = object.to_mesh(ctx.scene, True, 'PREVIEW')
-    if not mesh:
-        raise Exception('Cannot retrieve mesh')
+    mesh_prepare(mesh)        
+    
+    # Retrieve normals, positions and weights
+    for vert in mesh.vertices:
+        vertex = {}
+        
+        # Retrieve vertex position
+        vertex["x"] = vert.co.x
+        vertex["y"] = vert.co.y
+        vertex["z"] = vert.co.z
+        
+        # Retrieve normals
+        vertex["nx"] = vert.normal.x
+        vertex["ny"] = vert.normal.y
+        vertex["nz"] = vert.normal.z
             
-    if len(mesh.materials) != 1:
-        raise Exception('Too many or missing materials')
+        # Retrieve bone weights
+        weights = []
+        for group in vert.groups:
+            weights.append({
+                "weight": group.weight,
+                "group": group.group
+            })
+            
+        if len(weights) > 4:
+            print (len(weights))
+            weights = sorted(weights, key = lambda w : w["weight"], reverse = True)
+            weights = weights[:3]
         
+        for i in range(0, len(weights)):
+            vertex["bi" + str(i)] = weights[i]["group"]
+            vertex["bw" + str(i)] = weights[i]["weight"]
+            
+        for i in range(len(weights), 4):
+            vertex["bi" + str(i)] = 0
+            vertex["bw" + str(i)] = 0
+            
+        verts.append(vertex)
+            
+    # Retrieve texture coordinates & indices      
     if len(mesh.tessface_uv_textures) != 1:
-        raise Exception('Too many or missing uv layers')
+        raise Exception('Invalid UV map')
         
-    mesh_prepare(mesh)
-    
-    vertices = []
-    cvertices = []
-    boxMin = [0, 0, 0]
-    boxMax = [0, 0, 0]
-    uv_layer = mesh.tessface_uv_textures.active.data
-    
-    # Retrieve mesh data
+    uv_layer = mesh.tessface_uv_textures.active.data    
     for face_idx, face in enumerate(mesh.tessfaces):
         for vert_idx, vert in enumerate(face.vertices):
-        
-            vertex = mesh.vertices[vert]
+            verts[vert]["u"] = uv_layer[face_idx].uv[vert_idx][0]
+            verts[vert]["v"] = 1.0 - uv_layer[face_idx].uv[vert_idx][1]
             
-            boxMin[0] = min(boxMin[0], vertex.co.x)
-            boxMin[1] = min(boxMin[1], vertex.co.y)
-            boxMin[2] = min(boxMin[2], vertex.co.z)
-            
-            boxMax[0] = max(boxMax[0], vertex.co.x)
-            boxMax[1] = max(boxMax[1], vertex.co.y)
-            boxMax[2] = max(boxMax[2], vertex.co.z)
-            
-            vertices.append(struct.pack('<ffffffff', 
-                vertex.co.x, vertex.co.y, vertex.co.z,
-                face.normal.x, face.normal.y, face.normal.z,
-                uv_layer[face_idx].uv[vert_idx][0],
-                1.0 - uv_layer[face_idx].uv[vert_idx][1]
-            ))
+            indices.append(vert_idx)
             
     bpy.data.meshes.remove(mesh)
-               
-    # Retrieve the collision mesh
-    if object.name + "_phys" in bpy.data.objects:
-        cobj = bpy.data.objects[object.name + "_phys"]
-        cmesh = cobj.to_mesh(ctx.scene, True, 'PREVIEW')
+    
+    # Read the collision mesh
+    if object.name + "_phys" in bpy.data.objects and use_collision:
+        flags = flags | FLAGS_COLLISION
         
-        if not cmesh:
-            raise Exception('Cannot retrieve collision mesh')
-            
+        cobj = bpy.data.objects[object.name + "_phys"]
+        cmesh = cobj.to_mesh(ctx.scene, True, 'PREVIEW')            
         mesh_prepare(cmesh)
-        for face_idx, face in enumerate(cmesh.tessfaces):
-                    
+        
+        for face_idx, face in enumerate(cmesh.tessfaces):            
             for vert_idx, vert in enumerate(face.vertices):
-            
-                vertex = cmesh.vertices[vert]
-                
-                cvertices.append(struct.pack('<fff', 
-                    vertex.co.x, 
-                    vertex.co.y, 
-                    vertex.co.z
-                ))  
+                cvertices.append({
+                    "x": cmesh.vertices[vert].co.x, 
+                    "y": cmesh.vertices[vert].co.y, 
+                    "z": cmesh.vertices[vert].co.z
+                })  
         
         bpy.data.meshes.remove(cmesh)
-                
+    
+    # Read information about the skeleton
+    if object.name + "_skel" in bpy.data.armatures and use_skeleton:
+        flags = flags | FLAGS_SKELETON
+        
+    # Write the file
     file = open(filepath, 'wb')
     
-    # Write the file header
     file.write(b'MZO\0')
-    file.write(struct.pack('<BBBB', 0, 0, 1, 0))
-    file.write(struct.pack('<HH', len(vertices), int(len(cvertices))))
-    file.write(struct.pack('<ffffff',
-        boxMin[0], boxMin[1], boxMin[2],
-        boxMax[0], boxMax[1], boxMax[2]
-    ))
+    file.write(pack('<BBBB', 0, 0, 1, 0))
+    file.write(pack('<I', flags))
+    file.write(pack('<HHHH', len(verts), len(indices), len(phys), len(skeleton)))
+    file.write(pack('<HHHH', 0, 0, 0, 0))
     
-    for vert in vertices:
-        file.write(vert)
-        
-    for cvert in cvertices:
-        file.write(cvert)
+    for vert in verts:
+        file.write(pack('<ffffffff', vert["x"],  vert["y"],  vert["z"],
+                                     vert["nx"], vert["ny"], vert["nz"],
+                                     vert["u"],  vert["v"]))
+    if use_skeleton:
+        for vert in verts:
+            file.write(pack('<HfHfHfHf', vert["bi0"], vert["bw0"],
+                                         vert["bi1"], vert["bw1"],
+                                         vert["bi2"], vert["bw2"],
+                                         vert["bi3"], vert["bw3"]))
+                                
+    for index in indices:
+        file.write(pack('<H', index))
+    
+    for vert in phys:
+        file.write(pack('<fff', vert["x"], vert["y"], vert["z"]))
     
     file.close()
     

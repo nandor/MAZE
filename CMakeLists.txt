@@ -8,6 +8,7 @@ project(MAZE)
 # Find dependencies
 find_package(OpenGL)
 
+link_directories("${PROJECT_SOURCE_DIR}/libs")
 include_directories("${PROJECT_SOURCE_DIR}/maze")
 include_directories("${PROJECT_SOURCE_DIR}/maze/png")
 include_directories("${PROJECT_SOURCE_DIR}/maze/zlib")

@@ -1,3 +1,4 @@
+
 -- This file is part of the MAZE project
 -- Licensing information can be found in the LICENSE file
 -- (C) 2013 The MAZE project. All rights reserved.
@@ -120,6 +121,9 @@ function spawn_finish(x, y)
         return
     end
     
+    x = 0
+    y = 0
+    
     finish_spawned = true
 
     local finish = scene.create("object")
@@ -140,9 +144,10 @@ function spawn_finish(x, y)
     local light = scene.create("light")
     light.type = "spot"
     light.diffuse = vec3(1.0, 1.0, 1.0)
-    light.specular = vec3(0.88, 0.34, 0.13)
+    light.specular = vec3(1.0, 1.0, 1.0)
     light.direction = vec3(0.0, -1.0, 0.0)
     light.radius = 5.0
+    light.shadow_caster = true
     light.position = vec3(x * 5 + 2.5, 3.25, y * 5 + 2.5)
 end
 
@@ -153,7 +158,7 @@ function on_world_init()
     finish_spawned = false
     object_count = 0
     light_count = 0
-    
+        
     -- Place walls
     for x = 0, 20 do
         for y = 0, 20 do         
@@ -182,7 +187,6 @@ function on_world_init()
     -- Place powerups
     for x = 0, 19 do
         for y = 0, 19 do
-            
             local id = math.floor(math.random() * 100) % 3
         
             if id == 1 then
@@ -248,15 +252,27 @@ function on_world_init()
         end
     end
 	
+	-- Plasty mobs
+	for x = 0, 20 do
+		local mob = scene.create("object", "mob_" .. x)
+		mob.model = "monster"
+		mob.shadow_caster = true
+		mob.position = vec3(2.5, 0.0, 2.5)
+		mob.box = box(vec3(-1.0, 0.0, -1.0), vec3(2.0, 2.5, 2.0))
+	end
+	
     -- Place pillars on corners
     for x = 0, 20 do
         for y = 0, 20 do
             spawn_pillar(x, y)  
         end
     end
-    
+		
     -- Print statistics
     print("Object count: " .. object_count)
     print("Light count: " .. light_count)
 end
 
+function on_world_update(t, dt)
+
+end

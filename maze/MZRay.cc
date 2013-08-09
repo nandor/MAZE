@@ -65,7 +65,7 @@ bool Ray::Outside(const BoundingBox& box) const
 		{
 			continue;
 		}
-
+		
 		point = _mm_sub_ps(mOrigin, _mm_mul_ps(mDirection, _mm_div_ps(dist, dot)));
 		mask = _mm_and_ps(_mm_cmple_ps(box.mMin, point), _mm_cmple_ps(point, box.mMax));
 		if ((_mm_movemask_ps(mask) & 7) == 7)

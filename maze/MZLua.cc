@@ -13,7 +13,7 @@ void MAZE::mzlClass(lua_State* L, const std::string& name, const std::string& ba
 	s ? luaL_newlib(L, s) : lua_createtable(L, 0, 1);
 	lua_pushvalue(L, -1);
 	lua_setglobal(L, name.c_str());
-
+	
 	// Attach a metatable with the __call method
 	if (ctor != NULL)
 	{
@@ -21,8 +21,9 @@ void MAZE::mzlClass(lua_State* L, const std::string& name, const std::string& ba
 		lua_pushcfunction(L, ctor);
 		lua_setfield(L, -2, "__call");
 		lua_setmetatable(L, -2);
-		lua_pop(L, 1);
 	}
+	
+	lua_pop(L, 1);
 
 	// Initialize the metatable
 	m ? luaL_newlib(L, m) : lua_createtable(L, 0, 5);

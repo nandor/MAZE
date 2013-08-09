@@ -88,7 +88,7 @@ void World::InitScript()
 	
 	lua_pushcfunction(mScript, mzlDefaultPrint);
 	lua_setglobal(mScript, "print");
-
+	
 	lua_pushlightuserdata(mScript, mScene);
 	lua_setglobal(mScript, "__scene");
 	lua_pushlightuserdata(mScript, mEngine->GetResourceManager());
@@ -121,11 +121,18 @@ void World::Update(float time, float dt)
 		
 	// Call the lua update method
 	lua_getglobal(mScript, "on_world_update");
-	lua_pushnumber(mScript, time);
-	lua_pushnumber(mScript, dt);
-	if (lua_isfunction(mScript, -1) && lua_pcall(mScript, 2, 0, 0))
+	if (lua_isfunction(mScript, -1))
 	{
-		throw Exception("[Script] ") << lua_tostring(mScript, -1);
+		lua_pushnumber(mScript, time);
+		lua_pushnumber(mScript, dt);
+		if (lua_pcall(mScript, 2, 0, 0))
+		{
+			throw Exception("[Script] ") << lua_tostring(mScript, -1);
+		}
+	}
+	else
+	{
+		lua_pop(mScript, 1);
 	}
 }
 

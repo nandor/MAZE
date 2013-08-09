@@ -475,12 +475,12 @@ static int player__setter(lua_State *L)
 	}    
     else if (!strcmp(name, "coins"))
     {
-        (*p)->SetCoins(luaL_checknumber(L, 3));
+        (*p)->SetCoins((int)luaL_checknumber(L, 3));
         return 0;
     }
     else if (!strcmp(name, "keys"))
     {
-        (*p)->SetKeys(luaL_checknumber(L, 3));
+        (*p)->SetKeys((int)luaL_checknumber(L, 3));
         return 1;
     }
 	else if (!strcmp(name, "position"))
@@ -551,7 +551,7 @@ static int scene__create(lua_State *L)
 	const char *type = luaL_checkstring(L, 1);
 	const char *name = luaL_optstring(L, 2, "");
 	Scene *scene;
-
+	
 	lua_getglobal(L, "__scene");
 	if (!lua_isuserdata(L, -1) || ((scene = (Scene*)lua_touserdata(L, -1)) == NULL))
 	{
