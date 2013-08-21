@@ -96,6 +96,7 @@ mglNormalPointerProc						mglNormalPointer;
 mglEnableClientStateProc					mglEnableClientState;
 mglDisableClientStateProc					mglDisableClientState;
 mglDrawArraysProc							mglDrawArrays;
+mglDrawElementsProc							mglDrawElements;
 mglTexCoordPointerProc						mglTexCoordPointer;
 mglGenBuffersProc							mglGenBuffers;
 mglDeleteBuffersProc						mglDeleteBuffers;
@@ -112,6 +113,7 @@ mglGenVertexArraysProc						mglGenVertexArrays;
 mglDeleteVertexArraysProc					mglDeleteVertexArrays;
 mglBindVertexArrayProc						mglBindVertexArray;
 mglDrawArraysInstancedProc					mglDrawArraysInstanced;
+mglDrawElementsInstancedProc				mglDrawElementsInstanced;
 mglIsRenderbufferProc						mglIsRenderbuffer;
 mglIsFramebufferProc						mglIsFramebuffer;
 mglCheckFramebufferStatusProc				mglCheckFramebufferStatus;
@@ -220,6 +222,7 @@ int mglInit()
 	mglClearStencil			= glClearStencil;
 	mglPolygonOffset		= glPolygonOffset;
 	mglDrawArrays			= glDrawArrays;
+	mglDrawElements			= glDrawElements;
 
 	GET_ADDR(glGenerateMipmap);
 	GET_ADDR(glUseProgram);
@@ -275,11 +278,13 @@ int mglInit()
 	if (mglIsSupported("GL_ARB_draw_instanced"))
 	{
 		GET_ADDR_ARB(glDrawArraysInstanced);
+		GET_ADDR_ARB(glDrawElementsInstanced);
 		GL.Instancing = 1;
 	}
 	else if (mglIsSupported("GL_EXT_draw_instanced"))
 	{
 		GET_ADDR_EXT(glDrawArraysInstanced);
+		GET_ADDR_EXT(glDrawElementsInstanced);
 		GL.Instancing = 1;
 	}
 	else

@@ -8,6 +8,45 @@
 
 namespace MAZE
 {
+	/// Forward declarations
+	struct Bone;
+	class Skeleton;
+	class Animation;
+
+	/// Maximum number of bones which can be present in a skeleton
+	const size_t MAX_BONES = 36;
+	
+	/**
+		An animation sequence is composed of keyframes which
+		define the bone transforms. The skeleton is interpolated
+		between the keyframes
+	*/
+	class Animation
+	{
+	public:
+
+		struct Frame
+		{
+			float Key;
+
+			struct
+			{
+				glm::vec3 Translation;
+				glm::vec3 Rotation;
+				glm::vec3 Scaling;
+			} Transform[MAX_BONES];
+		};
+
+		/**	
+			Write bone transforms into the skeleton
+		*/
+		void Animate(Skeleton * skel, float time);
+
+	private:
+
+		/// List of keyframes
+		std::vector<Frame> mFrames;
+	};
 
 	/**
 		The model class stores information about meshes:
@@ -30,15 +69,39 @@ namespace MAZE
 			glm::vec3 Normal;
 			glm::vec2 UV;
 		};
+		
+		#pragma pack(push, 1)	
+		/**
+			Bone weight
+		*/
+		struct Weight
+		{
+			unsigned char bi0;
+			unsigned char bi1;
+			unsigned char bi2;
+			unsigned char bi3; 
+			float bw0; 
+			float bw1; 
+			float bw2;
+			float bw3; 
+		};	
 
 		/**
-			Skinning data associated to a vertex
+			Bone data
 		*/
-		struct BoneVertex
+		struct Bone
 		{
-			unsigned short Id;
-			unsigned short Weight;	// weight /= SHORT_MAX
+			std::string Name;
+			uint16_t Parent;
+			glm::vec3 Head;
+			glm::vec3 Tail;
 		};
+		#pragma pack(pop)
+
+		/**
+			Vertex index
+		*/
+		typedef unsigned short Index;
 				
 	public:
 
@@ -114,16 +177,22 @@ namespace MAZE
 		std::vector<Vertex> mVertices;
 
 		/// List of bone weights
-		std::vector<BoneVertex> mWeights;
-
+		std::vector<Weight> mWeights;
+		
 		/// List of vertices of the collision mesh
 		std::vector<glm::vec3> mCollision;
 
+		/// List of bones
+		std::vector<Bone> mBones;
+
 		/// Number of vertices of the mesh
-		size_t mVertexCount;
+		size_t mCount;
 		
 		/// Mesh VBO
-		MGLuint mVBO;
+		MGLuint mMeshVBO;
+
+		/// Weight VBO
+		MGLuint mWeightVBO;
 		
 		/// Diffuse map
 		Resource::Ptr<Texture> mDiffuseMap;
@@ -131,11 +200,11 @@ namespace MAZE
 		/// Normal map
 		Resource::Ptr<Texture> mBumpMap;
 
-		/// Bounding box min point
-		glm::vec3 mBoxWorldMin;
+		/// Default skeleton
+		Skeleton * mSkeleton;
 
-		/// Bounding box max point
-		glm::vec3 mBoxWorldMax;
+		/// Builtin animations
+		std::vector<Animation> mAnimations;
 	};
 };
 

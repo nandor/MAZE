@@ -75,7 +75,7 @@ void Player::Update(float time, float dt)
 	// Compute rotation
 	mRotation.y += ((width >> 1) - pos.x) * ROTATE_SPEED;
 	mRotation.x += ((height >> 1) - pos.y) * ROTATE_SPEED;	
-	mRotation.x = std::min(std::max(mRotation.x, -PI / 3.0f), PI / 3.0f);
+	mRotation.x = std::min(std::max(mRotation.x, -PI / 2.1f), PI / 2.1f);
 
 	// Camera orientation
 	lookDir.x = sin(mRotation.y) * cos(mRotation.x);
@@ -341,6 +341,7 @@ void Player::Render(RenderBuffer *buffer, RenderMode mode)
 		object->model = mTorch;
 		object->ModelMatrix = torchMtx;
 		object->Position = torchPos;
+		object->Skinned = false;
 	}
 	
 	// Crosshair

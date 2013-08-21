@@ -26,7 +26,7 @@ namespace MAZE
 		/**
 			Destroys the object
 		*/
-		~Object();
+		virtual ~Object();
 		
 		/**
 			Checks if the obj has a collision mesh
@@ -102,7 +102,7 @@ namespace MAZE
 		*/
 		void UpdateInternals();
 		
-	private:
+	protected:
 
 		/// Model used by this entity
 		Resource::Ptr<Model> mModel;

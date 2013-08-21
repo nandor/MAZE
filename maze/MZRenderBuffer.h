@@ -23,16 +23,23 @@ namespace MAZE
 
 		/// Position of the object
 		glm::vec3 Position;
+		
+		/// Local matrix of the object
+		glm::mat4 Skin[MAX_BONES];
 
 		/// Reference to the model
 		Resource::Ptr<Model> model;
 
-		/// Depth of the object
-		float Z;
-		
+		/// Do not instance, use skinning instead
+		bool Skinned;
+
 		/// ID of the entity
 		unsigned Handle;
+
+		/// Depth of the object
+		float Z;
 	};
+
 
 	/**
 		Ligth render data
@@ -156,7 +163,7 @@ namespace MAZE
 			Creates a new light
 		*/
 		LightRenderData* AddLight();
-
+		
 		/**
 			Creates a new widget
 		*/

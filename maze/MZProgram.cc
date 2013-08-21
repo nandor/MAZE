@@ -207,6 +207,14 @@ void Program::GetUniforms()
 			uniform.Name.pop_back();
 		}
 
+		if (*uniform.Name.rbegin() == ']')
+		{
+			while (!isalpha(*uniform.Name.rbegin()))
+			{
+				uniform.Name.pop_back();
+			}
+		}
+
 		uniform.Loc = mglGetUniformLocation(mProgram, &uniform.Name[0]);
 
 		mUniforms.insert(std::make_pair(uniform.Name, uniform));

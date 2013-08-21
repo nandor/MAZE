@@ -253,8 +253,8 @@ function on_world_init()
     end
 	
 	-- Plasty mobs
-	for x = 0, 20 do
-		local mob = scene.create("object", "mob_" .. x)
+	for x = 0, 1 do
+		local mob = scene.create("char", "mob_" .. x)
 		mob.model = "monster"
 		mob.shadow_caster = true
 		mob.position = vec3(2.5, 0.0, 2.5)

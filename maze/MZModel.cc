@@ -14,28 +14,22 @@ const Resource::Type Model::TYPE = Resource::MODEL;
 
 struct MZOHeader
 {
-	unsigned char Header[4];
+	uint8_t Header[4];
 
 	struct
 	{
-		char Major;
-		char Minor;
-		char Rev;
-		char Build;
+		uint8_t Major;
+		uint8_t Minor;
+		uint8_t Rev;
+		uint8_t Build;
 	} Version;
 	
-	unsigned short MeshVertices;
-	unsigned short CollisionFaces;
+	uint32_t Flags;
+	uint16_t VertexCount;
+	uint16_t PhysCount;
+	uint16_t BoneCount;
 
-	struct
-	{
-		float MinX;
-		float MinY;
-		float MinZ;
-		float MaxX;
-		float MaxY;
-		float MaxZ;
-	} Box;
+	uint16_t Pad[5];
 };
 
 #pragma pack(pop)
@@ -44,14 +38,16 @@ struct MZOHeader
 Model::Model(ResourceManager* rsmngr, const std::string& id, const std::string& fn)
 	: Resource(rsmngr, Resource::MODEL, id),
 	  mFile(fn),
-	  mVBO(0)
+	  mMeshVBO(0),
+	  mWeightVBO(0)
 {
 }
 
 // ------------------------------------------------------------------------------------------------
 Model::~Model()
 {
-	if (mVBO) { mglDeleteBuffers(1, &mVBO);		 mVBO = 0; }
+	if (mMeshVBO)	{ mglDeleteBuffers(1, &mMeshVBO);	mMeshVBO = 0; }
+	if (mWeightVBO) { mglDeleteBuffers(1, &mWeightVBO);	mWeightVBO = 0; }
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -70,23 +66,25 @@ void Model::Load()
 			throw Exception("Invalid mzo: '" + mFile + "'");
 		}
 		
-		mBoxWorldMin.x = header.Box.MinX;
-		mBoxWorldMin.y = header.Box.MinY;
-		mBoxWorldMin.z = header.Box.MinZ;
-		
-		mBoxWorldMax.x = header.Box.MaxX;
-		mBoxWorldMax.y = header.Box.MaxY;
-		mBoxWorldMax.z = header.Box.MaxZ;
-
-		mVertices.resize(header.MeshVertices);
-		mCollision.resize(header.CollisionFaces);
-		mVertexCount = mVertices.size();
+		mVertices.resize(header.VertexCount);
+		mWeights.resize(header.VertexCount);
+		mCollision.resize(header.PhysCount);
+		mBones.resize(header.BoneCount);
+		mCount = mVertices.size();
 	
 		if (mVertices.size() > 0)
 		{
 			if (!fs.read((char*)&mVertices[0], mVertices.size() * sizeof(Vertex)))
 			{
-				throw Exception("Cannot read vertex data");
+				throw Exception("Cannot read vertex data: ") << mID;
+			}
+		}
+
+		if (mWeights.size() > 0)
+		{
+			if (!fs.read((char*)&mWeights[0], mWeights.size() * sizeof(Weight)))
+			{
+				throw Exception("Cannot read bone weight data: ") << mID;
 			}
 		}
 
@@ -94,7 +92,28 @@ void Model::Load()
 		{
 			if (!fs.read((char*)&mCollision[0], mCollision.size() * sizeof(glm::vec3)))
 			{			
-				throw Exception("Cannot read collision data");
+				throw Exception("Cannot read collision data: ") << mID;
+			}
+		}
+
+		if (mBones.size() > 0)
+		{
+			for (size_t i = 0; i < mBones.size(); ++i)
+			{
+				unsigned short length;
+				if (!fs.read((char*)&length, sizeof(length)))
+				{
+					throw Exception("Cannot read bone: ") << mID;
+				}
+
+				mBones[i].Name.resize(length + 1);
+				mBones[i].Name[length] = '\0';
+				if (!fs.read((char*)&mBones[i].Name[0], length) ||
+					!fs.read((char*)&mBones[i].Parent, sizeof(uint16_t)) ||					
+					!fs.read((char*)&mBones[i].Head, sizeof(float) * 6))
+				{
+					throw Exception("Cannot read bone: ") << mID;
+				}
 			}
 		}
 
@@ -105,16 +124,24 @@ void Model::Load()
 	// Upload the model to the GPU
 	if (mVertices.size() > 0)
 	{
-		mglGenBuffers(1, &mVBO);
-		mglBindBuffer(MGL_ARRAY_BUFFER, mVBO);
+		mglGenBuffers(1, &mMeshVBO);
+		mglBindBuffer(MGL_ARRAY_BUFFER, mMeshVBO);
 		mglBufferData(MGL_ARRAY_BUFFER, mVertices.size() * sizeof(mVertices[0]), &mVertices[0], MGL_STATIC_DRAW);
-		mglBindBuffer(MGL_ARRAY_BUFFER, 0);
 
 		mVertices.clear();
-
-		mglBindBuffer(MGL_ARRAY_BUFFER, 0);
-		mglFinish();	
 	}
+
+	if (mWeights.size() > 0)
+	{
+		mglGenBuffers(1, &mWeightVBO);
+		mglBindBuffer(MGL_ARRAY_BUFFER, mWeightVBO);
+		mglBufferData(MGL_ARRAY_BUFFER, mWeights.size() * sizeof(mWeights[0]), &mWeights[0], MGL_STATIC_DRAW);
+
+		mWeights.clear();
+	}
+		
+	mglBindBuffer(MGL_ARRAY_BUFFER, 0);
+	mglFinish();	
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -124,9 +151,11 @@ void Model::Unload()
 	mBumpMap.Free();
 
 	mVertices.clear();
+	mWeights.clear();
 	mCollision.clear();
 
-	if (mVBO) { mglDeleteBuffers(1, &mVBO);		 mVBO = 0; }
+	if (mMeshVBO)	{ mglDeleteBuffers(1, &mMeshVBO);	mMeshVBO = 0; }
+	if (mWeightVBO) { mglDeleteBuffers(1, &mWeightVBO);	mWeightVBO = 0; }
 }
 
 
@@ -157,7 +186,7 @@ void Model::CreatePlane(ResourceManager* rsmngr,
 	float w = size.x / 2.0f, h = size.y / 2.0f;
 
 	model->mVertices.resize(6);
-	model->mVertexCount = 6;
+	model->mCount = 6;
 
 	model->mVertices[0].Position = glm::vec3(-w, 0.0f, -h);
 	model->mVertices[1].Position = glm::vec3(-w, 0.0f,  h);	
@@ -179,6 +208,6 @@ void Model::CreatePlane(ResourceManager* rsmngr,
 	model->mVertices[3].UV		 = glm::vec2(0.0f,					0.0f				 );
 	model->mVertices[4].UV		 = glm::vec2(2.0f * w / cellSize.x, 2.0f * h / cellSize.y);
 	model->mVertices[5].UV		 = glm::vec2(2.0f * w / cellSize.x, 0.0f				 );
-	
+		
 	rsmngr->Add(model);
 }

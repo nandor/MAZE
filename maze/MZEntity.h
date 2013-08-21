@@ -31,11 +31,8 @@ namespace MAZE
 			/// Mesh, character etc
 			OBJECT,
 
-			/// Billboard - faces the camera
-			BILLBOARD,
-
-			/// Particle engine
-			PARTICLE,
+			/// AI controlled
+			CHARACTER,
 
 			/// It's complicated
 			PLAYER,

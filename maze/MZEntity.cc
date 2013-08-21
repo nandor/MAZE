@@ -20,6 +20,12 @@ void Entity::PlaySound(const std::string& sound)
 // ------------------------------------------------------------------------------------------------
 void Entity::Update(float time, float dt)
 {
+	mModelMat = glm::translate(mPosition);
+	mModelMat *= glm::rotate(mRotation.x, glm::vec3(1.0, 0.0, 0.0));
+	mModelMat *= glm::rotate(mRotation.y, glm::vec3(0.0, 1.0, 0.0));
+	mModelMat *= glm::rotate(mRotation.z, glm::vec3(0.0, 0.0, 1.0));
+	mModelMat *= glm::scale(mScale);
+
 	for (size_t i = 0; i < mSounds.size();)
 	{
 		mSounds[i].Update();

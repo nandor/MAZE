@@ -19,13 +19,6 @@ varying vec3 vVertex;
 varying vec3 vNormal;
 varying vec2 vUV;
 
-mat3 matrixInverse(in mat3 m)
-{  
-   float det = dot(cross(m[0], m[1]), m[2]);
-   mat3 t = transpose(m);
-   return mat3(cross(t[1], t[2]), cross(t[2], t[0]), cross(t[0], t[1])) / det;
-}
-
 void main()
 {
     mat4 aModel = mat4(aModel0, aModel1, aModel2, aModel3);

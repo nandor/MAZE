@@ -15,6 +15,7 @@
 #include <cstring>
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <new>
 #include <stack>
@@ -102,6 +103,7 @@
 #include "MZLight.h"
 #include "MZCamera.h"
 #include "MZPlayer.h"
+#include "MZCharacter.h"
 #include "MZScene.h"
 #include "MZNetwork.h"
 #include "MZProgram.h"

@@ -42,11 +42,11 @@ def save(operator, ctx, filepath = '',
     """
     
     # Data to be saved
-    flags       = 0
-    verts       = []
-    indices     = []
-    phys        = []
-    skeleton    = []
+    flags   = 0
+    verts   = []
+    data    = []
+    phys    = []
+    bones   = []
     
     # Retrieve the object
     object = ctx.active_object
@@ -80,17 +80,23 @@ def save(operator, ctx, filepath = '',
             })
             
         if len(weights) > 4:
-            print (len(weights))
             weights = sorted(weights, key = lambda w : w["weight"], reverse = True)
-            weights = weights[:3]
-        
+            weights = weights[:4]
+            
+        sum = 0.0
         for i in range(0, len(weights)):
             vertex["bi" + str(i)] = weights[i]["group"]
             vertex["bw" + str(i)] = weights[i]["weight"]
+            sum = sum + weights[i]["weight"]
             
         for i in range(len(weights), 4):
             vertex["bi" + str(i)] = 0
             vertex["bw" + str(i)] = 0
+            
+        vertex["bw0"] /= sum
+        vertex["bw1"] /= sum
+        vertex["bw2"] /= sum
+        vertex["bw3"] /= sum
             
         verts.append(vertex)
             
@@ -101,10 +107,10 @@ def save(operator, ctx, filepath = '',
     uv_layer = mesh.tessface_uv_textures.active.data    
     for face_idx, face in enumerate(mesh.tessfaces):
         for vert_idx, vert in enumerate(face.vertices):
-            verts[vert]["u"] = uv_layer[face_idx].uv[vert_idx][0]
-            verts[vert]["v"] = 1.0 - uv_layer[face_idx].uv[vert_idx][1]
-            
-            indices.append(vert_idx)
+            v = verts[vert].copy() 
+            v["u"] = uv_layer[face_idx].uv[vert_idx][0]
+            v["v"] = 1.0 - uv_layer[face_idx].uv[vert_idx][1]
+            data.append(v)
             
     bpy.data.meshes.remove(mesh)
     
@@ -118,7 +124,7 @@ def save(operator, ctx, filepath = '',
         
         for face_idx, face in enumerate(cmesh.tessfaces):            
             for vert_idx, vert in enumerate(face.vertices):
-                cvertices.append({
+                phys.append({
                     "x": cmesh.vertices[vert].co.x, 
                     "y": cmesh.vertices[vert].co.y, 
                     "z": cmesh.vertices[vert].co.z
@@ -129,32 +135,61 @@ def save(operator, ctx, filepath = '',
     # Read information about the skeleton
     if object.name + "_skel" in bpy.data.armatures and use_skeleton:
         flags = flags | FLAGS_SKELETON
+        skel = bpy.data.armatures[object.name + "_skel"]
+        
+        # Retrieve all bones
+        for bone in skel.bones:            
+            bones.append({
+                "name": bone.name,
+                "head": {
+                    "x": bone.head_local.x,
+                    "y": bone.head_local.z,
+                    "z": bone.head_local.y
+                },
+                "tail": {
+                    "x": bone.tail_local.x,
+                    "y": bone.tail_local.z,
+                    "z": bone.tail_local.y
+                },
+                "parent": 0
+            })
+                        
+        for idx in range(0, len(bones)):
+            for child in skel.bones[bones[idx]["name"]].children:
+                for c in range(0, len(bones)):
+                    if bones[c]["name"] == child.name:
+                        bones[c]["parent"] = idx
+                        break
         
     # Write the file
     file = open(filepath, 'wb')
     
     file.write(b'MZO\0')
-    file.write(pack('<BBBB', 0, 0, 1, 0))
-    file.write(pack('<I', flags))
-    file.write(pack('<HHHH', len(verts), len(indices), len(phys), len(skeleton)))
-    file.write(pack('<HHHH', 0, 0, 0, 0))
+    file.write(pack('=BBBB', 0, 0, 1, 0))
+    file.write(pack('=I', flags))
+    file.write(pack('=HHHH', len(data), len(phys), len(bones) if use_skeleton else 0, 0))
+    file.write(pack('=HHHH', 0, 0, 0, 0))
     
-    for vert in verts:
-        file.write(pack('<ffffffff', vert["x"],  vert["y"],  vert["z"],
+    for vert in data:
+        file.write(pack('=ffffffff', vert["x"],  vert["y"],  vert["z"],
                                      vert["nx"], vert["ny"], vert["nz"],
                                      vert["u"],  vert["v"]))
     if use_skeleton:
-        for vert in verts:
-            file.write(pack('<HfHfHfHf', vert["bi0"], vert["bw0"],
-                                         vert["bi1"], vert["bw1"],
-                                         vert["bi2"], vert["bw2"],
-                                         vert["bi3"], vert["bw3"]))
-                                
-    for index in indices:
-        file.write(pack('<H', index))
-    
+        for vert in data:
+            file.write(pack('=BBBBffff', vert["bi0"], vert["bi1"],
+                                         vert["bi2"], vert["bi3"],
+                                         vert["bw0"], vert["bw1"],
+                                         vert["bw2"], vert["bw3"]))
+                                    
     for vert in phys:
-        file.write(pack('<fff', vert["x"], vert["y"], vert["z"]))
+        file.write(pack('=fff', vert["x"], vert["y"], vert["z"]))
+    
+    for bone in bones:
+        file.write(pack('=H', len(bone["name"])))
+        file.write(bytearray(bone["name"], "utf-8"))
+        file.write(pack('=H', bone["parent"]))
+        file.write(pack('=ffffff', bone["head"]["x"], bone["head"]["y"], bone["head"]["z"],
+                                bone["tail"]["x"], bone["tail"]["y"], bone["tail"]["z"]))
     
     file.close()
     

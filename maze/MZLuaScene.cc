@@ -315,6 +315,84 @@ static const struct luaL_Reg object_m[] =
 };
 
 // ------------------------------------------------------------------------------------------------
+// char
+// -------------------------------------------------------------------------------------------------
+static int char__setter(lua_State *L)
+{
+	Object **object = (Object**)mzlGetObject(L,  1, "char");
+	const char *field = luaL_checkstring(L, 2);
+	
+	if (!strcmp(field, "model"))
+	{
+		ResourceManager *rsmngr;
+
+		lua_getglobal(L, "__rsmngr");
+		if (!lua_isuserdata(L, -1) || ((rsmngr = (ResourceManager*)lua_touserdata(L, -1)) == NULL))
+		{
+			lua_pushstring(L, "'__rsmngr' not found");
+			lua_error(L);
+		}
+
+		(*object)->SetModel(rsmngr->Get<Model>(luaL_checkstring(L, 3)));
+		return 0;
+	}
+
+	lua_pushnil(L);
+	return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
+static int char__getter(lua_State *L)
+{
+	const Object **object = (const Object**)mzlGetObject(L,  1, "char");
+	const char *field = luaL_checkstring(L, 2);
+	
+	if (!strcmp(field, "model"))
+	{
+		Model *model;
+
+		if (!(model = (*object)->GetModel()))
+		{
+			lua_pushnil(L);
+		}
+		else
+		{
+			lua_pushstring(L, model->GetID().c_str());
+		}
+		
+		return 1;
+	}
+
+	return 0;
+}
+
+// ------------------------------------------------------------------------------------------------
+static int char__tostring(lua_State *L)
+{
+	std::stringstream ss;
+
+	Object **p = (Object**)mzlGetObject(L,  1, "char");
+
+	ss << "char('" 
+	   << (*p)->GetName() << "', vec3(" 
+	   << (*p)->GetPosition().x << ", "
+	   << (*p)->GetPosition().y << ", "
+	   << (*p)->GetPosition().z << "))";
+	
+	lua_pushstring(L, ss.str().c_str());
+	return 1;
+}
+
+// ------------------------------------------------------------------------------------------------
+static const struct luaL_Reg char_m[] =
+{
+	{"__setter", char__setter},
+	{"__getter", char__getter},
+	{"__tostring", char__tostring},
+	{NULL, NULL}
+};
+
+// ------------------------------------------------------------------------------------------------
 // light
 // ------------------------------------------------------------------------------------------------
 static int light__setter(lua_State *L)
@@ -569,6 +647,11 @@ static int scene__create(lua_State *L)
 		*(Light**)mzlCreateObject(L, sizeof(Light**), "light") = scene->Create<Light> (name);
 		return 1;
 	}
+	else if (!strcmp(type, "char"))
+	{
+		*(Character**)mzlCreateObject(L, sizeof(Character**), "char") = scene->Create<Character> (name);
+		return 1;
+	}
 	
 	lua_pushstring(L, "scene.create: invalid type");
 	lua_error(L);
@@ -602,6 +685,11 @@ static int scene__get(lua_State *L)
 	else if (!strcmp(type, "light"))
 	{
 		*(Light**)mzlCreateObject(L, sizeof(Light**), "light") = scene->Get<Light> (name);
+		return 1;
+	}
+	else if (!strcmp(type, "char"))
+	{
+		*(Character**)mzlCreateObject(L, sizeof(Character**), "char") = scene->Get<Character> (name);
 		return 1;
 	}
 
@@ -642,5 +730,6 @@ void MAZE::mzlRegisterScene(lua_State* L)
 	mzlClass(L, "light",  "entity", NULL, NULL,    light_m );
 	mzlClass(L, "object", "entity", NULL, NULL,    object_m);
 	mzlClass(L, "player", "entity", NULL, NULL,	   player_m);
+	mzlClass(L, "char",	  "entity", NULL, NULL,	   char_m  );
 	mzlClass(L, "scene",  "",		NULL, scene_s, NULL    );
 }
